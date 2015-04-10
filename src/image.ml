@@ -63,8 +63,9 @@ let create_click_thread =
       let status = Graphics.wait_next_event [Button_down;Button_up] in
       if not status.button then 
 	begin
-	  let color = Graphics.point_color status.mouse_x status.mouse_y in
-	  Printf.printf "[RED = %d] & [GREEN = %d] & [BLUE = %d]\n%!" (red color) (green color) (blue color)
+	  let (x,y) = (status.mouse_x,status.mouse_y) in
+	  let color = Graphics.point_color x y in
+	  Printf.printf "(%d,%d) [RED = %d] & [GREEN = %d] & [BLUE = %d]\n%!" x y (red color) (green color) (blue color)
 	end
     done)
 

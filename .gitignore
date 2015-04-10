@@ -13,4 +13,6 @@ parser.mli
 lexer.ml
 parser.ml
 /src/ccsmc
+*~
+*.hist
 

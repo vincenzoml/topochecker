@@ -2,7 +2,3 @@ Let reach(a,b) = !( (!b) S (!a) );
 Let reachThrough(a,b) = a & reach((a|b),b);
 
 Let toExit = reachThrough(["white"],["green"]);
-
-Ask ["red"] -< (G (toExit | ["red"]));
-Ask ["blue"] -< (G (toExit | ["blue"]));
-

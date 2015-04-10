@@ -1,6 +1,6 @@
 open Ccsmc
 open Ccsmc.PictureLogic
-open Ccsmc.DigitalPlane 
+open Ccsmc.DigitalPlane
 open Image
       
 let split_extension filename =
@@ -35,7 +35,13 @@ let _ =
       match syntax with
 	ASK cfsyntax ->
 	let cformula = cformula_of_cfsyntax (!env) cfsyntax in
-	Printf.printf "%b\n%!" (ccheck model (model.space.points) cformula) 
+	Printf.printf "%b\n%!" (ccheck model (model.space.points) cformula)
+      | ASKSET (cfsyntax, points_list) ->
+	 let cformula = cformula_of_cfsyntax (!env) cfsyntax in
+	 Printf.printf "%b\n%!" (ccheck model (List.fold_left
+						 (fun acc (x,y) -> PSet.add (x,y) acc)
+						 PSet.empty
+						 points_list) cformula)
       | PAINT (c, fsyntax) ->
 	  let color = 
 	    (match c with

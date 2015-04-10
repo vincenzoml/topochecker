@@ -22,7 +22,25 @@ module Logic ( Prop : LANG) = struct
      | CAnd of ('a cformula * 'a cformula)
      | Group of ('a formula)
      | Share of ('a formula * 'a cformula)
-      
+
+  let rec string_of_formula f =
+    match f with
+      T -> "T"
+    | Prop p -> "prop"
+    | Not f -> Printf.sprintf "!(%s)" (string_of_formula f)
+    | Closure f -> Printf.sprintf "N(%s)" (string_of_formula f)
+    | And (f1,f2) -> Printf.sprintf "(%s) & (%s)" (string_of_formula f1) (string_of_formula f2)
+    | Until (f1,f2) -> Printf.sprintf "(%s) S (%s)" (string_of_formula f1) (string_of_formula f2)
+				      
+  and string_of_cformula cf =
+    match cf with 
+      CT -> "T"
+    | CNot f -> Printf.sprintf "!(%s)" (string_of_cformula f)
+    | Group f -> Printf.sprintf "G(%s)" (string_of_formula f)
+    | CAnd (f1,f2) -> Printf.sprintf "(%s) & (%s)" (string_of_cformula f1) (string_of_cformula f2)
+    | Share (f1,f2) -> Printf.sprintf "(%s) -< (%s)" (string_of_formula f1) (string_of_cformula f2)
+		  
+		  
   module Env = Map.Make(String)
 
   type cfsyntax =
@@ -121,6 +139,7 @@ module Logic ( Prop : LANG) = struct
   type syntax = 
       PAINT of (Prop.syntax * fsyntax)
     | ASK of cfsyntax
+    | ASKSET of cfsyntax * ((int * int) list)
     | LET of string * (string list) * fsyntax
     | RESET
 end
@@ -246,35 +265,40 @@ struct
       CT -> true
     | CAnd (cf1, cf2) -> (ccheck model points cf1) && (ccheck model points cf2)
     | CNot cf -> not (ccheck model points cf)
-    | Share (f, cf) -> ccheck model (check model f) cf
-    | Group f -> check_group model points f
+    | Share (f, cf) ->
+       ccheck model (PSet.inter (check model f) points) cf			      
+    | Group f ->
+       check_group model points f
 
   and check_group model points f =
     let rec my_visit visited to_visit points =
-      if PSet.is_empty points then true
-      else if PSet.is_empty to_visit then false
-      else let x = PSet.choose to_visit in
-	   let visited' = PSet.add x visited in
-	   let to_visit' = PSet.diff
-			     (PSet.union
-				(PSet.union to_visit (model.space.pre x))
-				(model.space.clos (PSet.singleton x)))
-			     visited' in
-	   let points' = PSet.remove x points in
-	   my_visit visited' to_visit' points'
+      if PSet.is_empty points
+      then true
+      else
+	if PSet.is_empty to_visit
+	then false
+	else let x = PSet.choose to_visit in
+	     let visited' = PSet.add x visited in
+	     let to_visit' = PSet.diff
+			       (PSet.union
+				  (PSet.union to_visit (model.space.pre x))
+				  (model.space.clos (PSet.singleton x)))
+			       visited' in
+	     let points' = PSet.remove x points in
+	     my_visit visited' to_visit' points'
     in
-    if PSet.is_empty points then true
-    else let trap = check model f in
-	 let ctrap = PSet.diff model.space.points trap in
-	 if not (PSet.is_empty (PSet.inter points ctrap)) then false
-	 else let trap_points = PSet.inter points trap in
-	      if PSet.is_empty trap_points then false				
-	      else let start = PSet.choose trap_points in
-		   my_visit
-		     ctrap
-		     (PSet.singleton start)
-		     points
-
+    if PSet.is_empty points
+    then true
+    else let start = PSet.choose points in
+	 let trap = check model f in
+	 if PSet.mem start trap
+	 then 
+	   my_visit
+	     (PSet.diff model.space.points trap)
+	     (PSet.singleton start)
+	     points
+	 else false
+		
   let from_coloured_graph nodes_props arcs = 
     let add_node tbl idx n =
       if Hashtbl.mem tbl idx 

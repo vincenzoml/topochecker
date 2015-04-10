@@ -22,9 +22,20 @@ The prerequisites are the ocaml compiler, lexer and parser generators
 (ocamllex and ocamlyacc), and the camlimages library. On ubuntu,
 install the packages:
 
-ocaml-native-compilers
-ocaml-nox
-libcamlimages-ocaml-dev
+    ocaml-native-compilers
+    ocaml-nox
+    libcamlimages-ocaml-dev
+
+Optionally, you can install either the package
+
+    rlfe
+
+or
+
+    rlwrap
+
+to get command-line editing, and permanent history in the .hist file
+in the current directory.
 
 
 COMPILING
@@ -33,6 +44,9 @@ To compile, type "make" in the "src" subdirectory.
 
 
 RUNNING
+
+Running "make interactive-maze" will invoke a session that loads the
+maze examle.
 
 The tool is named "ccsmc" and can be invoked with 1 to 3
 arguments. The first argument is mandatory and is the name of a
@@ -57,12 +71,12 @@ for more details.
 
 
 
+MORE INFORMATION
+
 This documentation will be updated as soon as a more stable version of
 the tool and the input language of the model checker will be
 available. 
 
-
-MORE INFORMATION
 
 For more information, please write to
 

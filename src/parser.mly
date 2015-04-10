@@ -32,20 +32,34 @@
 %token EQ
 %token COMMENT_START
 %token COMMENT_END
+%token LCURLY
+%token RCURLY
 %start main
 %type <Ccsmc.PictureLogic.syntax> main
 %%
-main:
+  main:
  | PAINT color formula eol {Ccsmc.PictureLogic.PAINT (Ccsmc.Picture.COL $2,$3)}
- | ASK cformula eol {Ccsmc.PictureLogic.ASK $2}	    
+ | ASK cformula eol {Ccsmc.PictureLogic.ASK $2}
+ | ASK cformula set eol {Ccsmc.PictureLogic.ASKSET ($2,$3)}
  | LET IDE EQ formula eol {Ccsmc.PictureLogic.LET ($2,[],$4)}
  | LET IDE formalarglist EQ formula eol {Ccsmc.PictureLogic.LET ($2,$3,$5)} 
  | RESET eol {Ccsmc.PictureLogic.RESET}
-  ;
-  eol:
+ ;
+   eol:
  | EOL {}
-  ;
-    cformula:
+ ;
+   set:
+     LCURLY point_list RCURLY { $2 }
+ | LCURLY RCURLY {[]}
+ ;
+   point_list:
+     point { [$1] }
+ | point COMMA point_list { $1 :: $3 }
+ ;
+   point:
+     LPAREN NUM COMMA NUM RPAREN { ($2,$4) }
+ ;
+   cformula:
  | LPAREN cformula RPAREN {$2}
  | TRUE { Ccsmc.PictureLogic.CTRUE }
  | FALSE { Ccsmc.PictureLogic.CFALSE }

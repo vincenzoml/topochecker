@@ -19,6 +19,8 @@ rule token = parse
 | ")" {RPAREN}
 | "[" {LBRACKET}
 | "]" {RBRACKET}
+| "{" {LCURLY}
+| "}" {RCURLY}
 | ['"'] {QUOTE}
 | "T" {TRUE}
 | "F" {FALSE}

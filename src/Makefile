@@ -1,8 +1,24 @@
-.PHONY: clean allclean test export
-OCAMLC = ocamlopt.opt -thread -I /usr/lib/ocaml/camlimages graphics.cmxa camlimages_core.cmxa camlimages_graphics.cmxa unix.cmxa threads.cmxa 
+.PHONY: clean almostclean interactive-maze export
+OCAMLC = ocamlopt.opt -thread -I /usr/lib/ocaml/camlimages graphics.cmxa camlimages_core.cmxa camlimages_graphics.cmxa unix.cmxa threads.cmxa
+
+#RLFE=$(shell which rlfe || which rlwrap || true)
+
+RLFE=$(shell which rlfe)
+ifneq ($(RLFE),)
+	HIST=-h .hist
+else
+RLFE=$(shell which rlwrap)
+ifneq ($(RLFE),)
+	HIST=-H .hist
+endif
+endif
+
 
 ccsmc: ccsmc.cmx parser.cmx lexer.cmx image.cmx main.ml
 	$(OCAMLC) $^ -o $@
+
+interactive-maze: ccsmc
+	$(RLFE) $(HIST) ./ccsmc ../examples/maze/maze.bmp ../examples/maze/maze.ccsmc
 
 parser.cmx: parser.ml
 	$(OCAMLC) -c parser.mli
