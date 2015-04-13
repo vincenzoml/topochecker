@@ -1,0 +1,4 @@
+Ask
+(  (!(["black"] | ["white"])) -< G F ) &
+(["black"] -< (G ((!["white"]) & (["black"] S ["white"])) )) & 
+(["white"] -< (G ((!["black"]) & (["white"] S ["black"])) ));
