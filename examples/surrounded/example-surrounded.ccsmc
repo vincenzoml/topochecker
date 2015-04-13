@@ -1,0 +1,6 @@
+Ask (G ((!["black"]) & (["white"] S ["black"]) )) {(4,4),(4,6)};
+Ask (G ((!["black"]) & (["white"] S ["black"]) )) {(4,4)};
+Ask (G ((!["black"]) & (["white"] S ["black"]) )) {(4,6),(6,6)};
+
+
+

@@ -18,7 +18,7 @@ ccsmc: ccsmc.cmx parser.cmx lexer.cmx image.cmx main.ml
 	$(OCAMLC) $^ -o $@
 
 interactive-maze: ccsmc
-	$(RLFE) $(HIST) ./ccsmc ../examples/maze/maze.bmp ../examples/maze/maze.ccsmc
+	$(RLFE) $(HIST) ./ccsmc ../examples/maze/mazeIndiv.bmp ../examples/maze/mazeIndiv.ccsmc
 
 parser.cmx: parser.ml
 	$(OCAMLC) -c parser.mli
