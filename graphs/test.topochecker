@@ -1,0 +1,2 @@
+Kripke "time.dot" Space "space.dot" Eval "eval.csv";
+Check T;
