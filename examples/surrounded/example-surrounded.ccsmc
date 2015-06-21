@@ -1,6 +1,7 @@
-Ask (G ((!["black"]) & (["white"] S ["black"]) )) {(4,4),(4,6)};
-Ask (G ((!["black"]) & (["white"] S ["black"]) )) {(4,4)};
-Ask (G ((!["black"]) & (["white"] S ["black"]) )) {(4,6),(6,6)};
+Let f = ["white"] S ["black"];
 
-
-
+Ask (!f -< G F) {(4,4),(4,6),(6,4),(6,6)};
+Ask (G ((!["black"]) & f)) {(4,4)};
+Ask (G ((!["black"]) & f)) {(4,6),(6,6)};
+Ask (G ((!["black"]) & f)) {(4,4),(6,4)};
+Ask (G ((!["black"]) & f)) {(4,4),(4,6)};

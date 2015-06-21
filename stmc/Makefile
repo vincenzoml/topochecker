@@ -25,5 +25,5 @@ clean : almostclean
 	rm -f $(EXE)
 
 interactive-example-trace: $(EXE)
-	$(RLWRAP) ./$(EXE) ../examples/trace/maps/map ../examples/trace/time.dot ../examples/trace/formula.stmc 
+	$(RLWRAP) ./$(EXE) examples/trace/maps/map examples/trace/time.dot examples/trace/formula.stmc 
 
