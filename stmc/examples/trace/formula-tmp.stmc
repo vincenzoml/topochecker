@@ -1,0 +1,8 @@
+let bus1 = <RED [155,155]> & <GREEN [0,0]> & <BLUE [0,0]>;
+let bus2 = <RED [188,188]> & <GREEN [0,0]> & <BLUE [0,0]>;
+let bus3 = <RED [221,221]> & <GREEN [0,0]> & <BLUE [0,0]>;
+let bus = bus1 | bus2 | bus3;
+let busStop = <RED [55,55]> & <GREEN [55,55]> & <BLUE [255,255]>;
+let close(x) = C(C(C(C(C(C(C(x)))))));
+let busAtStop(x) = busStop & close(x);
+let busAfterBus1 = busAtStop(bus1) & E X busAtStop(bus2 | bus3);
