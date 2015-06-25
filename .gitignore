@@ -7,12 +7,11 @@
 *.cmx
 *.cmxs
 *.cmxa
-dmc
-parser.mli
 *.output
-lexer.ml
-parser.ml
-/src/ccsmc
+src/tcLexer.ml
+src/tcParser.ml
+src/tcParser.mli
+src/topochecker
 *~
 *.hist
 

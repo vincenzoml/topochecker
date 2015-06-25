@@ -74,10 +74,14 @@ let rec formula_of_fsyn env f =
   | EF f1 -> Eu (T,formula_of_fsyn env f1)
   | AF f1 -> Af (formula_of_fsyn env f1)
   | EU (f1,f2) -> Eu (formula_of_fsyn env f1,formula_of_fsyn env f2)
+  | AU (f1,f2) ->
+     let (ff1,ff2) = (formula_of_fsyn env f1,formula_of_fsyn env f2) in
+     And(Not (Eu (Not ff2,And(Not ff1,Not ff2))),Af ff2)
   | CALL (ide,actuals) ->
      let (formals,body) = apply env ide in
      formula_of_fsyn (zipenv env formals (List.map (fun x -> ([],x)) actuals)) body
-  | AU _ -> Util.fail "AU not supported yet in formula syntax"
+
+
 (*  | SHARE _ -> raise TypeMismatch
   | GROUP _ -> raise TypeMismatch  
 
