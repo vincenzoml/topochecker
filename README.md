@@ -5,7 +5,17 @@ Topochecker is a spatio-temporal model checker based on closure spaces
 and Kripke frames. Currently it checks a spatial extension of CTL
 named STLCS (spatio-temporal logic of closure spaces).
 
+Quick installation for the impatient running a debian-based distribution
+========================================================================
 
+Open a terminal and run the following four commands:
+
+```
+sudo apt-get install git ocaml-native-compilers libcsv-ocaml-dev libocamlgraph-ocaml-dev
+git clone https://github.com/vincenzoml/topochecker.git 
+cd topochecker
+make all
+```
 
 Prerequisites
 =============
