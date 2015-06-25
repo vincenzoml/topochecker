@@ -12,3 +12,4 @@ let debug s =
 let fail s =
   Printf.eprintf "%s\n%!" s;
   exit 1
+
