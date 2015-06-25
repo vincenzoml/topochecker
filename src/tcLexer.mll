@@ -1,5 +1,5 @@
 {
-  open ExpParser
+  open TcParser
   exception Eof
 }
 rule token = parse

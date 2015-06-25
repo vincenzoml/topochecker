@@ -1,4 +1,6 @@
 open Logic
+open Bigarray
+type slice = (int,int_elt,c_layout) Bigarray.Array2.t
 
 module Vertex =
   struct
@@ -13,6 +15,6 @@ module Graph = Graph.Imperative.Digraph.ConcreteBidirectional(Vertex)
 type 'prop model =
     { kripke : Graph.t;
       space : Graph.t;
-      eval : (formula,Slice.t) Hashtbl.t}
+      eval : (formula,slice) Hashtbl.t}
 
       

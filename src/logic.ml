@@ -8,11 +8,12 @@ type formula =
   | Ex of formula
   | Af of formula
   | Eu of formula * formula     
-									  
+
+(*		      
  and cformula =
    CT
    | CNot of cformula
    | CAnd of cformula * cformula
    | CGroup of formula
    | CShare of formula * cformula
-		 
+ *)		 

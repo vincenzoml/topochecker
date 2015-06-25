@@ -102,7 +102,8 @@ Where "kripke.dot" "space.dot" and "eval.csv" are file names.
 
 "kripke.dot" is a dot file containing a directed unlabelled graph,
 representing a Kripke frame. Node ids must be numbers starting at 0
-and with no gaps.
+and with no gaps. The Kripke frame is completed by adding self-loops
+to all nodes whose number of outgoing edges is 0.
 
 "space.dot" is a dot file containing a directed unlabelled graph,
 representing space. Node ids must be numbers starting at 0 and with no

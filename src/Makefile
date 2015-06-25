@@ -8,7 +8,7 @@ PACKAGES=-package ocamlgraph -package csv
 OCAMLC = ocamlfind ocamlc $(PACKAGES) $(ALIBS)
 OCAMLOPT = ocamlfind ocamlopt $(PACKAGES) $(LIBS)
 OCAMLMKTOP = ocamlfind ocamlmktop $(PACKAGES) $(ALIBS)
-DEPS=util.cmx logic.cmx syntax.cmx slice.cmx expParser.cmx expLexer.cmx model.cmx intBool.cmx dotParser.cmx checker.cmx expLoader.cmx 
+DEPS=util.cmx logic.cmx syntax.cmx tcParser.cmx tcLexer.cmx model.cmx tcParser.cmx checker.cmx modelLoader.cmx
 ADEPS=$(DEPS:.cmx=.cmo)
 MAIN=main
 RLFE=$(shell which rlfe)
@@ -32,16 +32,16 @@ $(TOP): $(ADEPS)
 toptest: $(TOP)
 	rlfe -h .hist ./$(TOP)
 
-expParser.cmx: expParser.ml
-	$(OCAMLOPT) -c expParser.mli
-	$(OCAMLOPT) -c expParser.ml
+tcParser.cmx: tcParser.ml
+	$(OCAMLOPT) -c tcParser.mli
+	$(OCAMLOPT) -c tcParser.ml
 
-expParser.cmo: expParser.ml
-	$(OCAMLC) -c expParser.mli
-	$(OCAMLC) -c expParser.ml
+tcParser.cmo: tcParser.ml
+	$(OCAMLC) -c tcParser.mli
+	$(OCAMLC) -c tcParser.ml
 
-expLexer.ml: expLexer.mll
-	ocamllex expLexer.mll
+tcLexer.ml: tcLexer.mll
+	ocamllex tcLexer.mll
 
 %.ml: %.mly
 	ocamlyacc $^
@@ -58,4 +58,4 @@ almostclean:
 	rm -f *.cm* a.out *~ \#* *.o
 
 clean: almostclean 
-	rm -f $(EXE) $(TOP) expParser.ml expLexer.ml expParser.mli
+	rm -f $(EXE) $(TOP) tcParser.ml tcLexer.ml tcParser.mli
