@@ -126,7 +126,7 @@ Check FORMULA;
 
 Formulas are described by the following syntax:
 
-`
+```
 FMLA ::=
 	 [string]                       (atomic proposition, no quotes around the string)
        | T                              (true)
@@ -146,7 +146,7 @@ FMLA ::=
        | A F FMLA			(AF from CTL)
        | E FMLA U FMLA			(EU from CTL)
        | A FMLA U FMLA			(AU from CTL)
-`
+```
 
 See also
 ========
