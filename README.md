@@ -35,14 +35,12 @@ https://opam.ocaml.org/doc/Install.html
 
 and then install all the required dependencies using it:
 
+`
 opam init --comp 4.02.1
-
 opam install ocamlfind
-
 opam install csv
-
 opam install ocamlgraph
-
+`
 
 Compiling topochecker
 =====================
@@ -128,43 +126,27 @@ Check FORMULA;
 
 Formulas are described by the following syntax:
 
+`
 FMLA ::=
 	 [string]                       (atomic proposition, no quotes around the string)
-	 
        | T                              (true)
-       
        | F                              (false)
-       
        | (FMLA)				(subformula)
-       
        | identifier                     (as declared with Let ide = FMLA)
-       
        | identifier(arg1,...,argN)	(as declared with Let ide(arg1,...,argN) = FMLA)
-       
        | N FMLA				(near in space: reachable in one step)
-       
        | N^k FMLA			(k is a number; nested application of N)
-       
        | I FMLA				(dual of N: not reaching in one step)
-       
        | FMLA S FMLA			(surrounded in space)
-       
        | E X FMLA			(EX from CTL)
-       
        | A X FMLA			(AX from CTL)
-       
-       | E G FMLA			(EG from CTL)
-       
+       | E G FMLA			(EG from CTL)       	 
        | A G FMLA			(AG from CTL)
-       
        | E F FMLA			(EF from CTL)
-       
        | A F FMLA			(AF from CTL)
-       
        | E FMLA U FMLA			(EU from CTL)
-       
        | A FMLA U FMLA			(AU from CTL)
-
+`
 
 See also
 ========
