@@ -22,7 +22,7 @@ Installing prerequisites on ubuntu
 
 install the following packages using apt:
 
-ocaml ocaml-native-compilers libocamlgraph-ocaml-dev libcsv-ocaml-dev
+`ocaml ocaml-native-compilers libocamlgraph-ocaml-dev libcsv-ocaml-dev`
 
 
 Installing prerequisites on OSX
@@ -35,19 +35,25 @@ https://opam.ocaml.org/doc/Install.html
 
 and then install all the required dependencies using it:
 
-`
+```
 opam init --comp 4.02.1
 opam install ocamlfind
 opam install csv
 opam install ocamlgraph
-`
+```
 
 Compiling topochecker
 =====================
 
-Run make.
+Simply run
 
-Using "make all" will also run the model checker on the examples in
+`make`
+
+Using
+
+`make all`
+
+will also run the model checker on the examples in
 the examples subdirectory.
 
 
@@ -56,7 +62,7 @@ Usage
 
 Usage:
 
-topochecker EXPERIMENT_FILENAME OUTPUT_PREFIX
+`topochecker EXPERIMENT_FILENAME OUTPUT_PREFIX`
 
 This will run the model checker on an experiment described by the file
 at EXPERIMENT_FILENAME and write the output as OUTPUT_PREFIX-nn.dot
@@ -80,7 +86,7 @@ Model declaration
 
 Model declaration takes the form:
 
-Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
+`Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";`
 
 Where "kripke.dot" "space.dot" and "eval.csv" are file names.
 
@@ -95,7 +101,7 @@ gaps.
 "eval.csv" is a whitespace-separated csv file, with three or more
 columns. Each row takes the form
 
-state point prop1 prop2 ... propN
+`state point prop1 prop2 ... propN`
 
 where state is a node id in kripke.dot, space is a node id in
 space.dot, and prop1 ... propN are strings (at least one must be
@@ -108,11 +114,11 @@ Macro declaration
 
 Macro declaration takes the form of a list of statements of the form
 
-Let ide = FORMULA;
+`Let ide = FORMULA;`
 
 or
 
-Let ide (arg1,...,argN) = FORMULA;
+`Let ide (arg1,...,argN) = FORMULA;`
 
 
 Syntax of commands
@@ -120,7 +126,7 @@ Syntax of commands
 
 The only supported command at the moment is
 
-Check FORMULA;
+`Check FORMULA;`
 
 (mind the semicolon!).
 
@@ -128,24 +134,24 @@ Formulas are described by the following syntax:
 
 ```
 FMLA ::=
-	 [string]                       (atomic proposition, no quotes around the string)
+         [string]                       (atomic proposition, no quotes around the string)
        | T                              (true)
        | F                              (false)
-       | (FMLA)				(subformula)
+       | (FMLA)                         (subformula)
        | identifier                     (as declared with Let ide = FMLA)
-       | identifier(arg1,...,argN)	(as declared with Let ide(arg1,...,argN) = FMLA)
-       | N FMLA				(near in space: reachable in one step)
-       | N^k FMLA			(k is a number; nested application of N)
-       | I FMLA				(dual of N: not reaching in one step)
-       | FMLA S FMLA			(surrounded in space)
-       | E X FMLA			(EX from CTL)
-       | A X FMLA			(AX from CTL)
-       | E G FMLA			(EG from CTL)       	 
-       | A G FMLA			(AG from CTL)
-       | E F FMLA			(EF from CTL)
-       | A F FMLA			(AF from CTL)
-       | E FMLA U FMLA			(EU from CTL)
-       | A FMLA U FMLA			(AU from CTL)
+       | identifier(arg1,...,argN)      (as declared with Let ide(arg1,...,argN) = FMLA)
+       | N FMLA                         (near in space: reachable in one step)
+       | N^k FMLA                       (k is a number; nested application of N)
+       | I FMLA                         (dual of N: not reaching in one step)
+       | FMLA S FMLA                    (surrounded in space)
+       | E X FMLA                       (EX from CTL)
+       | A X FMLA                       (AX from CTL)
+       | E G FMLA                       (EG from CTL)            
+       | A G FMLA                       (AG from CTL)
+       | E F FMLA                       (EF from CTL)
+       | A F FMLA                       (AF from CTL)
+       | E FMLA U FMLA                  (EU from CTL)
+       | A FMLA U FMLA                  (AU from CTL)
 ```
 
 See also
