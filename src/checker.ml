@@ -21,6 +21,13 @@ let precompute model =
       (match f with 
 	 T -> Array2.fill slice valTrue
        | Prop p -> (* TODO check whether p really is in eval? *) ()
+       | QProp (p,fn) ->
+	  let a1 = cache (Prop p) in
+	  for state = 0 to num_states - 1 do
+	    for point = 0 to num_points - 1 do
+	      Array2.set slice state point (Util.ofBool (fn (Array2.get a1 state point)))
+	    done
+	  done
        | Not f1 -> let a1 = cache f1 in
 		   iter (fun state point -> valNot (Array2.get a1 state point))
        | And (f1,f2) -> let a1 = cache f1 in

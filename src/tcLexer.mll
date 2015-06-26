@@ -33,7 +33,7 @@ rule token = parse
 | "Kripke" {KRIPKE}
 | "Space" {SPACE}
 | "Eval" {EVAL}
-| ['>' '<' '+' '-' '*' '/']+ as lxm {BINOP lxm}
+| (">" | "<"| "=="| "<=" |">"| ">="| "!=") as lxm {OP lxm}
 | "E" {E}
 | "A" {A}
 | "U" {U}

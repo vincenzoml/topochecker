@@ -20,8 +20,7 @@
 %token NEAR
 %token INTERIOR
 %token SURROUNDED
-%token <string> UNOP
-%token <string> BINOP
+%token <string> OP
 %token ARROW
 %token HAT
 %token COMMA
@@ -58,8 +57,6 @@ decl:
 ;
 comSpec:
 | CHECK formula eol {Syntax.CHECK $2}
-/*| CCHECK formula eol {Syntax.CCHECK $2}
-| CCHECK formula set eol {Syntax.CCHECKSET ($2,$3)}*/
 ;
 eol:
 | EOL {}
@@ -83,6 +80,7 @@ formula:
 | IDE {Syntax.CALL ($1,[])}
 | IDE actualarglist {Syntax.CALL ($1,$2)}
 | LBRACKET IDE RBRACKET {Syntax.PROP $2}
+| LBRACKET IDE OP NUM RBRACKET {Syntax.QPROP ($2,$3,$4)}
 | NOT formula {Syntax.NOT $2}
 | formula AND formula {Syntax.AND ($1,$3)}
 | formula OR formula {Syntax.OR ($1,$3)}
@@ -90,8 +88,6 @@ formula:
 | NEAR HAT NUM formula {Syntax.NEARN ($3,$4)}
 | INTERIOR formula {Syntax.INT $2}
 | formula SURROUNDED formula {Syntax.SURROUNDED ($1,$3)}
-/* | GROUP formula { Syntax.GROUP $2 }
-| formula SHARE formula { Syntax.SHARE ($1,$3) } */
 | E X formula {Syntax.EX $3}
 | A X formula {Syntax.AX $3}
 | E G formula {Syntax.EG $3}

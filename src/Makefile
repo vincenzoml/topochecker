@@ -2,7 +2,7 @@
 EXE=topochecker
 TOP=topochecker.top
 
-LIBS=graph.cmxa bigarray.cmxa csv.cmxa
+LIBS=graph.cmxa bigarray.cmxa str.cmxa csv.cmxa
 ALIBS=$(LIBS:.cmxa=.cma)
 PACKAGES=-package ocamlgraph -package csv
 OCAMLC = ocamlfind ocamlc $(PACKAGES) $(ALIBS)

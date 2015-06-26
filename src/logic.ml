@@ -1,6 +1,7 @@
 type formula =
     T
   | Prop of string
+  | QProp of (string * (int -> bool))
   | Not of formula
   | And of formula * formula
   | Near of formula
@@ -8,12 +9,3 @@ type formula =
   | Ex of formula
   | Af of formula
   | Eu of formula * formula     
-
-(*		      
- and cformula =
-   CT
-   | CNot of cformula
-   | CAnd of cformula * cformula
-   | CGroup of formula
-   | CShare of formula * cformula
- *)		 

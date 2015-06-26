@@ -3,16 +3,15 @@ open Logic
 type ide = string
 type propsyn = string
 type model = MODEL of (string*string*string) (* Kripke, Space, Eval *)
-	     
+			
 type fsyn =
     TRUE
   | FALSE
   | NOT of fsyn
   | AND of (fsyn * fsyn)
   | OR of (fsyn * fsyn)
-(*  | SHARE of (fsyn * fsyn)
-  | GROUP of fsyn *)
   | PROP of propsyn
+  | QPROP of propsyn * string * int
   | NEAR of fsyn
   | NEARN of (int * fsyn)
   | INT of fsyn
@@ -32,8 +31,6 @@ type dseq = decl list
 
 type com = 
   | CHECK of fsyn
-(*  | CCHECK of fsyn
-  | CCHECKSET of fsyn * ((int * int) list) *)
 		      
 type experiment = model * dseq * com
 
@@ -50,14 +47,24 @@ let zipenv : env -> ide list -> dval list -> env =
     (fun env (formal,actual) -> bind env formal actual)
     env
     (List.combine formals actuals)
-
-exception TypeMismatch
+    
+let opsem op =
+  match op with
+    "<" -> (<)
+  | "<=" -> (<=)
+  | "==" -> (==)
+  | "!=" -> (!=)
+  | ">" -> (>)
+  | ">=" -> (>=)
+  | x -> Util.fail (Printf.sprintf "unknown operator %s" x)
 
 let env_of_dseq ds = List.fold_left (fun env (LET (name,args,body)) -> bind env name (args,body)) empty ds  
-					
+		   
 let rec formula_of_fsyn env f =
   match f with
     PROP prop -> Prop prop
+  | QPROP (prop,op,n) ->
+     QProp (prop,fun value -> opsem op value n)
   | TRUE -> T
   | FALSE -> Not T
   | NOT f1 -> Not (formula_of_fsyn env f1)     
@@ -80,23 +87,3 @@ let rec formula_of_fsyn env f =
   | CALL (ide,actuals) ->
      let (formals,body) = apply env ide in
      formula_of_fsyn (zipenv env formals (List.map (fun x -> ([],x)) actuals)) body
-
-
-(*  | SHARE _ -> raise TypeMismatch
-  | GROUP _ -> raise TypeMismatch  
-
-let rec cformula_of_fsyn env f =
-  match f with
-  | TRUE -> CT
-  | FALSE -> CNot CT
-  | NOT f1 -> CNot (cformula_of_fsyn env f1)     
-  | AND (f1,f2) -> CAnd (cformula_of_fsyn env f1,cformula_of_fsyn env f2)
-  | OR (f1,f2) -> CNot (CAnd (CNot (cformula_of_fsyn env f1),CNot (cformula_of_fsyn env f2)))
-  | GROUP f1 -> CGroup (formula_of_fsyn env f1)			  
-  | CALL (ide,actuals) ->
-     let (formals,body) = apply env ide in
-     cformula_of_fsyn (zipenv env formals (List.map (fun x -> ([],x)) actuals)) body
-  | _ -> raise TypeMismatch
- *)
-
-	       

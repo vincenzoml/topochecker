@@ -117,7 +117,11 @@ columns. Each row takes the form
 where state is a node id in kripke.dot, space is a node id in
 space.dot, and prop1 ... propN are strings (at least one must be
 present) that are used as atomic propositions associated to state
-"state" and point "point", giving rise to a spatio-temporal model.
+"state" and point "point", giving rise to a spatio-temporal model;
+alternatively, each of prop1 ... propN may be in the form string=int,
+associating a quantity to a proposition. Actually, the first form is a
+shorthand for string=1, and omitting a string makes its value equal to
+0.
 
 
 Macro declaration
@@ -146,6 +150,7 @@ Formulas are described by the following syntax:
 ```
 FMLA ::=
          [string]                       (atomic proposition, no quotes around the string)
+       | [string OP INTEGER]		(quantitative check, OP is <, <=, ==, !=, >, >=)
        | T                              (true)
        | F                              (false)
        | (FMLA)                         (subformula)
