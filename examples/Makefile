@@ -1,13 +1,10 @@
-all: make-square_grid make-square_grid_no_generation
+.PHONY: all clean
 
-clean: clean-square_grid clean-square_grid_no_generation
+EXAMPLES=$(shell ls test-* -d)
 
-clean-%: %
-	echo $<
-	cd $^ && make clean
+all:
+	for f in $(EXAMPLES); do (cd $$f && make); done
+
+clean:
+	for f in $(EXAMPLES); do (cd $$f && make clean); done
 	rm -f *~
-
-
-make-%: %
-	cd $^ && make
-

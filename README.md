@@ -109,6 +109,10 @@ to all nodes whose number of outgoing edges is 0.
 representing space. Node ids must be numbers starting at 0 and with no
 gaps.
 
+Both graphs can be weighted; to achieve this, just add a property
+"weight=n" to each edge, where n is a float; the default value for n
+is 1.0.
+
 "eval.csv" is a whitespace-separated csv file, with three or more
 columns. Each row takes the form
 

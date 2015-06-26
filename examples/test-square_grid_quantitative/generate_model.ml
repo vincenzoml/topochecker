@@ -18,7 +18,7 @@ let out_space fname =
   let out_node i j = Printf.fprintf ch "%d [ pos = \"%d,%d!\" ];\n" (mkid i j) i j in
   let out_arc (i1,j1) (i2,j2) =
     let (i1,i2) = (mkid i1 j1,mkid i2 j2) in
-    Printf.fprintf ch "%d->%d;\n%d->%d\n" i1 i2 i2 i1;
+    Printf.fprintf ch "%d->%d [weight=3.0];\n%d->%d [weight=3.0];\n" i1 i2 i2 i1;
   in
   Printf.fprintf ch "digraph{\n";
   for j = 0 to num_space - 1 do

@@ -52,8 +52,8 @@ let opsem op =
   match op with
     "<" -> (<)
   | "<=" -> (<=)
-  | "==" -> (==)
-  | "!=" -> (!=)
+  | ("=="|"=") -> (=)
+  | ("!="|"<>") -> (!=)
   | ">" -> (>)
   | ">=" -> (>=)
   | x -> Util.fail (Printf.sprintf "unknown operator %s" x)

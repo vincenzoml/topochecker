@@ -9,8 +9,15 @@ module Vertex =
     let hash = Hashtbl.hash
     let equal = (=)
   end
+
+module Edge =
+  struct
+    type t = float
+    let compare = compare
+    let default = 1.0
+  end
     
-module Graph = Graph.Imperative.Digraph.ConcreteBidirectional(Vertex)
+module Graph = Graph.Imperative.Digraph.ConcreteBidirectionalLabeled(Vertex)(Edge)
 			       
 type 'prop model =
     { kripke : Graph.t;

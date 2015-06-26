@@ -2,14 +2,31 @@ open Graph.Dot_ast
 open Bigarray
 
 module StringSet = Set.Make(String)
-       
+
+let list = ref []
+
+let debug_edge x =
+  match x with
+    (Number s|String s|Html s|Ident s) -> Util.debug s
+
+let string_of_id i =
+  match i with
+    (String s | Html s | Ident s | Number s) -> s
+						     
 module ParserSig =
   struct
     let node (id,_) _ =
       match id with
 	Number n -> int_of_string n
       | _ -> Util.fail "Node ids must be integer"
-    let edge _ = ()
+    let edge l =
+      list := l::!list;
+      match l with	
+	[(i1,Some i2)]::_ ->
+	if string_of_id i1 = "weight"
+	then float_of_string (string_of_id i2)
+	else Model.Edge.default
+      | _ -> Model.Edge.default
   end
     
 module Parser = Graph.Dot.Parse(Graph.Builder.I(Model.Graph))(ParserSig)
