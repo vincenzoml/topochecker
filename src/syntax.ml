@@ -11,7 +11,7 @@ type fsyn =
   | AND of (fsyn * fsyn)
   | OR of (fsyn * fsyn)
   | PROP of propsyn
-  | QPROP of propsyn * string * int
+  | QPROP of propsyn * string * float
   | NEAR of fsyn
   | NEARN of (int * fsyn)
   | INT of fsyn

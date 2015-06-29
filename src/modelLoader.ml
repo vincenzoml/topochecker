@@ -45,11 +45,11 @@ let parse_eval filename states points =
 	     let (prop,value) =
 	       match Str.split (Str.regexp "=") datum with
 		 [prop] -> (prop,Util.valTrue)
-	       | [prop;v] -> (prop,int_of_string v)
+	       | [prop;v] -> (prop,float_of_string v)
 	       | _ -> Util.fail "Atomic propositions in csv file must be of the form pro' or prop=value where prop is a string and value is an integer"
 	     in
 	     let a = try Hashtbl.find prop_tbl (Logic.Prop prop)
-		     with Not_found -> let a = Array2.create int c_layout states points in
+		     with Not_found -> let a = Array2.create float64 c_layout states points in
 				       Array2.fill a Util.valFalse;
 				       Hashtbl.add prop_tbl (Logic.Prop prop) a;
 				       a

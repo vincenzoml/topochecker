@@ -1,10 +1,10 @@
-let isTrue x = x = 1
-let isFalse x = x = 0
-let valTrue = 1
-let valFalse = 0
-let valUtil = 2
-let valAnd x y = if x = 1 && y = 1 then 1 else 0
-let valNot x = if x = 0 then 1 else 0
+let isTrue x = x = 1.0
+let isFalse x = x = 0.0
+let valTrue = 1.0
+let valFalse = 0.0
+let valUtil = 2.0
+let valAnd x y = if x = 1.0 && y = 1.0 then 1.0 else 0.0
+let valNot x = if x = 0.0 then 1.0 else 0.0
 let ofBool x = if x then valTrue else valFalse
 
 let debug s =

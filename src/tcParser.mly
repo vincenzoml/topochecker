@@ -25,7 +25,8 @@
 %token HAT
 %token COMMA
 %token QUOTE
-%token <int> NUM
+%token <float> FLOAT
+%token <int> INT
 %token <string> IDE
 %token LET
 %token EQ
@@ -70,7 +71,7 @@ point_list:
 | point COMMA point_list { $1 :: $3 }
 ;
 point:
-| LPAREN NUM COMMA NUM RPAREN { ($2,$4) }
+| LPAREN INT COMMA INT RPAREN { ($2,$4) }
 ;
 ;       
 formula:
@@ -80,12 +81,13 @@ formula:
 | IDE {Syntax.CALL ($1,[])}
 | IDE actualarglist {Syntax.CALL ($1,$2)}
 | LBRACKET IDE RBRACKET {Syntax.PROP $2}
-| LBRACKET IDE OP NUM RBRACKET {Syntax.QPROP ($2,$3,$4)}
+| LBRACKET IDE OP FLOAT RBRACKET {Syntax.QPROP ($2,$3,$4)}
+| LBRACKET IDE OP INT RBRACKET {Syntax.QPROP ($2,$3,(float_of_int $4))}
 | NOT formula {Syntax.NOT $2}
 | formula AND formula {Syntax.AND ($1,$3)}
 | formula OR formula {Syntax.OR ($1,$3)}
 | NEAR formula {Syntax.NEAR $2}
-| NEAR HAT NUM formula {Syntax.NEARN ($3,$4)}
+| NEAR HAT INT formula {Syntax.NEARN ($3,$4)}
 | INTERIOR formula {Syntax.INT $2}
 | formula SURROUNDED formula {Syntax.SURROUNDED ($1,$3)}
 | E X formula {Syntax.EX $3}

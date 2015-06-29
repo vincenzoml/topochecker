@@ -11,7 +11,7 @@ let precompute model =
     try
       Hashtbl.find model.eval f 
     with Not_found ->
-      let slice = Array2.create int c_layout num_states num_points in
+      let slice = Array2.create float64 c_layout num_states num_points in
       Hashtbl.add model.eval f slice;
       let iter fn = for state = 0 to num_states - 1 do
 		      for point = 0 to num_points - 1 do
@@ -43,7 +43,7 @@ let precompute model =
 					model.space
 		    done
        | Surrounded (f1,f2) ->
-	  Array2.fill slice 0;
+	  Array2.fill slice valFalse;
 	  let a1 = cache f1 in
           let a2 = cache f2 in
           let accum = Stack.create () in

@@ -2,6 +2,9 @@
 EXE=topochecker
 TOP=topochecker.top
 
+#Command to compile without explicit dependencies:
+#ocamlbuild -cflags -I,+ocamlgraph,-I,+csv -libs ocamlgraph/graph,csv/csv,bigarray,str main.native
+
 LIBS=graph.cmxa bigarray.cmxa str.cmxa csv.cmxa
 ALIBS=$(LIBS:.cmxa=.cma)
 PACKAGES=-package ocamlgraph -package csv

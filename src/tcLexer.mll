@@ -19,7 +19,8 @@ rule token = parse
 | ['"'] {QUOTE}
 | "T" {TRUE}
 | "F" {FALSE}
-| ['0'-'9']+ as lxm {NUM (int_of_string lxm)}
+| ['0'-'9']+'.'['0'-'9']* as lxm {FLOAT (float_of_string lxm)}
+| ['0'-'9']+ as lxm {INT (int_of_string lxm)}
 | "&" {AND}
 | "|" {OR}
 | "!" {NOT}
