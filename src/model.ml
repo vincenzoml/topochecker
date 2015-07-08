@@ -31,6 +31,8 @@ module Graph = Graph.Imperative.Digraph.ConcreteBidirectionalLabeled(Vertex)(Edg
 type 'prop model =
     { kripke : Graph.t;
       space : Graph.t;
+      kripkeid : int -> string;
+      spaceid : int -> string;
       eval : slice H.t }
 
       

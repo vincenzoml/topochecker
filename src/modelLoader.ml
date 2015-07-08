@@ -12,13 +12,32 @@ let debug_edge x =
 let string_of_id i =
   match i with
     (String s | Html s | Ident s | Number s) -> s
-						     
+
+module IntMap = Map.Make(struct type t = int let compare = compare end)
+						  
 module ParserSig =
   struct
+    let (mkId,reset,read) =
+      let h = ref (Hashtbl.create 1000) in
+      let idTbl = ref IntMap.empty in
+      let curId = ref 0 in
+      ((fun id ->
+	let x = !curId in
+	curId := x+1;
+	idTbl := IntMap.add x id !idTbl;
+	Hashtbl.add (!h) id x;
+	x),
+       (fun () ->
+	idTbl := IntMap.empty;
+	h := Hashtbl.create 1000;
+	curId := 0),
+       (fun () -> ((fun x -> IntMap.find x !idTbl),(fun x -> Hashtbl.find !h x))))
+	
     let node (id,_) _ =
       match id with
-	Number n -> int_of_string n
-      | _ -> Util.fail "Node ids must be integer"
+	(Ident s|Number s|String s|Html s) ->
+	mkId s
+
     let edge l =
       list := l::!list;
       match l with	
@@ -31,7 +50,7 @@ module ParserSig =
     
 module Parser = Graph.Dot.Parse(Graph.Builder.I(Model.Graph))(ParserSig)
 
-let parse_eval filename states points =
+let parse_eval filename states points stateid pointid =
   let prop_tbl = Model.H.create 100 in
   let chan = open_in filename in
   let csv_chan = Csv.of_channel ~separator:',' chan in
@@ -39,7 +58,7 @@ let parse_eval filename states points =
       while true do
 	match Csv.next csv_chan with
 	  stateS::pointS::props ->
-	  let (state,point) = (int_of_string stateS,int_of_string pointS) in
+	  let (state,point) = (stateid stateS,pointid pointS) in
 	  List.iter
 	    (fun datum ->
 	     let (prop,value) =
@@ -68,12 +87,18 @@ let parse_eval filename states points =
       
 let load_model : string -> string -> string -> string Model.model =
   fun kripkef spacef evalf ->
+  ParserSig.reset ();
   let kripke = Parser.parse kripkef in
+  let (k_id_of_int,k_int_of_id) = ParserSig.read () in
+  ParserSig.reset ();
   let space = Parser.parse spacef in
-  let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex space) in
+  let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
+  let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex space) k_int_of_id s_int_of_id in
   Model.Graph.iter_vertex (fun v -> if 0 = Model.Graph.out_degree kripke v then Model.Graph.add_edge kripke v v) kripke;
   { Model.kripke = kripke;
     Model.space = space;
+    Model.kripkeid = k_id_of_int;
+    Model.spaceid = s_id_of_int;
     Model.eval = propTbl; }
     
 let mkfname dir file =

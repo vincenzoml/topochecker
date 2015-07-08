@@ -42,8 +42,8 @@ let precompute model =
 		begin
 		  Array2.set slice state point valTrue;
 		  Graph.iter_succ (fun point' ->
-				   Util.debug (Printf.sprintf "%d -> %d" point point');
-				   Array2.set slice state point' valTrue) model.space point
+				   Array2.set slice state point' valTrue)
+				  model.space point
 		end
 	    done
 	  done

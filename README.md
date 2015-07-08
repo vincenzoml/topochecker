@@ -112,8 +112,7 @@ and with no gaps. The Kripke frame is completed by adding self-loops
 to all nodes whose number of outgoing edges is 0.
 
 "space.dot" is a dot file containing a directed unlabelled graph,
-representing space. Node ids must be numbers starting at 0 and with no
-gaps.
+representing space.
 
 Both graphs can be weighted; to achieve this, just add a property
 "weight=n" to each edge, where n is a float; the default value for n
