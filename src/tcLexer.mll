@@ -4,6 +4,12 @@
 }
 rule token = parse
   '"' { STRING (stringl (Buffer.create 30) lexbuf) }
+| "E" {E}
+| "A" {A}
+| "U" {U}
+| "G" {G}
+| "F" {F}
+| "X" {X}
 | [' ' '\t' '\n'] { token lexbuf }    
 | "Gr" {GROUP}
 | "-<" {SHARE}
@@ -17,8 +23,8 @@ rule token = parse
 | "{" {LCURLY}
 | "}" {RCURLY}
 | ['"'] {QUOTE}
-| "T" {TRUE}
-| "F" {FALSE}
+| "TT" {TRUE}
+| "FF" {FALSE}
 | ['0'-'9']+'.'['0'-'9']* as lxm {FLOAT (float_of_string lxm)}
 | ['0'-'9']+ as lxm {INT (int_of_string lxm)}
 | "&" {AND}
@@ -35,11 +41,6 @@ rule token = parse
 | "Space" {SPACE}
 | "Eval" {EVAL}
 | (">" | "<"| "=="| "<=" |">"| ">="| "!=") as lxm {OP lxm}
-| "E" {E}
-| "A" {A}
-| "U" {U}
-| "G" {G}
-| "F" {F}
 | ['A'-'Z' 'a'-'z']['A'-'Z' 'a'-'z' '0'-'9']* as lxm {IDE lxm} 
 | eof {raise Eof}
 

@@ -20,7 +20,7 @@ ifneq ($(RLFE),)
 else
 RLFE=$(shell which rlwrap)
 ifneq ($(RLFE),)
-	HIST=-H .hist
+	HIST=-h .hist
 endif
 endif
 
@@ -48,8 +48,6 @@ tcLexer.ml: tcLexer.mll
 
 %.ml: %.mly
 	ocamlyacc $^
-
-export: ccsmc almostclean
 
 %.cmx: %.ml
 	$(OCAMLOPT) -c $^ -o $@

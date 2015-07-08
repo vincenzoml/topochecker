@@ -113,8 +113,8 @@ Both graphs can be weighted; to achieve this, just add a property
 "weight=n" to each edge, where n is a float; the default value for n
 is 1.0.
 
-"eval.csv" is a whitespace-separated csv file, with three or more
-columns. Each row takes the form
+"eval.csv" is a csv file, with three or more columns. Each row takes
+the form
 
 `state point prop1 prop2 ... propN`
 
@@ -155,8 +155,8 @@ Formulas are described by the following syntax:
 FMLA ::=
          [string]                       (atomic proposition, no quotes around the string)
        | [string OP INTEGER]		(quantitative check, OP is <, <=, ==, !=, >, >=)
-       | T                              (true)
-       | F                              (false)
+       | TT                             (true)
+       | FF                             (false)
        | (FMLA)                         (subformula)
        | identifier                     (as declared with Let ide = FMLA)
        | identifier(arg1,...,argN)      (as declared with Let ide(arg1,...,argN) = FMLA)

@@ -64,7 +64,7 @@ let rec formula_of_fsyn env f =
   match f with
     PROP prop -> Prop prop
   | QPROP (prop,op,n) ->
-     QProp (prop,fun value -> opsem op value n)
+     QProp (prop,op,n)
   | TRUE -> T
   | FALSE -> Not T
   | NOT f1 -> Not (formula_of_fsyn env f1)     

@@ -1,7 +1,7 @@
 type formula =
     T
   | Prop of string
-  | QProp of (string * (float -> bool))
+  | QProp of (string * string * float)
   | Not of formula
   | And of formula * formula
   | Near of formula

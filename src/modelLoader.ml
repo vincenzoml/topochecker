@@ -32,9 +32,9 @@ module ParserSig =
 module Parser = Graph.Dot.Parse(Graph.Builder.I(Model.Graph))(ParserSig)
 
 let parse_eval filename states points =
-  let prop_tbl = (Hashtbl.create 100 : (Logic.formula,Model.slice) Hashtbl.t) in
+  let prop_tbl = Model.H.create 100 in
   let chan = open_in filename in
-  let csv_chan = Csv.of_channel ~separator:' ' chan in
+  let csv_chan = Csv.of_channel ~separator:',' chan in
   (try
       while true do
 	match Csv.next csv_chan with
@@ -48,10 +48,10 @@ let parse_eval filename states points =
 	       | [prop;v] -> (prop,float_of_string v)
 	       | _ -> Util.fail "Atomic propositions in csv file must be of the form pro' or prop=value where prop is a string and value is an integer"
 	     in
-	     let a = try Hashtbl.find prop_tbl (Logic.Prop prop)
+	     let a = try Model.H.find prop_tbl (Logic.Prop prop)
 		     with Not_found -> let a = Array2.create float64 c_layout states points in
 				       Array2.fill a Util.valFalse;
-				       Hashtbl.add prop_tbl (Logic.Prop prop) a;
+				       Model.H.add prop_tbl (Logic.Prop prop) a;
 				       a
 	     in
 	     Array2.set a state point value

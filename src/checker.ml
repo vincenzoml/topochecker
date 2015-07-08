@@ -9,10 +9,10 @@ let precompute model =
   let count = Array1.create int c_layout num_states in 
   let rec cache f =
     try
-      Hashtbl.find model.eval f 
+      H.find model.eval f 
     with Not_found ->
       let slice = Array2.create float64 c_layout num_states num_points in
-      Hashtbl.add model.eval f slice;
+      H.add model.eval f slice;
       let iter fn = for state = 0 to num_states - 1 do
 		      for point = 0 to num_points - 1 do
 			Array2.set slice state point (fn state point)
@@ -21,11 +21,11 @@ let precompute model =
       (match f with 
 	 T -> Array2.fill slice valTrue
        | Prop p -> (* TODO check whether p really is in eval? *) ()
-       | QProp (p,fn) ->
+       | QProp (p,op,n) ->
 	  let a1 = cache (Prop p) in
 	  for state = 0 to num_states - 1 do
 	    for point = 0 to num_points - 1 do
-	      Array2.set slice state point (Util.ofBool (fn (Array2.get a1 state point)))
+	      Array2.set slice state point (Util.ofBool (Syntax.opsem op (Array2.get a1 state point) n))
 	    done
 	  done
        | Not f1 -> let a1 = cache f1 in
@@ -77,7 +77,7 @@ let precompute model =
 	    let accum = Stack.create () in		  	    
 	    for state = 0 to num_states - 1 do
 	      if Util.isTrue (Array2.get a1 state point)
-	      then (Array1.set count state 0; Stack.push state accum)
+	      then (Array1.set count state 0; Array2.set slice state point valTrue; Stack.push state accum)
 	      else Array1.set count state (Model.Graph.out_degree model.kripke state)
 	    done;
 	    while not (Stack.is_empty accum) do
@@ -85,12 +85,12 @@ let precompute model =
 	      Model.Graph.iter_pred
 		(fun state ->
 		 let c = Array1.get count state in
-		 if c > 0 then Array1.set count state (c-1);
+		 if c > 0 then Array1.set count state (c-1);		 
 		 if c = 1 then (Stack.push state accum;
 				Array2.set slice state point valTrue))
 		model.kripke state
 	    done	      
-	  done;	    	    
+	  done;	  
        | Ex f1 ->
 	  Array2.fill slice valFalse;
 	  let a1 = cache f1 in

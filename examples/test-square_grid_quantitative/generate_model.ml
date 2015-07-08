@@ -38,7 +38,7 @@ let out_eval fname =
   for time = 0 to num_time - 1 do
     for y = 0 to num_space - 1 do
       for x = 0 to num_space - 1 do	
-	Printf.fprintf ch "%d %d %s\n" time (mkid x y) (eval time x y)
+	Printf.fprintf ch "%d,%d,%s\n" time (mkid x y) (eval time x y)
       done
     done
   done;
