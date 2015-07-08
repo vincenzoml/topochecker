@@ -1,3 +1,4 @@
 Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
-Check [a] S [b];
+Check N ![a];
+
 

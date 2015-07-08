@@ -1,13 +1,16 @@
 
 
-let num_time = 10
-let num_space = 10
+let num_time = 1
+let num_space = 5
 let mkid i j = i + (num_space*j)
 	    
 let out_time fname =
   let ch = open_out fname in
   Printf.fprintf ch "digraph{\n";
   for i = 0 to num_time - 1 do
+    Printf.fprintf ch "%d;\n" i
+  done;
+  for i = 0 to num_time - 2 do
     Printf.fprintf ch "%d->%d;\n" i (i+1)
   done;
   Printf.fprintf ch "}\n";
@@ -31,8 +34,7 @@ let out_space fname =
   Printf.fprintf ch "}\n";
   close_out ch
 
-let eval time x y =
-  if (x*x) + (y*y) <= (time * time) && (x*x) + (y*y) > ((time - 1) * (time - 1)) then "b" else "a"
+let eval time x y = if x < 4 && x > 0 && y < 4 && y > 0 then "a" else "b"
 	    
 let out_eval fname =
   let ch = open_out fname in

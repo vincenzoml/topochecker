@@ -33,15 +33,20 @@ let precompute model =
        | And (f1,f2) -> let a1 = cache f1 in
 			let a2 = cache f2 in
 			iter (fun state point -> valAnd (Array2.get a1 state point) (Array2.get a2 state point))
-       | Near f1 -> let a1 = cache f1 in
-		    for state = 0 to num_states - 1 do
-		      Graph.iter_vertex (fun point ->
-					 if isTrue (Array2.get a1 state point) then					     
-					   (Array2.set slice state point valTrue;
-					    Graph.iter_succ (fun point -> Array2.set slice state point valTrue) model.space point)
-					 else Array2.set slice state point valFalse)
-					model.space
-		    done
+       | Near f1 ->
+	  Array2.fill slice valFalse;
+	  let a1 = cache f1 in
+	  for state = 0 to num_states - 1 do
+	    for point = 0 to num_points - 1 do
+	      if isTrue (Array2.get a1 state point) then
+		begin
+		  Array2.set slice state point valTrue;
+		  Graph.iter_succ (fun point' ->
+				   Util.debug (Printf.sprintf "%d -> %d" point point');
+				   Array2.set slice state point' valTrue) model.space point
+		end
+	    done
+	  done
        | Surrounded (f1,f2) ->
 	  Array2.fill slice valFalse;
 	  let a1 = cache f1 in
