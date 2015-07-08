@@ -31,7 +31,8 @@ module ParserSig =
 	idTbl := IntMap.empty;
 	h := Hashtbl.create 1000;
 	curId := 0),
-       (fun () -> ((fun x -> IntMap.find x !idTbl),(fun x -> Hashtbl.find !h x))))
+       (fun () -> let (t,h) = (!idTbl,!h) in
+		  ((fun x -> IntMap.find x t),(fun x -> Hashtbl.find h x))))
 	
     let node (id,_) _ =
       match id with
@@ -56,7 +57,8 @@ let parse_eval filename states points stateid pointid =
   let csv_chan = Csv.of_channel ~separator:',' chan in
   (try
       while true do
-	match Csv.next csv_chan with
+	let n = Csv.next csv_chan in
+	match n with
 	  stateS::pointS::props ->
 	  let (state,point) = (stateid stateS,pointid pointS) in
 	  List.iter
@@ -87,12 +89,12 @@ let parse_eval filename states points stateid pointid =
       
 let load_model : string -> string -> string -> string Model.model =
   fun kripkef spacef evalf ->
-  ParserSig.reset ();
   let kripke = Parser.parse kripkef in
-  let (k_id_of_int,k_int_of_id) = ParserSig.read () in
+  let (k_id_of_int,k_int_of_id) = ParserSig.read () in      
   ParserSig.reset ();
   let space = Parser.parse spacef in
-  let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
+  let (s_id_of_int,s_int_of_id)  = ParserSig.read () in (* TODO remove k_h *)
+  ParserSig.reset ();
   let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex space) k_int_of_id s_int_of_id in
   Model.Graph.iter_vertex (fun v -> if 0 = Model.Graph.out_degree kripke v then Model.Graph.add_edge kripke v v) kripke;
   { Model.kripke = kripke;
