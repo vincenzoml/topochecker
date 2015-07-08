@@ -90,6 +90,12 @@ of a model declaration, an optional macro declaration part, and a
 "commands" part (see files with extension .topochecker in the
 examples).
 
+Comments
+--------
+
+Comments can be introduced by "//"; everything from "//" to the end of
+a line is ignored by the model checker.
+
 
 Model declaration
 -----------------

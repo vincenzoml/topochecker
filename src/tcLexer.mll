@@ -2,15 +2,16 @@
   open TcParser
   exception Eof
 }
-rule token = parse
-  '"' { STRING (stringl (Buffer.create 30) lexbuf) }
+  rule token = parse
+  [' ' '\t' '\n'] { token lexbuf }    
+| "//"[^'\n']* { token lexbuf } 
+| '"' { STRING (stringl (Buffer.create 30) lexbuf) }
 | "E" {E}
 | "A" {A}
 | "U" {U}
 | "G" {G}
 | "F" {F}
 | "X" {X}
-| [' ' '\t' '\n'] { token lexbuf }    
 | "Gr" {GROUP}
 | "-<" {SHARE}
 | "Let" {LET}
