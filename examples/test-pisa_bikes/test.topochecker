@@ -1,4 +1,4 @@
-Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
+Kripke "mc_kripke.dot" Space "mc_space.dot" Eval "mc_eval.csv";
 
 Let full = [vacant == 0];
 Check "0xFF0000" E F ((N (full & (A X full))) & ((A X full)));
