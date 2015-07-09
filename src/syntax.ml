@@ -29,10 +29,10 @@ type fsyn =
 type decl = LET of ide * ide list * fsyn
 type dseq = decl list
 
-type com = 
-  | CHECK of fsyn
+type com = CHECK of fsyn
+type cseq = com list
 		      
-type experiment = model * dseq * com
+type experiment = model * dseq * cseq
 
 module MEnv = Map.Make(struct type t = ide let compare = compare end)		     
 type dval = ide list * fsyn

@@ -1,0 +1,4 @@
+Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
+
+Let full = [vacant == 0];
+Check E F ((N (full & (A X full))) & ((A X full)));

@@ -112,7 +112,7 @@ let load_experiment path =
   try
     let (syntax,dseq,command) = TcParser.main TcLexer.token lexbuf in
     match (syntax,dseq,command) with
-      (Syntax.MODEL (kripkef,spacef,evalf),dseq,Syntax.CHECK fsyn) ->
+      (Syntax.MODEL (kripkef,spacef,evalf),dseq,[Syntax.CHECK fsyn]) ->
       let model = load_model (mkfname dir kripkef) (mkfname dir spacef) (mkfname dir evalf) in
       let env = Syntax.env_of_dseq dseq in
       let formula = Syntax.formula_of_fsyn env fsyn in

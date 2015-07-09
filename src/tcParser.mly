@@ -37,42 +37,35 @@
 %token SPACE
 %token EVAL       
 %token CHECK
-%token CCHECK       
+%token CCHECK
+%token EOF 
 %start main
 %type <Syntax.experiment> main
 %%
 main:
-| modelSpec declSpec comSpec {($1,$2,$3)}
-| modelSpec comSpec {($1,[],$2)}
-;  
+| modelSpec declSpec comSpec EOF {($1,$2,$3)}
+| modelSpec comSpec EOF {($1,[],$2)}
+; 
 modelSpec:
 | KRIPKE STRING SPACE STRING EVAL STRING eol {Syntax.MODEL ($2,$4,$6)}
 ;
 declSpec:
 | decl {[$1]}
-| decl eol declSpec {$1 :: $3}    
+| decl declSpec {$1 :: $2}    
 ;
 decl:
 | LET IDE EQ formula eol {Syntax.LET ($2,[],$4)}
 | LET IDE formalarglist EQ formula eol {Syntax.LET ($2,$3,$5)}
 ;
 comSpec:
+| com {[$1]}
+| com comSpec {$1 :: $2}
+;
+com:
 | CHECK formula eol {Syntax.CHECK $2}
 ;
 eol:
 | EOL {}
-;
-set:
-| LCURLY point_list RCURLY { $2 }
-| LCURLY RCURLY {[]}
-;
-point_list:
-| point { [$1] }
-| point COMMA point_list { $1 :: $3 }
-;
-point:
-| LPAREN INT COMMA INT RPAREN { ($2,$4) }
-;
 ;       
 formula:
 | LPAREN formula RPAREN {$2}
@@ -113,4 +106,3 @@ inneractualarglist:
 | formula {[$1]}
 | formula COMMA inneractualarglist {$1::$3}
 ;
-
