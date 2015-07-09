@@ -9,6 +9,6 @@ maketool:
 	cd ../../src && make
 
 clean: almostclean 
-	rm -rf output *~
+	rm -rf output/* *~
 
 

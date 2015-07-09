@@ -1,0 +1,17 @@
+Kripke "mc_kripke.dot" Space "mc_space.dot" Eval "mc_eval.csv";
+
+Let full = [vacant == 1];
+
+// Experiment 1:
+// Detecting clusters
+// Check E F ([vacant == 0] S [vacant > 0]);
+// Check E F (([vacant == 0] S [vacant > 0]) & I ([vacant == 0] S [vacant > 0]));
+// Check E F (([vacant == 0] S [vacant > 0]) & I [vacant == 0]);
+// Check [vacant == 0] S [vacant > 0] ;
+//Check E F (I ([vacant == 0] S [vacant > 0]));
+//Check E F ([vacant == 0] S [vacant > 0]);
+// Check (E F I ([vacant == 0] S [vacant > 0]));
+
+//Check (N full & (! (I full)));
+
+Check full;

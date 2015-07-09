@@ -38,8 +38,8 @@ let main args =
 					    List.fold_left
 					      (fun accum (color,truth_val) -> 
 					       if truth_val state point
-					       then accum
-					       else accum + color)
+					       then color (* accum + color *) 
+					       else accum)
 					      0x000000 colored_truth_vals
 					  in
 					  if col == 0 then []

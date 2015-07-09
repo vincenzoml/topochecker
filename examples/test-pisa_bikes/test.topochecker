@@ -1,5 +1,49 @@
 Kripke "mc_kripke.dot" Space "mc_space.dot" Eval "mc_eval.csv";
 
-Let full = [vacant == 0];
-Check "0xFF0000" E F ((N (full & (A X full))) & ((A X full)));
-Check "0x00FF00" !( E F ((N (full & (A X full))) & ((A X full))));
+Let full = [vacant < 2];
+//Let full2steps = full & (A X full);
+//Let full3steps = full & (A X (full & AX full));
+
+// RED=0xFF0000
+// GREEN=0x00FF00
+// BLUE=0x0000FF
+
+//// Persistence of clusters
+
+//Check "0x00FF00" full2steps;
+//Check "0x00EE00" full3steps;
+
+// Growing clusters 
+//Check "0xFF0000" (!full) & (N full2steps) & (A X full2steps);
+
+// Shrinking of clusters
+//Check "0x0000FF" (full) & (N full2steps) & (A X (!full));
+
+//// Transformation of clusters
+//Check "0x00FF00" E F (full);
+
+//INTERESSSANTE: colora in rosso i punti che se diventano pieni, sempre, si espandono
+//Check "0xFF0000" (E F full) & (A G ((!full) | (A full U (I full))));
+
+// INTERESSANTE: colora i punti che non saranno mai parte di un cluster ma son sul bordo
+//Check "0x0000FF" (! (E F (I full))) & (N (E F (I full)));
+
+
+//Check "0xFF0000" A G ((!full) | (A (full & (! (I full))) U (!full)));
+//Check "0x0000FF"
+
+//// Repetition of clusters
+//Check "0xFF0000" E F (full & E F ((!full) & (E F full)));
+//Check "0x00FF00" A G (!full);
+//Check "0x0000FF" (E F full) & (! ( E F (full & E F ((!full) & (E F full)))));
+
+//Check "0x00EE00" (E F full);
+//Check "0xFF0000" (E F full) & (A G ( (! full) | (full S (E F full))));
+//Check "0x0000FF" ((E F full) & ! (I (E F full))) & ((E F full) & (A G ( (! full) | (full S (E F full)))));
+//Check "0x0000FF" ((E F full) & ! (I (E F full))) & ((E F full) & (A G ( (! full) | I (E F full))));
+//Check "0x00FF00" ! (E F full);
+
+
+//Check "0xFF0000" (E F full) & (A G ( (! full) | (TT S (E F full))));
+//Check "0x0000FF" ((E F full) & ! (I (E F full))) & ((E F full) & (A G ( (! full) | (TT S (E F full)))));
+
