@@ -42,7 +42,7 @@
 | "Space" {SPACE}
 | "Eval" {EVAL}
 | (">" | "=" | "<"| "!" | "?" | "+" | "-" | "*" | "/")* as lxm {OP lxm}
-| ['a'-'z']['A'-'Z' 'a'-'z' '0'-'9']* as lxm {IDE lxm} 
+| ['A'-'Z' 'a'-'z']['A'-'Z' 'a'-'z' '0'-'9']* as lxm {IDE lxm} 
 | eof {EOF} 
 
 and  stringl buffer = parse
