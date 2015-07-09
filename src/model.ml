@@ -28,7 +28,7 @@ module Edge =
     
 module Graph = Graph.Imperative.Digraph.ConcreteBidirectionalLabeled(Vertex)(Edge)
 			       
-type 'prop model =
+type model =
     { kripke : Graph.t;
       space : Graph.t;
       kripkeid : int -> string;

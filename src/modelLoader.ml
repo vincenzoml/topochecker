@@ -87,7 +87,7 @@ let parse_eval filename states points stateid pointid =
   Csv.close_in csv_chan;
   prop_tbl
       
-let load_model : string -> string -> string -> string Model.model =
+let load_model : string -> string -> string -> Model.model =
   fun kripkef spacef evalf ->
   let kripke = Parser.parse kripkef in
   let (k_id_of_int,k_int_of_id) = ParserSig.read () in      
@@ -106,17 +106,16 @@ let load_model : string -> string -> string -> string Model.model =
 let mkfname dir file =
   if Filename.is_relative file then dir ^ Filename.dir_sep ^ file else file							      
 
-let load_experiment path =  
+let load_experiment : string -> Model.model * ((int * Logic.formula) list) =
+  fun path ->
   let (dir,file) = (Filename.dirname path,Filename.basename path) in  
   let lexbuf = Lexing.from_channel (open_in (mkfname dir file)) in
   try
-    let (syntax,dseq,command) = TcParser.main TcLexer.token lexbuf in
-    match (syntax,dseq,command) with
-      (Syntax.MODEL (kripkef,spacef,evalf),dseq,[Syntax.CHECK fsyn]) ->
-      let model = load_model (mkfname dir kripkef) (mkfname dir spacef) (mkfname dir evalf) in
-      let env = Syntax.env_of_dseq dseq in
-      let formula = Syntax.formula_of_fsyn env fsyn in
-      (model,formula)
+    let (Syntax.MODEL (kripkef,spacef,evalf),dseq,commands) = TcParser.main TcLexer.token lexbuf in    
+    let model = load_model (mkfname dir kripkef) (mkfname dir spacef) (mkfname dir evalf) in
+    let env = Syntax.env_of_dseq dseq in
+    let colored_formulas = List.map (fun (Syntax.CHECK (color,fsyn)) -> (int_of_string color,Syntax.formula_of_fsyn env fsyn)) commands in
+    (model,colored_formulas)
   with exn -> 
     let msg = Printexc.to_string exn in
     let curr = lexbuf.Lexing.lex_curr_p in
@@ -124,4 +123,3 @@ let load_experiment path =
     let cnum = curr.Lexing.pos_cnum - curr.Lexing.pos_bol in
     let tok = Lexing.lexeme lexbuf in
     Util.fail (Printf.sprintf "filename: %s, line %d, character %d, token %s: %s\n%!" file line cnum tok msg)
-	      

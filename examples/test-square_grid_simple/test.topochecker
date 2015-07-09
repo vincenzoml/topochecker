@@ -1,3 +1,3 @@
 Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
-Check [a] S [b]; 
+Check "0xFF0000" [a] S [b]; 
 

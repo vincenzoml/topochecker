@@ -16,7 +16,7 @@ module PrinterGraph =
 
 module Printer = Graph.Graphviz.Neato(PrinterGraph)
 				     
-let f args =
+let main args =
   let (expfname,outbasefname) =
     try
       (args.(1),args.(2)) 
@@ -25,22 +25,29 @@ let f args =
       Util.fail (Printf.sprintf "Usage: %s FILENAME OUTPUT_PREFIX\n" Sys.argv.(0))
   in
   Util.debug "Step 1/3: Loading experiment...";
-  let (model,formula) = ModelLoader.load_experiment expfname in
+  let (model,colored_formulas) = ModelLoader.load_experiment expfname in
   Util.debug "Step 2/3: Precomputing model checking table...";
   let checker = Checker.precompute model in
-  let truth_val = checker formula in
+  let colored_truth_vals = List.map (fun (color,formula) -> (color,checker formula)) colored_formulas in
   Util.debug "Step 3/3: Writing output files...";
   for state = 0 to Model.Graph.nb_vertex model.Model.kripke - 1 do
     let out_name =  (Printf.sprintf "%s-%s.dot" outbasefname (model.Model.kripkeid state)) in
-    let output = open_out out_name in
+    let output = open_out out_name in 
     PrinterGraph.vertex_attributes_fn := (fun point ->
-			if truth_val state point
-			then [`Color 0xFF0000; `Style `Filled]
-			else []);
+					  let col =
+					    List.fold_left
+					      (fun accum (color,truth_val) -> 
+					       if truth_val state point
+					       then accum
+					       else accum + color)
+					      0x000000 colored_truth_vals
+					  in
+					  if col == 0 then []
+					  else [`Color col; `Style `Filled]);
     PrinterGraph.vertex_name_fn := model.Model.spaceid;
     Printer.output_graph output model.Model.space;
     close_out output
   done;
   Util.debug "All done."
 
-let _ = f Sys.argv
+let _ = main Sys.argv

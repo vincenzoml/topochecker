@@ -1,4 +1,5 @@
 Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
 
 Let full = [vacant == 0];
-Check E F ((N (full & (A X full))) & ((A X full)));
+Check "0xFF0000" E F ((N (full & (A X full))) & ((A X full)));
+Check "0x00FF00" !( E F ((N (full & (A X full))) & ((A X full))));

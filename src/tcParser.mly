@@ -62,7 +62,7 @@ comSpec:
 | com comSpec {$1 :: $2}
 ;
 com:
-| CHECK formula eol {Syntax.CHECK $2}
+| CHECK STRING formula eol {Syntax.CHECK ($2,$3)}
 ;
 eol:
 | EOL {}

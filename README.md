@@ -150,9 +150,9 @@ Syntax of commands
 
 The only supported command at the moment is
 
-`Check FORMULA;`
+`Check "COLOR" FORMULA;`
 
-(mind the semicolon!).
+(mind the semicolon!). COLOR is an integer, which can also be in hexadecimal form (0xNNNNNN); this RGB color is used to color the output for the specified formula. Colours are currently just summed for different formulas.
 
 Formulas are described by the following syntax:
 
