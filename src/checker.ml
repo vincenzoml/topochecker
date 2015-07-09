@@ -142,5 +142,6 @@ let precompute model =
       slice in
   fun f ->
   let slice = cache f in
+  Util.debug "new formula";
   fun state point -> isTrue(Array2.get slice state point)
 			   

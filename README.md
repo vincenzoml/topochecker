@@ -148,11 +148,20 @@ or
 Syntax of commands
 ------------------
 
-The only supported command at the moment is
+Possible commands are:
 
 `Check "COLOR" FORMULA;`
 
 (mind the semicolon!). COLOR is an integer, which can also be in hexadecimal form (0xNNNNNN); this RGB color is used to color the output for the specified formula. Colours are currently just summed for different formulas.
+
+`Output "filename";`
+
+Starts a new file named "filename", closing the previous one. If no
+"Output" commands are present, the second argument from the command
+line is used.
+
+Syntax of formulas
+------------------
 
 Formulas are described by the following syntax:
 

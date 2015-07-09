@@ -105,17 +105,22 @@ let load_model : string -> string -> string -> Model.model =
     
 let mkfname dir file =
   if Filename.is_relative file then dir ^ Filename.dir_sep ^ file else file							      
-
-let load_experiment : string -> Model.model * ((int * Logic.formula) list) =
+type command =
+    Check of int * Logic.formula
+  | Output of string
+									 
+let load_experiment =
   fun path ->
   let (dir,file) = (Filename.dirname path,Filename.basename path) in  
   let lexbuf = Lexing.from_channel (open_in (mkfname dir file)) in
   try
-    let (Syntax.MODEL (kripkef,spacef,evalf),dseq,commands) = TcParser.main TcLexer.token lexbuf in    
+    let (Syntax.MODEL (kripkef,spacef,evalf),dseq,commands) = TcParser.main TcLexer.token lexbuf in
     let model = load_model (mkfname dir kripkef) (mkfname dir spacef) (mkfname dir evalf) in
     let env = Syntax.env_of_dseq dseq in
-    let colored_formulas = List.map (fun (Syntax.CHECK (color,fsyn)) -> (int_of_string color,Syntax.formula_of_fsyn env fsyn)) commands in
-    (model,colored_formulas)
+    let commands = List.map (function
+				Syntax.CHECK (color,fsyn) -> Check (int_of_string color,Syntax.formula_of_fsyn env fsyn)
+			      | Syntax.OUTPUT s -> Output s) commands in
+    (model,commands)
   with exn -> 
     let msg = Printexc.to_string exn in
     let curr = lexbuf.Lexing.lex_curr_p in

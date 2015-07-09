@@ -29,7 +29,7 @@ type fsyn =
 type decl = LET of ide * ide list * fsyn
 type dseq = decl list
 
-type com = CHECK of string * fsyn
+type com = CHECK of string * fsyn | OUTPUT of string
 type cseq = com list
 		      
 type experiment = model * dseq * cseq

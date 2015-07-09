@@ -1,4 +1,4 @@
-.PHONY: clean almostclean
+.PHONY: clean 
 TOPOCHECKER=../../src/topochecker
 
 run: maketool
@@ -8,7 +8,7 @@ run: maketool
 maketool:
 	cd ../../src && make
 
-clean: almostclean 
+clean: 
 	rm -rf output/* *~
 
 

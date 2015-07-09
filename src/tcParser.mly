@@ -37,7 +37,7 @@
 %token SPACE
 %token EVAL       
 %token CHECK
-%token CCHECK
+%token OUTPUT
 %token EOF 
 %start main
 %type <Syntax.experiment> main
@@ -63,6 +63,7 @@ comSpec:
 ;
 com:
 | CHECK STRING formula eol {Syntax.CHECK ($2,$3)}
+| OUTPUT STRING eol {Syntax.OUTPUT $2};
 ;
 eol:
 | EOL {}
