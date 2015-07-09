@@ -45,25 +45,28 @@ let main args =
   in		   
   Util.debug "Step 3/3: Writing output files...";
   List.iter
-    (fun (fname,colored_truth_vals) -> 
-     for state = 0 to Model.Graph.nb_vertex model.Model.kripke - 1 do
-       let out_name =  (Printf.sprintf "%s-%s.dot" fname (model.Model.kripkeid state)) in
-       let output = open_out out_name in
-       PrinterGraph.vertex_attributes_fn := (fun point ->
-					     let col =
-					       List.fold_left
-						 (fun accum (color,truth_val) -> 
+    (fun (fname,colored_truth_vals) ->
+     match colored_truth_vals with
+       [] -> ()
+     | _ ->
+	for state = 0 to Model.Graph.nb_vertex model.Model.kripke - 1 do
+	  let out_name =  (Printf.sprintf "%s-%s.dot" fname (model.Model.kripkeid state)) in
+	  let output = open_out out_name in
+	  PrinterGraph.vertex_attributes_fn := (fun point ->
+						let col =
+						  List.fold_left
+						    (fun accum (color,truth_val) -> 
 						  if truth_val state point
 						  then color (* accum + color *) 
-					       else accum)
-						 0x000000 colored_truth_vals
+						  else accum)
+						    0x000000 colored_truth_vals
 					     in
 					     if col == 0 then []
 					     else [`Color col; `Style `Filled]);
-       PrinterGraph.vertex_name_fn := model.Model.spaceid;
-       Printer.output_graph output model.Model.space;
-       close_out output
-     done)
+	  PrinterGraph.vertex_name_fn := model.Model.spaceid;
+	  Printer.output_graph output model.Model.space;
+	  close_out output
+	done)
     products;
   Util.debug "All done."
 

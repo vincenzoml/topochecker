@@ -14,4 +14,4 @@ src/tcParser.mli
 src/topochecker
 *~
 *.hist
-
+examples/test-*/output
