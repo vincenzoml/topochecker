@@ -31,8 +31,10 @@ module Graph = Graph.Imperative.Digraph.ConcreteBidirectionalLabeled(Vertex)(Edg
 type model =
     { kripke : Graph.t;
       space : Graph.t;
+      kripkefname : string;
+      spacefname : string;
       kripkeid : int -> string;
       spaceid : int -> string;
-      eval : slice H.t }
+      eval : slice H.t } (* TODO PERSISTENCE CLARITY turn this table into the cache of the model checker, and implement persistence in this file? *)
 
       

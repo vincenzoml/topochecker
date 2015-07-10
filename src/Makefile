@@ -25,9 +25,11 @@ endif
 endif
 
 
-$(EXE): $(DEPS) $(MAIN).cmx
-	$(OCAMLOPT) $^ -o $@
+slow: $(DEPS) $(MAIN).cmx
+	$(OCAMLOPT) $^ -o $(EXE)
 
+fast:
+	ocamlbuild -cflags -I,+ocamlgraph,-I,+csv -libs ocamlgraph/graph,csv/csv,bigarray,str main.native && cp -L main.native $(EXE)
 
 $(TOP): $(ADEPS)
 	$(OCAMLMKTOP) $^ -o $@
@@ -56,7 +58,7 @@ tcLexer.ml: tcLexer.mll
 	$(OCAMLC) -c $^ -o $@
 
 almostclean: 
-	rm -f *.cm* a.out *~ \#* *.o
+	rm -rf *.cm* a.out *~ \#* *.o _build main.native
 
 clean: almostclean 
 	rm -f $(EXE) $(TOP) tcParser.ml tcLexer.ml tcParser.mli

@@ -15,3 +15,5 @@ src/topochecker
 *~
 *.hist
 examples/test-*/output
+src/_build
+src/main.native
