@@ -26,6 +26,7 @@ let main args =
   in
   Util.debug "Step 1/3: Loading experiment...";
   let (model,commands) = ModelLoader.load_experiment expfname in
+  (* TODO: check for output commands here! *)
   Util.debug "Step 2/3: Precomputing model checking table...";
   let checker = Checker.precompute model in
   let products =
