@@ -90,7 +90,7 @@ let main args =
 	for state = 0 to Model.Graph.nb_vertex model.Model.kripke - 1 do
 	  let out_name =  (Printf.sprintf "%s-%s.dot" fname (model.Model.kripkeid state)) in
 	  let output = open_out out_name in
-	  alternate_write_state model state colored_truth_vals output model.Model.spacefname;
+	  alternate_write_state model state (List.rev colored_truth_vals) output model.Model.spacefname;
 	  close_out output
 	done)
     products;
