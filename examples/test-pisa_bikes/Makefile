@@ -5,8 +5,8 @@ run: maketool
 	mkdir -p output
 	$(TOPOCHECKER) test.topochecker
 
-img:
-	for f in output/*-0.dot; do neato -Tpdf $$f -o output/$$(basename $$f .dot).pdf; done
+img: run
+	for f in output/eventuallyCluster-0.dot output/evolvingCluster-77.dot output/nextCluster-80.dot; do neato -Tpdf $$f -o output/$$(basename $$f .dot).pdf; done
 
 maketool:
 	cd ../../src && make

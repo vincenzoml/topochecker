@@ -1,45 +1,53 @@
 Kripke "mc_kripke.dot" Space "mc_space.dot" Eval "mc_eval.csv";
 
-Let full = [vacant < 2];
-Let full2steps = full & (A X full);
-Let full3steps = full & (A X (full & A X full));
+Let full = [vacant == 0];
+Let cluster = I full;
 
-// RED=0xFF0000
-// GREEN=0x00FF00
-// BLUE=0x0000FF
+Let cluster2steps = cluster & (A X cluster); 
+Let cluster3steps = cluster & (A X cluster2steps);
+
+Let boundary(x) = (!x) & (N x);
+Let growingCluster = (!full) & (N (boundary(cluster))) & (A X full);
+Let shrinkingCluster =  cluster & (A X (!full));	
+
+Let implies(x,y) = (!x) | y;
+Let nextCluster =  (E F full) & (A G implies(full,A full U cluster));
+Let boundaryCluster =  boundary(E F cluster);
 
 //// Persistence of clusters
 
-Output "output/persistence";
+Output "output/eventuallyCluster";
 
-Check "0x00FF00" full2steps;
-Check "0x00AA00" full3steps;
+Check "0x00FF00" E F cluster;
+Check "0x0000FF" E F cluster2steps;
+Check "0xFF0000" E F cluster3steps;
 
-// Growing clusters 
-Check "0xFF0000" (!full) & (N full2steps) & (A X full2steps);
+
+//// Growth of clusters
+
+Output "output/evolvingCluster";
+Check "0x00FF00" E F cluster;
+
+// Growing clusters
+Check "0xFF0000" growingCluster;
 
 // Shrinking of clusters
-Check "0x0000FF" (full) & (N full2steps) & (A X (!full));
+Check "0x0000FF" shrinkingCluster;
 
-Output "output/transformation";
 
 //// Transformation of clusters
 
-//INTERESSSANTE: colora in rosso i punti che se diventano pieni, sempre, si espandono
-Check "0xFF0000" (E F full) & (A G ((!full) | (A full U (I full))));
+Output "output/nextCluster";
 
-// INTERESSANTE: colora i punti che non saranno mai parte di un cluster ma son sul bordo
-Check "0x0000FF" (! (E F (I full))) & (N (E F (I full)));
-
-//Check "0xFF0000" A G ((!full) | (A (full & (! (I full))) U (!full)));
-//Check "0x0000FF"
+Check "0xFF0000" nextCluster;
+Check "0x00FF00" boundaryCluster;
 
 //// Repetition of clusters
 
-Output "output/repetition";
-Check "0xFF0000" E F (full & E F ((!full) & (E F full)));
+//Output "output/repetition";
+//Check "0xFF0000" E F (full & E F ((!full) & (E F full)));
 //Check "0x0000FF" (E F full) & (! ( E F (full & E F ((!full) & (E F full)))));
-Check "0x0000FF" E F (full & (!(E F (!full))));
+//Check "0x0000FF" E F (full & (!(E F (!full))));
 
 //Check "0x00EE00" (E F full);
 //Check "0xFF0000" (E F full) & (A G ( (! full) | (full S (E F full))));
@@ -50,4 +58,5 @@ Check "0x0000FF" E F (full & (!(E F (!full))));
 
 //Check "0xFF0000" (E F full) & (A G ( (! full) | (TT S (E F full))));
 //Check "0x0000FF" ((E F full) & ! (I (E F full))) & ((E F full) & (A G ( (! full) | (TT S (E F full)))));
+
 
