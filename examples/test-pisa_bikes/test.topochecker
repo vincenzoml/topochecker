@@ -14,6 +14,8 @@ Let implies(x,y) = (!x) | y;
 Let nextCluster =  (E F full) & (A G implies(full,A full U cluster));
 Let boundaryCluster =  boundary(E F cluster);
 
+Let tripEnd = full & ( N ( A X ( full & ( N ( A X ( full & N ( A X full)))))));
+
 //// Persistence of clusters
 
 Output "output/eventuallyCluster";
@@ -44,5 +46,5 @@ Check "0x00FF00" boundaryCluster;
 
 //// User experience
 Output "output/tail";
-Check "0xFF0000" full & ( N ( A X ( full & ( N ( A X ( full & N ( A X full)))))));
+Check "0xFF0000" tripEnd;
 

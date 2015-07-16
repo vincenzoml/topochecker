@@ -6,7 +6,7 @@ run: maketool
 	$(TOPOCHECKER) test.topochecker
 
 img: run
-	for f in output/eventuallyCluster-0.dot output/evolvingCluster-77.dot output/nextCluster-80.dot; do neato -Tpdf $$f -o output/$$(basename $$f .dot).pdf; done
+	for f in output/eventuallyCluster-0.dot output/evolvingCluster-77.dot output/nextCluster-80.dot output/tail-0.dot; do neato -Tpdf $$f -o output/$$(basename $$f .dot).pdf; done
 
 maketool:
 	cd ../../src && make
