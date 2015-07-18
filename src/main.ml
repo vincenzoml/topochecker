@@ -38,7 +38,7 @@ let alternate_write_state model state colored_truth_vals (output : out_channel) 
   let input = open_in space_fname in
   let l1 = input_line input in
   if not (Str.string_match (Str.regexp_case_fold "[' ' '\t']*digraph[^{]*") l1 0)
-  then (Util.debug "didn't match"; write_state model state colored_truth_vals output)
+  then (close_in input; write_state model state colored_truth_vals output)
   else
     begin
       Printf.fprintf output "%s\n" l1;
@@ -50,7 +50,7 @@ let alternate_write_state model state colored_truth_vals (output : out_channel) 
 	while true do
 	  Printf.fprintf output "%s\n" (input_line input)
 	done
-      with End_of_file -> ()
+      with End_of_file -> close_in input
     end
       
 let main args =

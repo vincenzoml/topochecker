@@ -113,8 +113,9 @@ type command =
 									 
 let load_experiment =
   fun path ->
-  let (dir,file) = (Filename.dirname path,Filename.basename path) in  
-  let lexbuf = Lexing.from_channel (open_in (mkfname dir file)) in
+  let (dir,file) = (Filename.dirname path,Filename.basename path) in
+  let desc = open_in (mkfname dir file) in
+  let lexbuf = Lexing.from_channel desc in
   try
     let (Syntax.MODEL (kripkef,spacef,evalf),dseq,commands) = TcParser.main TcLexer.token lexbuf in
     let model = load_model (mkfname dir kripkef) (mkfname dir spacef) (mkfname dir evalf) in
@@ -122,8 +123,10 @@ let load_experiment =
     let commands = List.map (function
 				Syntax.CHECK (color,fsyn) -> Check (int_of_string color,Syntax.formula_of_fsyn env fsyn)
 			      | Syntax.OUTPUT s -> Output s) commands in
+    close_in desc; (* TODO use a safe wrapper for the open/close pairs here and everywhere else *)
     (model,commands)
-  with exn -> 
+  with exn ->
+    close_in desc;
     let msg = Printexc.to_string exn in
     let curr = lexbuf.Lexing.lex_curr_p in
     let line = curr.Lexing.pos_lnum in
