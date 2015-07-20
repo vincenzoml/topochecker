@@ -5,6 +5,33 @@ Topochecker is a spatio-temporal model checker based on closure spaces
 and Kripke frames. Currently it checks a spatial extension of CTL
 named STLCS (spatio-temporal logic of closure spaces).
 
+Spatio-temporal model checking
+==============================
+
+Spatio-temporal model checking is perforemd with a variant of
+Computation Tree Logic (CTL) featuring spatial operators coming from the
+tradition of topological spatial logics.
+
+CTL is widely known. See e.g.:
+
+https://mitpress.mit.edu/books/principles-model-checking
+
+The spatial operators come from the Spatial Logic of Closure Spaces
+(SLCS), of which you can read in the following paper:
+
+http://link.springer.com/chapter/10.1007%2F978-3-662-44602-7_18
+http://arxiv.org/abs/1406.6393
+https://raw.githubusercontent.com/vincenzoml/topochecker/master/doc/specifying_and_verifying_properties_of_space.pdf
+
+The used algorithm is an extension of both CTL and SLCS model checking, described in a paper (to appear in VERY* 2015 @ SEFM):
+
+https://raw.githubusercontent.com/vincenzoml/topochecker/master/doc/an_experimental_spatio-temporal_model_checker.pdf
+
+For an introduction to topological spatial logics see
+
+http://www.springer.com/us/book/9781402055867
+
+
 Quick installation for the impatient running a debian-based distribution
 ========================================================================
 
