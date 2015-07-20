@@ -88,12 +88,19 @@ Simply run
 
 `make`
 
-Using
+You can also use
 
 `make all`
 
 will also run the model checker on the examples in
 the examples subdirectory.
+
+BIG NOTE: topochecker uses ocamlbuild to build the tool, which
+automatically handles dependencies; if ocamlbuild is not available,
+the tool falls back to old-style makefile dependencies. If you have
+troubles with ocamlbuild and want to use makefile dependencies, run
+"make slow" in the tool directory; you can make that the default
+target in the makefile; see the comment in src/Makefile for that.
 
 
 Usage

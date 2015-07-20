@@ -1,4 +1,4 @@
-.PHONY: clean almostclean export
+.PHONY: clean almostclean export slow fast slowclean fastclean
 EXE=topochecker
 TOP=topochecker.top
 
@@ -24,12 +24,23 @@ ifneq ($(RLFE),)
 endif
 endif
 
+TARGET=slow
+#COMMENT THE FOLLOWING THREE LINES TO FORCE OLD-STYLE MAKEFILED DEPENDENCIES
+ifneq ($(shell which ocamlbuild),)
+	TARGET=fast
+endif
+#END REGION TO COMMENT
+
+
+$(EXE): $(TARGET)
 
 slow: $(DEPS) $(MAIN).cmx
+	make fastclean
 	$(OCAMLOPT) $^ -o $(EXE)
 
 fast:
-	ocamlbuild -cflags -I,+ocamlgraph,-I,+csv -libs ocamlgraph/graph,csv/csv,bigarray,str main.native && cp -L main.native $(EXE)
+	make slowclean
+	ocamlbuild -cflags -I,+ocamlgraph,-I,+csv -libs ocamlgraph/graph,csv/csv,bigarray,str main.native && cp -L main.native $(EXE) && rm main.native
 
 $(TOP): $(ADEPS)
 	$(OCAMLMKTOP) $^ -o $@
@@ -57,8 +68,13 @@ tcLexer.ml: tcLexer.mll
 %.cmo: %.ml
 	$(OCAMLC) -c $^ -o $@
 
-almostclean: 
-	rm -rf *.cm* a.out *~ \#* *.o _build main.native
+almostclean: slowclean fastclean
+
+slowclean: 
+	rm -rf *.cm* a.out *~ \#* *.o tcParser.ml tcLexer.ml tcParser.mli
+
+fastclean:
+	rm -rf _build main.native
 
 clean: almostclean 
-	rm -f $(EXE) $(TOP) tcParser.ml tcLexer.ml tcParser.mli
+	rm -f $(EXE) $(TOP)
