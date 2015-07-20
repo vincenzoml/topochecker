@@ -20,7 +20,9 @@ The spatial operators come from the Spatial Logic of Closure Spaces
 (SLCS), of which you can read in the following paper:
 
 http://link.springer.com/chapter/10.1007%2F978-3-662-44602-7_18
+
 http://arxiv.org/abs/1406.6393
+
 https://raw.githubusercontent.com/vincenzoml/topochecker/master/doc/specifying_and_verifying_properties_of_space.pdf
 
 The used algorithm is an extension of both CTL and SLCS model checking, described in a paper (to appear in VERY* 2015 @ SEFM):
