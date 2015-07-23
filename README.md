@@ -75,7 +75,7 @@ https://opam.ocaml.org/doc/Install.html
 and then install all the required dependencies using it:
 
 ```
-opam init --comp 4.02.1
+opam init
 opam install ocamlfind
 opam install csv
 opam install ocamlgraph

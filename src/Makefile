@@ -25,10 +25,10 @@ endif
 endif
 
 TARGET=slow
-#COMMENT THE FOLLOWING THREE LINES TO FORCE OLD-STYLE MAKEFILED DEPENDENCIES
-ifneq ($(shell which ocamlbuild),)
-	TARGET=fast
-endif
+#UNCOMMENT THE FOLLOWING THREE LINES TO USE OCAMLBUILD WHEN AVAILABLE
+#ifneq ($(shell which ocamlbuild),)
+#	TARGET=fast
+#endif
 #END REGION TO COMMENT
 
 
