@@ -86,7 +86,18 @@ let parse_eval filename states points stateid pointid =
   );
   Csv.close_in csv_chan;
   prop_tbl
-      
+
+let completeDeadlocks kripke =
+  let vect = Array1.create float64 c_layout (Model.Graph.nb_vertex kripke) in
+  Array1.fill vect Util.valFalse;
+  Model.Graph.iter_vertex (fun v -> if 0 = Model.Graph.out_degree kripke v
+				    then begin
+					Model.Graph.add_edge kripke v v;
+					Array1.set vect v Util.valTrue
+				      end)
+			  kripke;
+  fun state -> Util.isTrue (Array1.get vect state)
+  
 let load_model : string -> string -> string -> Model.model =
   fun kripkef spacef evalf ->
   let kripke = Parser.parse kripkef in
@@ -95,21 +106,25 @@ let load_model : string -> string -> string -> Model.model =
   let space = Parser.parse spacef in
   let (s_id_of_int,s_int_of_id)  = ParserSig.read () in (* TODO remove k_h *)
   ParserSig.reset ();
-  let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex space) k_int_of_id s_int_of_id in
-  Model.Graph.iter_vertex (fun v -> if 0 = Model.Graph.out_degree kripke v then Model.Graph.add_edge kripke v v) kripke;
+  let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex space) k_int_of_id s_int_of_id in  
+  let deadlocks = completeDeadlocks kripke in
   { Model.kripke = kripke;
     Model.space = space;
+    Model.deadlocks = deadlocks;
     Model.kripkefname = kripkef;
     Model.spacefname = spacef;
     Model.kripkeid = k_id_of_int;
+    Model.idkripke = k_int_of_id;
     Model.spaceid = s_id_of_int;
+    Model.idspace = s_int_of_id;
     Model.eval = propTbl; }
     
 let mkfname dir file =
-  if Filename.is_relative file then dir ^ Filename.dir_sep ^ file else file							      
+  if Filename.is_relative file then dir ^ Filename.dir_sep ^ file else file	
+						      
 type command =
     Check of int * Logic.formula
-  | Output of string
+  | Output of string * (int list option)
 									 
 let load_experiment =
   fun path ->
@@ -122,7 +137,8 @@ let load_experiment =
     let env = Syntax.env_of_dseq dseq in
     let commands = List.map (function
 				Syntax.CHECK (color,fsyn) -> Check (int_of_string color,Syntax.formula_of_fsyn env fsyn)
-			      | Syntax.OUTPUT s -> Output s) commands in
+			      | Syntax.OUTPUT (s,None) -> Output (s,None)
+    			      | Syntax.OUTPUT (s,Some states) -> Output (s,Some (List.map model.Model.idkripke states))) commands in
     close_in desc; (* TODO use a safe wrapper for the open/close pairs here and everywhere else *)
     (model,commands)
   with exn ->
@@ -133,3 +149,4 @@ let load_experiment =
     let cnum = curr.Lexing.pos_cnum - curr.Lexing.pos_bol in
     let tok = Lexing.lexeme lexbuf in
     Util.fail (Printf.sprintf "filename: %s, line %d, character %d, token %s: %s\n%!" file line cnum tok msg)
+	      

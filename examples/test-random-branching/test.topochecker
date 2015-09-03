@@ -1,0 +1,5 @@
+Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
+Output "output/state" "0","3"; 
+Check "0xFF0000" A F ([a] S [b]);
+
+

@@ -141,6 +141,10 @@ let precompute model =
       );
       slice in
   fun f ->
-  let slice = cache f in
-  fun state point -> isTrue(Array2.get slice state point)
+  match f with
+    Prop "deadlock" -> 
+    fun state point -> model.deadlocks state
+  | _ ->
+     let slice = cache f in
+     fun state point -> isTrue(Array2.get slice state point)
 			   

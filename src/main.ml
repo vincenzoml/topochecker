@@ -75,24 +75,30 @@ let main args =
 	    [] ->
 	    (match outbasefname with
 	       None -> Util.fail "no filename specified either on command line or in experiment file"
-	     | Some fname -> [(fname,[(color,(checker formula))])])
+	     | Some fname -> [((fname,None),[(color,(checker formula))])])
 	  | (fname,fmlas)::rem -> (fname,(color,(checker formula))::fmlas)::rem)
-       | ModelLoader.Output fname ->
-	  (fname,[])::accum)
+       | ModelLoader.Output (fname,states) ->
+	  ((fname,states),[])::accum)
       [] commands 
   in		   
   Util.debug "Step 3/3: Writing output files...";
   List.iter
-    (fun (fname,colored_truth_vals) ->
+    (fun ((fname,states),colored_truth_vals) ->
      match colored_truth_vals with
        [] -> ()
      | _ ->
-	for state = 0 to Model.Graph.nb_vertex model.Model.kripke - 1 do
+	let aux fn =
+		match states with
+		  None -> for state = 0 to Model.Graph.nb_vertex model.Model.kripke - 1 do fn state done
+		| Some lst -> List.iter fn lst
+	in
+	let fn state =
 	  let out_name =  (Printf.sprintf "%s-%s.dot" fname (model.Model.kripkeid state)) in
 	  let output = open_out out_name in
 	  alternate_write_state model state (List.rev colored_truth_vals) output model.Model.spacefname;
-	  close_out output
-	done)
+	  close_out output in
+	aux fn
+    ) 
     products;
   Util.debug "All done."
 

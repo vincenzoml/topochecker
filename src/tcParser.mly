@@ -63,8 +63,12 @@ comSpec:
 ;
 com:
 | CHECK STRING formula eol {Syntax.CHECK ($2,$3)}
-| OUTPUT STRING eol {Syntax.OUTPUT $2};
+| OUTPUT STRING eol {Syntax.OUTPUT ($2,None)};
+| OUTPUT STRING states eol {Syntax.OUTPUT ($2,Some $3)} 
 ;
+states:
+| STRING { [$1] }
+| STRING COMMA states {$1::$3}
 eol:
 | EOL {}
 ;       

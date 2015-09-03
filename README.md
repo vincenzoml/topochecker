@@ -43,8 +43,16 @@ Open a terminal and run the following four commands:
 sudo apt-get install git ocaml-native-compilers libcsv-ocaml-dev libocamlgraph-ocaml-dev
 git clone https://github.com/vincenzoml/topochecker.git 
 cd topochecker
+make
+```
+
+Optionally, type
+
+```
 make all
 ```
+
+to also build the examples (some of them take plenty of space-time!)
 
 Prerequisites
 =============
@@ -191,10 +199,10 @@ Possible commands are:
 (mind the semicolon!). COLOR is an integer, which can also be in hexadecimal form (0xNNNNNN); this RGB color is used to color the output for the specified formula. Colours are currently just summed for different formulas.
 
 `Output "filename";`
+`Output "filename" state1,state2,...
 
-Starts a new file named "filename", closing the previous one. If no
-"Output" commands are present, the second argument from the command
-line is used.
+Outputs to a set of files named "filename-STATEID", closing the previous ones. If no
+"Output" commands are present, the second argument from the command line is used. If a list of states is additionally specified, then only these states are saved.
 
 Syntax of formulas
 ------------------
@@ -203,7 +211,7 @@ Formulas are described by the following syntax:
 
 ```
 FMLA ::=
-         [string]                       (atomic proposition, no quotes around the string)
+         [string]                       (atomic proposition, no quotes around the string; see below for reserved names)
        | [string OP INTEGER]		(quantitative check, OP is <, <=, ==, !=, >, >=)
        | TT                             (true)
        | FF                             (false)
@@ -223,6 +231,17 @@ FMLA ::=
        | E FMLA U FMLA                  (EU from CTL)
        | A FMLA U FMLA                  (AU from CTL)
 ```
+
+Special treatment of deadlocks and reserved names of atomic propositions
+========================================================================
+
+It may happen that there are deadlock states in a Kripke structure,
+that is, states with no outgoing edges. In that case, usually the
+structure is completed with self-loops to make sure that only infinite
+paths are considered. Additionally, we make such states observable, by
+adding an atomic predicate "deadlock" that is true only on these
+states; this means that the name "deadlock" should be avoided for
+atomic propositions.
 
 See also
 ========

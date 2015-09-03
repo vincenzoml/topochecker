@@ -40,7 +40,7 @@ slow: $(DEPS) $(MAIN).cmx
 
 fast:
 	make slowclean
-	ocamlbuild -cflags -I,+ocamlgraph,-I,+csv -libs ocamlgraph/graph,csv/csv,bigarray,str main.native && cp -L main.native $(EXE) && rm main.native
+	ocamlbuild -r -cflags -I,+ocamlgraph,-I,+csv -libs ocamlgraph/graph,csv/csv,bigarray,str main.native && cp -L main.native $(EXE) && rm main.native
 
 $(TOP): $(ADEPS)
 	$(OCAMLMKTOP) $^ -o $@
