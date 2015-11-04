@@ -1,0 +1,7 @@
+
+- Save model checker state on disk, formula by formula, and use some caching discipline.
+
+- Distributed? Spatial caching?
+
+- Error reporting is a joke.
+
