@@ -13,4 +13,6 @@ let debug s =
 let fail s =
   Printf.eprintf "%s\n%!" s;
   exit 1
-
+    
+let mkfname dir file =
+  if Filename.is_relative file then dir ^ Filename.dir_sep ^ file else file	

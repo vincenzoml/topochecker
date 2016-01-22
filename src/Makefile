@@ -46,7 +46,7 @@ $(TOP): $(ADEPS)
 	$(OCAMLMKTOP) $^ -o $@
 
 toptest: $(TOP)
-	rlfe -h .hist ./$(TOP)
+	$(RLFE) -h .hist ./$(TOP)
 
 tcParser.cmx: tcParser.ml
 	$(OCAMLOPT) -c tcParser.mli

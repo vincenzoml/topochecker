@@ -118,9 +118,6 @@ let load_model : string -> string -> string -> Model.model =
     Model.spaceid = s_id_of_int;
     Model.idspace = s_int_of_id;
     Model.eval = propTbl; }
-    
-let mkfname dir file =
-  if Filename.is_relative file then dir ^ Filename.dir_sep ^ file else file	
 						      
 type command =
     Check of int * Logic.formula
@@ -129,11 +126,11 @@ type command =
 let load_experiment =
   fun path ->
   let (dir,file) = (Filename.dirname path,Filename.basename path) in
-  let desc = open_in (mkfname dir file) in
+  let desc = open_in (Util.mkfname dir file) in
   let lexbuf = Lexing.from_channel desc in
   try
     let (Syntax.MODEL (kripkef,spacef,evalf),dseq,commands) = TcParser.main TcLexer.token lexbuf in
-    let model = load_model (mkfname dir kripkef) (mkfname dir spacef) (mkfname dir evalf) in
+    let model = load_model (Util.mkfname dir kripkef) (Util.mkfname dir spacef) (Util.mkfname dir evalf) in
     let env = Syntax.env_of_dseq dseq in
     let commands = List.map (function
 				Syntax.CHECK (color,fsyn) -> Check (int_of_string color,Syntax.formula_of_fsyn env fsyn)
