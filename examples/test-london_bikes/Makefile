@@ -11,10 +11,10 @@ almostclean:
 	rm -rf *.cm* a.out *~ \#* *.o output generate_model generate_model.native _build
 
 clean: almostclean 
-	rm -f kripke.dot space.dot eval.csv test.out
+	rm -f london_map_transport.dot
 
 test: clean build
-	./generate_model test.out && neato -Tx11 test.out
+	./generate_model test.out && neato -Tx11 london_map_transport.dot
 
 
 
