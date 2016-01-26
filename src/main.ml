@@ -69,16 +69,20 @@ let main args =
   let products =
     List.fold_left
       (fun accum command ->
-       match command with
-	 ModelLoader.Check (color,formula) ->
-	 (match accum with
-	    [] ->
-	    (match outbasefname with
-	       None -> Util.fail "no filename specified either on command line or in experiment file"
-	     | Some fname -> [((fname,None),[(color,(checker formula))])])
-	  | (fname,fmlas)::rem -> (fname,(color,(checker formula))::fmlas)::rem)
-       | ModelLoader.Output (fname,states) ->
-	  ((fname,states),[])::accum)
+	match command with
+	  ModelLoader.Ask qformula ->
+	    (Printf.printf "%b\n%!" (Checker.qchecker (Model.Graph.nb_vertex model.Model.space) checker qformula);
+	     accum
+	    )
+	| ModelLoader.Check (color,formula) ->
+	   (match accum with
+	     [] ->
+	       (match outbasefname with
+		 None -> Util.fail "no filename specified either on command line or in experiment file"
+	       | Some fname -> [((fname,None),[(color,(checker formula))])])
+	   | (fname,fmlas)::rem -> (fname,(color,(checker formula))::fmlas)::rem)
+	| ModelLoader.Output (fname,states) ->
+	   ((fname,states),[])::accum)
       [] commands 
   in		   
   Util.debug "Step 3/3: Writing output files...";

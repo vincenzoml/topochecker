@@ -122,6 +122,7 @@ let load_model : string -> string -> string -> Model.model =
 type command =
     Check of int * Logic.formula
   | Output of string * (int list option)
+  | Ask of Logic.qformula
 									 
 let load_experiment =
   fun path ->
@@ -133,9 +134,10 @@ let load_experiment =
     let model = load_model (Util.mkfname dir kripkef) (Util.mkfname dir spacef) (Util.mkfname dir evalf) in
     let env = Syntax.env_of_dseq dseq in
     let commands = List.map (function
-				Syntax.CHECK (color,fsyn) -> Check (int_of_string color,Syntax.formula_of_fsyn env fsyn)
-			      | Syntax.OUTPUT (s,None) -> Output (s,None)
-    			      | Syntax.OUTPUT (s,Some states) -> Output (s,Some (List.map model.Model.idkripke states))) commands in
+      | Syntax.CHECK (color,fsyn) -> Check (int_of_string color,Syntax.formula_of_fsyn env fsyn)
+      | Syntax.ASK qfsyn -> Ask (Syntax.qformula_of_qfsyn env qfsyn)
+      | Syntax.OUTPUT (s,None) -> Output (s,None)
+      | Syntax.OUTPUT (s,Some states) -> Output (s,Some (List.map model.Model.idkripke states))) commands in    
     close_in desc; (* TODO use a safe wrapper for the open/close pairs here and everywhere else *)
     (model,commands)
   with exn ->

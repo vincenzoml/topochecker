@@ -1,7 +1,7 @@
 type formula =
     T
   | Prop of string
-  | QProp of (string * string * float)
+  | VProp of (string * string * float)
   | Not of formula
   | And of formula * formula
   | Near of formula
@@ -9,3 +9,12 @@ type formula =
   | Ex of formula
   | Af of formula
   | Eu of formula * formula     
+
+type qatom = Qint of int | Qformula of formula
+      
+type qformula =
+    QT
+  | QNot of qformula
+  | QAnd of qformula * qformula
+  | QOp of (int -> int -> bool) * qatom * qatom
+ 

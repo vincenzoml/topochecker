@@ -11,15 +11,15 @@ let _ =
   let (bgx,bgy,bgwidth,bgheight) = ((bgmaxx +. bgminx)/.2.,(bgmaxy+.bgminy)/.2.,bgmaxx-.bgminx,bgmaxy-.bgminy) in
   let output = open_out "london_map_transport.dot" in
   Printf.fprintf output "digraph{\n%!";
-  Printf.fprintf output
-    "background [image=\"london_map_transport.png\",fixedsize=true; label=\"\"; shape=rectangle; color=white; pos=\"%f,%f!\"; width=\"%f\"; height=\"%f\"; ]"
-    bgx bgy bgwidth bgheight; 
+(*  Printf.fprintf output
+    "background [image=\"london_map_transport.png\",fixedsize=true; label=\"\"; shape=rectangle; color=white; pos=\"%f,%f!\"; width=\"%f\"; height=\"%f\"; ]; \n%!"
+    bgx bgy bgwidth bgheight; *)
   List.iter
     (function x::y::name::_ ->
       let (rx,ry) = (float_of_string x,float_of_string y) in
       vector.(!id) <- (rx,ry,name,ref 0);
       Printf.fprintf output
-	"%d [ style=filled; label=\"\"; color=\"%s\"; fillcolor=\"%s\"; fixedsize=true; height=%f; width=%f; pos = \"%f,%f!\" ];\n%!"
+	"%d [ style=filled, label=\"\", color=\"%s\", fillcolor=\"%s\", fixedsize=true, height=%f, width=%f, pos = \"%f,%f!\" ];\n%!"
 	!id node_color node_color node_size node_size rx ry;
       (* NOTE: the name of each node is currently unused! *)
       for i = 0 to !id - 1 do

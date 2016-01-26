@@ -25,11 +25,10 @@ endif
 endif
 
 TARGET=slow
-#UNCOMMENT THE FOLLOWING THREE LINES TO USE OCAMLBUILD WHEN AVAILABLE
-#ifneq ($(shell which ocamlbuild),)
-#	TARGET=fast
-#endif
-#END REGION TO COMMENT
+
+ifneq ($(shell which ocamlbuild),)
+	TARGET=fast
+endif
 
 
 $(EXE): $(TARGET)
@@ -40,7 +39,7 @@ slow: $(DEPS) $(MAIN).cmx
 
 fast:
 	make slowclean
-	ocamlbuild -r -cflags -I,+ocamlgraph,-I,+csv -libs ocamlgraph/graph,csv/csv,bigarray,str main.native && cp -L main.native $(EXE) && rm main.native
+	ocamlbuild -use-ocamlfind -package ocamlgraph -package csv -libs bigarray,str main.native && cp -L main.native $(EXE) && rm main.native
 
 $(TOP): $(ADEPS)
 	$(OCAMLMKTOP) $^ -o $@

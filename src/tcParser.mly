@@ -37,6 +37,7 @@
 %token SPACE
 %token EVAL       
 %token CHECK
+%token ASK
 %token OUTPUT
 %token EOF 
 %start main
@@ -62,6 +63,7 @@ comSpec:
 | com comSpec {$1 :: $2}
 ;
 com:
+| ASK qformula eol {Syntax.ASK $2}
 | CHECK STRING formula eol {Syntax.CHECK ($2,$3)}
 | OUTPUT STRING eol {Syntax.OUTPUT ($2,None)};
 | OUTPUT STRING states eol {Syntax.OUTPUT ($2,Some $3)} 
@@ -71,7 +73,20 @@ states:
 | STRING COMMA states {$1::$3}
 eol:
 | EOL {}
-;       
+;
+qformula:
+  TRUE {Syntax.QFALSE}
+| FALSE {Syntax.QTRUE}
+| LPAREN qformula RPAREN { $2 }
+| NOT qformula { Syntax.QNOT $2 }
+| qformula AND qformula { Syntax.QAND ($1,$3) }
+| qformula OR qformula { Syntax.QOR ($1,$3) }
+| qaformula OP qaformula { Syntax.QOP ($2,$1,$3) }
+;
+qaformula:
+  formula { Syntax.QFSYN $1 }
+| INT { Syntax.QINT $1 }
+;
 formula:
 | LPAREN formula RPAREN {$2}
 | TRUE {Syntax.TRUE}
@@ -79,8 +94,8 @@ formula:
 | IDE {Syntax.CALL ($1,[])}
 | IDE actualarglist {Syntax.CALL ($1,$2)}
 | LBRACKET IDE RBRACKET {Syntax.PROP $2}
-| LBRACKET IDE OP FLOAT RBRACKET {Syntax.QPROP ($2,$3,$4)}
-| LBRACKET IDE OP INT RBRACKET {Syntax.QPROP ($2,$3,(float_of_int $4))}
+| LBRACKET IDE OP FLOAT RBRACKET {Syntax.VPROP ($2,$3,$4)}
+| LBRACKET IDE OP INT RBRACKET {Syntax.VPROP ($2,$3,(float_of_int $4))}
 | NOT formula {Syntax.NOT $2}
 | formula AND formula {Syntax.AND ($1,$3)}
 | formula OR formula {Syntax.OR ($1,$3)}

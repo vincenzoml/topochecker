@@ -11,7 +11,7 @@ type fsyn =
   | AND of (fsyn * fsyn)
   | OR of (fsyn * fsyn)
   | PROP of propsyn
-  | QPROP of propsyn * string * float
+  | VPROP of propsyn * string * float
   | NEAR of fsyn
   | NEARN of (int * fsyn)
   | INT of fsyn
@@ -25,11 +25,26 @@ type fsyn =
   | AF of fsyn
   | EU of fsyn * fsyn
   | AU of fsyn * fsyn
-		    
+
+type qasyn =
+    QINT of int
+  | QFSYN of fsyn
+      
+type qfsyn =
+  | QTRUE
+  | QFALSE
+  | QNOT of qfsyn
+  | QAND of qfsyn * qfsyn
+  | QOR of qfsyn * qfsyn
+  | QOP of string * qasyn * qasyn
+      
 type decl = LET of ide * ide list * fsyn
 type dseq = decl list
 
-type com = CHECK of string * fsyn | OUTPUT of string * (string list option)
+type com =
+    CHECK of string * fsyn
+  | OUTPUT of string * (string list option)
+  | ASK of qfsyn      
 type cseq = com list
 		      
 type experiment = model * dseq * cseq
@@ -57,14 +72,14 @@ let opsem op =
   | ">" -> (>)
   | ">=" -> (>=)
   | x -> Util.fail (Printf.sprintf "unknown operator %s" x)
-
+     
 let env_of_dseq ds = List.fold_left (fun env (LET (name,args,body)) -> bind env name (args,body)) empty ds  
 		   
 let rec formula_of_fsyn env f =
   match f with
     PROP prop -> Prop prop
-  | QPROP (prop,op,n) ->
-     QProp (prop,op,n)
+  | VPROP (prop,op,n) ->
+     VProp (prop,op,n)
   | TRUE -> T
   | FALSE -> Not T
   | NOT f1 -> Not (formula_of_fsyn env f1)     
@@ -87,3 +102,17 @@ let rec formula_of_fsyn env f =
   | CALL (ide,actuals) ->
      let (formals,body) = apply env ide in
      formula_of_fsyn (zipenv env formals (List.map (fun x -> ([],x)) actuals)) body
+
+let qatom_of_qasyn env qa =
+  match qa with
+    QINT i -> Qint i
+  | QFSYN f -> Qformula (formula_of_fsyn env f)
+       
+let rec qformula_of_qfsyn env qf =
+  match qf with
+    QTRUE -> QT
+  | QFALSE -> QNot QT
+  | QNOT qf1 -> QNot (qformula_of_qfsyn env qf1)
+  | QAND (qf1,qf2) -> QAnd (qformula_of_qfsyn env qf1, qformula_of_qfsyn env qf2)
+  | QOR (qf1,qf2) -> QNot (QAnd (QNot (qformula_of_qfsyn env qf1), QNot (qformula_of_qfsyn env qf2)))
+  | QOP (op,qa1,qa2) -> QOp (opsem op,qatom_of_qasyn env qa1,qatom_of_qasyn env qa2)

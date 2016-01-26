@@ -21,7 +21,7 @@ let precompute model =
       (match f with 
 	 T -> Array2.fill slice valTrue
        | Prop p -> (* TODO check whether p really is in eval? *) ()
-       | QProp (p,op,n) ->
+       | VProp (p,op,n) ->
 	  let a1 = cache (Prop p) in
 	  for state = 0 to num_states - 1 do
 	    for point = 0 to num_points - 1 do
@@ -147,4 +147,21 @@ let precompute model =
   | _ ->
      let slice = cache f in
      fun state point -> isTrue(Array2.get slice state point)
-			   
+
+let achecker nb checker a =
+  match a with
+    Qint i -> i
+  | Qformula f -> let res = ref 0 in
+		  let c = checker f 0 in 
+		  for i = 0 to nb do 
+		    if c i
+		    then res := !res + 1
+		  done;
+		  !res
+       
+let rec qchecker nb checker qf =
+  match qf with
+    QT -> true
+  | QNot qf1 -> not (qchecker nb checker qf1)
+  | QAnd (qf1,qf2) -> (qchecker nb checker qf1) && (qchecker nb checker qf2)
+  | QOp (op,a1,a2) -> op (achecker nb checker a1) (achecker nb checker a2)

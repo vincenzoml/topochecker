@@ -38,6 +38,7 @@
 | "=" {EQ}
 | "^" {HAT}
 | "Check" {CHECK}
+| "Ask" {ASK}
 | "Kripke" {KRIPKE}
 | "Space" {SPACE}
 | "Eval" {EVAL}
