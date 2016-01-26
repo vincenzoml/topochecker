@@ -2,10 +2,10 @@
 TOPOCHECKER=../../src/topochecker
 
 build:
-	ocamlbuild -use-ocamlfind -package camlimages.core -package camlimages -package camlimages.all_formats -package csv generate_model.native && cp -L generate_model.native generate_model
+	ocamlbuild -use-ocamlfind -package csv generate_model.native && cp -L generate_model.native generate_model
 
 infer:
-	ocamlbuild -use-ocamlfind -package camlimages.core -package camlimages -package camlimages.all_formats -package csv generate_model.inferred.mli
+	ocamlbuild -use-ocamlfind -package csv generate_model.inferred.mli
 
 almostclean: 
 	rm -rf *.cm* a.out *~ \#* *.o output generate_model generate_model.native _build
