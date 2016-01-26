@@ -153,7 +153,7 @@ let achecker nb checker a =
     Qint i -> i
   | Qformula f -> let res = ref 0 in
 		  let c = checker f 0 in 
-		  for i = 0 to nb do 
+		  for i = 0 to nb-1 do 
 		    if c i
 		    then res := !res + 1
 		  done;
