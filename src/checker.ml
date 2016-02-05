@@ -158,10 +158,13 @@ let achecker nb checker a =
 		    then res := !res + 1
 		  done;
 		  !res
-       
+		    
 let rec qchecker nb checker qf =
   match qf with
-    QT -> true
-  | QNot qf1 -> not (qchecker nb checker qf1)
-  | QAnd (qf1,qf2) -> (qchecker nb checker qf1) && (qchecker nb checker qf2)
-  | QOp (op,a1,a2) -> op (achecker nb checker a1) (achecker nb checker a2)
+    QT -> Util.valTrue
+  | QNot qf1 -> valNot (qchecker nb checker qf1)
+  | QAnd (qf1,qf2) -> valAnd (qchecker nb checker qf1) (qchecker nb checker qf2)
+  | QOp (qop,a1,a2) -> ofBool (qop (achecker nb checker a1) (achecker nb checker a2))
+  | QCount f -> float_of_int (achecker nb checker f)
+
+     

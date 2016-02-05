@@ -1,3 +1,5 @@
 Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
+
+Let everywhere(phi) = [phi];
 Check "0xFF0000" [a] S [b]; 
 

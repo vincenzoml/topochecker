@@ -37,6 +37,7 @@ type qfsyn =
   | QAND of qfsyn * qfsyn
   | QOR of qfsyn * qfsyn
   | QOP of string * qasyn * qasyn
+  | QCOUNT of qasyn
       
 type decl = LET of ide * ide list * fsyn
 type dseq = decl list
@@ -116,3 +117,4 @@ let rec qformula_of_qfsyn env qf =
   | QAND (qf1,qf2) -> QAnd (qformula_of_qfsyn env qf1, qformula_of_qfsyn env qf2)
   | QOR (qf1,qf2) -> QNot (QAnd (QNot (qformula_of_qfsyn env qf1), QNot (qformula_of_qfsyn env qf2)))
   | QOP (op,qa1,qa2) -> QOp (opsem op,qatom_of_qasyn env qa1,qatom_of_qasyn env qa2)
+  | QCOUNT qa1 -> QCount (qatom_of_qasyn env qa1)

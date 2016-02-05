@@ -174,7 +174,12 @@ present) that are used as atomic propositions associated to state
 alternatively, each of prop1 ... propN may be in the form string=int,
 associating a quantity to a proposition. Actually, the first form is a
 shorthand for string=1, and omitting a string makes its value equal to
-0.
+0. Note that each pair of state and point id can be repeated many
+times, if needed; different atomic propositions will be accepted in
+different rows. However, for numeric values of atomic propositions, no
+combination is done. The first value found in the csv is the one
+accepted for the given atomic proposition if more than one row for the
+same pair of ids, and the same atomic formula, is found.
 
 
 Macro declaration

@@ -17,4 +17,5 @@ type qformula =
   | QNot of qformula
   | QAnd of qformula * qformula
   | QOp of (int -> int -> bool) * qatom * qatom
- 
+  | QCount of qatom
+      

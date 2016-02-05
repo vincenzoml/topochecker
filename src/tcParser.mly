@@ -1,5 +1,6 @@
 %token EOL
-%token <string> STRING 
+%token <string> STRING
+%token COUNT
 %token GROUP
 %token SHARE
 %token LPAREN
@@ -82,6 +83,7 @@ qformula:
 | qformula AND qformula { Syntax.QAND ($1,$3) }
 | qformula OR qformula { Syntax.QOR ($1,$3) }
 | qaformula OP qaformula { Syntax.QOP ($2,$1,$3) }
+| COUNT qaformula { Syntax.QCOUNT $2 }
 ;
 qaformula:
   formula { Syntax.QFSYN $1 }

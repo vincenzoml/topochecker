@@ -65,13 +65,14 @@ let main args =
   let (model,commands) = ModelLoader.load_experiment expfname in
   (* TODO: check for output commands here! *)
   Util.debug "Step 2/3: Precomputing model checking table...";
+  let t = Sys.time () in
   let checker = Checker.precompute model in
   let products =
     List.fold_left
       (fun accum command ->
 	match command with
 	  ModelLoader.Ask qformula ->
-	    (Printf.printf "%b\n%!" (Checker.qchecker (Model.Graph.nb_vertex model.Model.space) checker qformula);
+	    (Printf.printf "result: %f\n%!" (Checker.qchecker (Model.Graph.nb_vertex model.Model.space) checker qformula);
 	     accum
 	    )
 	| ModelLoader.Check (color,formula) ->
@@ -84,7 +85,9 @@ let main args =
 	| ModelLoader.Output (fname,states) ->
 	   ((fname,states),[])::accum)
       [] commands 
-  in		   
+  in
+  let t' = (Sys.time ()) -. t in
+  Util.debug (Printf.sprintf "Computation time (in seconds): %f" t');
   Util.debug "Step 3/3: Writing output files...";
   List.iter
     (fun ((fname,states),colored_truth_vals) ->

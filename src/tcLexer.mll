@@ -43,6 +43,7 @@
 | "Space" {SPACE}
 | "Eval" {EVAL}
 | "Output" {OUTPUT}
+| "#" {COUNT}
 | (">" | "=" | "<"| "!" | "?" | "+" | "-" | "*" | "/")* as lxm {OP lxm}
 | ['A'-'Z' 'a'-'z']['A'-'Z' 'a'-'z' '0'-'9']* as lxm {IDE lxm} 
 | eof {EOF} 
