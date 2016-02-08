@@ -1,0 +1,46 @@
+Kripke "data/mc0_kripke.dot" Space "data/mc0_space.dot" Eval "data/mc0_eval.csv";
+
+Let full = [vacant == 0];
+Let cluster = I full;
+
+Let cluster2steps = cluster & (A X cluster); 
+Let cluster3steps = cluster & (A X cluster2steps);
+
+Let boundary(x) = (!x) & (N x);
+Let growingCluster = (!full) & (N (boundary(cluster))) & (A X full);
+Let shrinkingCluster =  cluster & (A X (!full));	
+
+Let implies(x,y) = (!x) | y;
+Let nextCluster =  (E F full) & (A G implies(full,A full U cluster));
+Let boundaryCluster =  boundary(E F cluster);
+
+Let tripEnd = full & ( N ( A X ( full & ( N ( A X ( full & N ( A X full)))))));
+
+//// Persistence of clusters
+
+Output "output0/eventuallyCluster";
+
+Check "0x00FF00" E F cluster;
+Check "0x0000FF" E F cluster2steps;
+Check "0xFF0000" E F cluster3steps;
+
+
+//// Growth of clusters
+
+Output "output0/evolvingCluster";
+Check "0x00FF00" E F cluster;
+
+// Growing clusters
+Check "0xFF0000" growingCluster;
+
+// Shrinking of clusters
+Check "0x0000FF" shrinkingCluster;
+
+
+//// Transformation of clusters
+
+Output "output0/nextCluster";
+
+Check "0xFF0000" nextCluster;
+Check "0x00FF00" boundaryCluster;
+

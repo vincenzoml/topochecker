@@ -1,0 +1,8 @@
+Kripke "mc_kripke.dot" Space "london_map_transport.dot" Eval "mc_eval.csv";
+
+Let full = [vacant == 0];
+
+Let tripEnd = full & ( N ( A X ( full & ( N ( A X ( full & N ( A X full)))))));
+
+Ask TT == 733;
+
