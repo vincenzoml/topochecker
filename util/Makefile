@@ -10,7 +10,5 @@ all: bmp_to_topochecker
 	ocamlbuild -use-ocamlfind -pkg camlimages,camlimages.all_formats $@
 
 clean:
-	rm -rf _build *~ *.native
+	rm -rf _build *~ *.native *.topochecker bmp_to_topochecker eval.csv kripke.dot space.dot
 
-allclean: clean
-	rm -rf bmp_to_topochecker

@@ -30,7 +30,7 @@ let write_state model state colored_truth_vals (output : out_channel) =
        let col = vertex_color colored_truth_vals state point in
        if col == 0 then []
        else [`Color col; `Style `Filled]);
-    PrinterGraph.vertex_name_fn := model.Model.spaceid;
+    PrinterGraph.vertex_name_fn := model.Model.local_state.ModelLoader.spaceid;
     Printer.output_graph output model.Model.space
 
 let alternate_write_state model state colored_truth_vals (output : out_channel) space_fname =
@@ -52,6 +52,15 @@ let alternate_write_state model state colored_truth_vals (output : out_channel) 
 	done
       with End_of_file -> close_in input
     end
+
+let run_interactive model env checker =
+  try
+    while true do
+      let line = read_line () in
+      let (ide,qformula) = ModelLoader.load_ask_query env line in
+      Printf.printf "%s: %f\n%!" ide (Checker.qchecker (Model.Graph.nb_vertex model.Model.space) checker qformula)
+    done
+  with End_of_file -> ()
       
 let main args =
   let (expfname,outbasefname) =
@@ -62,7 +71,7 @@ let main args =
       Util.fail (Printf.sprintf "Usage: %s FILENAME OUTPUT_PREFIX\n" Sys.argv.(0))
   in
   Util.debug "Step 1/3: Loading experiment...";
-  let (model,commands) = ModelLoader.load_experiment expfname in
+  let (model,env,commands) = ModelLoader.load_experiment expfname in
   (* TODO: check for output commands here! *)
   Util.debug "Step 2/3: Precomputing model checking table...";
   let t = Sys.time () in
@@ -71,8 +80,8 @@ let main args =
     List.fold_left
       (fun accum command ->
 	match command with
-	  ModelLoader.Ask qformula ->
-	    (Printf.printf "result: %f\n%!" (Checker.qchecker (Model.Graph.nb_vertex model.Model.space) checker qformula);
+	  ModelLoader.Ask (ide,qformula) ->
+	    (Printf.printf "%s: %f\n%!" ide (Checker.qchecker (Model.Graph.nb_vertex model.Model.space) checker qformula);
 	     accum
 	    )
 	| ModelLoader.Check (color,formula) ->
@@ -86,27 +95,33 @@ let main args =
 	   ((fname,states),[])::accum)
       [] commands 
   in
-  let t' = (Sys.time ()) -. t in
-  Util.debug (Printf.sprintf "Computation time (in seconds): %f" t');
-  Util.debug "Step 3/3: Writing output files...";
-  List.iter
-    (fun ((fname,states),colored_truth_vals) ->
-     match colored_truth_vals with
-       [] -> ()
-     | _ ->
-	let aux fn =
+  match products with
+    [] ->
+      Util.debug "Step 3/3: Interactive evaluation of Ask queries";
+      run_interactive model env checker
+  | _ ->
+     begin
+       let t' = (Sys.time ()) -. t in
+       Util.debug (Printf.sprintf "Computation time (in seconds): %f" t');
+       Util.debug "Step 3/3: Writing output files...";
+       List.iter
+	 (fun ((fname,states),colored_truth_vals) ->
+	   match colored_truth_vals with
+	     [] -> ()
+	   | _ ->
+	      let aux fn =
 		match states with
 		  None -> for state = 0 to Model.Graph.nb_vertex model.Model.kripke - 1 do fn state done
-		| Some lst -> List.iter fn lst
-	in
-	let fn state =
-	  let out_name =  (Printf.sprintf "%s-%s.dot" fname (model.Model.kripkeid state)) in
-	  let output = open_out out_name in
-	  alternate_write_state model state (List.rev colored_truth_vals) output model.Model.spacefname;
-	  close_out output in
-	aux fn
-    ) 
-    products;
-  Util.debug "All done."
-
+	     | Some lst -> List.iter fn lst
+	      in
+	      let fn state =
+		let out_name =  (Printf.sprintf "%s-%s.dot" fname (model.Model.local_state.ModelLoader.kripkeid state)) in
+		let output = open_out out_name in
+		alternate_write_state model state (List.rev colored_truth_vals) output model.Model.local_state.ModelLoader.spacefname;
+		close_out output in
+	   aux fn) 
+	 products;
+       Util.debug "All done."
+     end
+       
 let _ = main Sys.argv

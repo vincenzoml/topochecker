@@ -28,14 +28,18 @@ module Edge =
     
 module Graph = Graph.Imperative.Digraph.ConcreteBidirectionalLabeled(Vertex)(Edge)
 			       
-type model =
+type 'a model =
     { kripke : Graph.t;
       space : Graph.t;
       deadlocks : int -> bool;
+      local_state : 'a;
+      eval : slice H.t } (* TODO PERSISTENCE CLARITY turn this table into the cache of the model checker, and implement persistence in this file? *)
+
+      (*
       kripkefname : string;
       spacefname : string;
       kripkeid : int -> string;
       idkripke : string -> int;
       spaceid : int -> string;
       idspace : string -> int;
-      eval : slice H.t } (* TODO PERSISTENCE CLARITY turn this table into the cache of the model checker, and implement persistence in this file? *)
+      *)

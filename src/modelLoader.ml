@@ -97,8 +97,17 @@ let completeDeadlocks kripke =
 				      end)
 			  kripke;
   fun state -> Util.isTrue (Array1.get vect state)
-  
-let load_model : string -> string -> string -> Model.model =
+
+    
+type dot_data =
+  { kripkefname : string;
+    spacefname : string;
+    kripkeid : int -> string;
+    idkripke : string -> int;
+    spaceid : int -> string;
+    idspace : string -> int }
+    
+let load_model : string -> string -> string -> dot_data Model.model =
   fun kripkef spacef evalf ->
   let kripke = Parser.parse kripkef in
   let (k_id_of_int,k_int_of_id) = ParserSig.read () in      
@@ -111,19 +120,25 @@ let load_model : string -> string -> string -> Model.model =
   { Model.kripke = kripke;
     Model.space = space;
     Model.deadlocks = deadlocks;
-    Model.kripkefname = kripkef;
-    Model.spacefname = spacef;
-    Model.kripkeid = k_id_of_int;
-    Model.idkripke = k_int_of_id;
-    Model.spaceid = s_id_of_int;
-    Model.idspace = s_int_of_id;
-    Model.eval = propTbl; }
+    Model.local_state =
+      { kripkefname = kripkef;
+	spacefname = spacef;
+	kripkeid = k_id_of_int;
+	idkripke = k_int_of_id;
+	spaceid = s_id_of_int;
+	idspace = s_int_of_id };
+    Model.eval = propTbl }
 						      
 type command =
     Check of int * Logic.formula
   | Output of string * (int list option)
-  | Ask of Logic.qformula
-									 
+  | Ask of string * Logic.qformula
+
+let load_ask_query env string =
+  let lexbuf = Lexing.from_string string in
+  let (id,qfsyn) = TcParser.ask TcLexer.token lexbuf in  
+  (id,Syntax.qformula_of_qfsyn env qfsyn)
+      
 let load_experiment =
   fun path ->
   let (dir,file) = (Filename.dirname path,Filename.basename path) in
@@ -135,11 +150,11 @@ let load_experiment =
     let env = Syntax.env_of_dseq dseq in
     let commands = List.map (function
       | Syntax.CHECK (color,fsyn) -> Check (int_of_string color,Syntax.formula_of_fsyn env fsyn)
-      | Syntax.ASK qfsyn -> Ask (Syntax.qformula_of_qfsyn env qfsyn)
+      | Syntax.ASK (ide,qfsyn) -> Ask (ide,Syntax.qformula_of_qfsyn env qfsyn)
       | Syntax.OUTPUT (s,None) -> Output (s,None)
-      | Syntax.OUTPUT (s,Some states) -> Output (s,Some (List.map model.Model.idkripke states))) commands in    
+      | Syntax.OUTPUT (s,Some states) -> Output (s,Some (List.map model.Model.local_state.idkripke states))) commands in    
     close_in desc; (* TODO use a safe wrapper for the open/close pairs here and everywhere else *)
-    (model,commands)
+    (model,env,commands)
   with exn ->
     close_in desc;
     let msg = Printexc.to_string exn in

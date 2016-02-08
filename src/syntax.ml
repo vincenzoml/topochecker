@@ -25,19 +25,11 @@ type fsyn =
   | AF of fsyn
   | EU of fsyn * fsyn
   | AU of fsyn * fsyn
-
-type qasyn =
-    QINT of int
-  | QFSYN of fsyn
       
 type qfsyn =
-  | QTRUE
-  | QFALSE
-  | QNOT of qfsyn
-  | QAND of qfsyn * qfsyn
-  | QOR of qfsyn * qfsyn
-  | QOP of string * qasyn * qasyn
-  | QCOUNT of qasyn
+  | QFLOAT of float
+  | QOP of string * qfsyn * qfsyn
+  | QCOUNT of fsyn
       
 type decl = LET of ide * ide list * fsyn
 type dseq = decl list
@@ -45,7 +37,7 @@ type dseq = decl list
 type com =
     CHECK of string * fsyn
   | OUTPUT of string * (string list option)
-  | ASK of qfsyn      
+  | ASK of string * qfsyn      
 type cseq = com list
 		      
 type experiment = model * dseq * cseq
@@ -103,18 +95,9 @@ let rec formula_of_fsyn env f =
   | CALL (ide,actuals) ->
      let (formals,body) = apply env ide in
      formula_of_fsyn (zipenv env formals (List.map (fun x -> ([],x)) actuals)) body
-
-let qatom_of_qasyn env qa =
-  match qa with
-    QINT i -> Qint i
-  | QFSYN f -> Qformula (formula_of_fsyn env f)
        
 let rec qformula_of_qfsyn env qf =
   match qf with
-    QTRUE -> QT
-  | QFALSE -> QNot QT
-  | QNOT qf1 -> QNot (qformula_of_qfsyn env qf1)
-  | QAND (qf1,qf2) -> QAnd (qformula_of_qfsyn env qf1, qformula_of_qfsyn env qf2)
-  | QOR (qf1,qf2) -> QNot (QAnd (QNot (qformula_of_qfsyn env qf1), QNot (qformula_of_qfsyn env qf2)))
-  | QOP (op,qa1,qa2) -> QOp (opsem op,qatom_of_qasyn env qa1,qatom_of_qasyn env qa2)
-  | QCOUNT qa1 -> QCount (qatom_of_qasyn env qa1)
+  | QFLOAT f -> QFloat f
+  | QOP (op,qf1,qf2) -> QOp (opsem op,qformula_of_qfsyn env qf1,qformula_of_qfsyn env qf2)
+  | QCOUNT f1 -> QCount (formula_of_fsyn env f1)

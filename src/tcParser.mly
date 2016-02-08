@@ -42,12 +42,19 @@
 %token OUTPUT
 %token EOF 
 %start main
+%start ask
 %type <Syntax.experiment> main
+%type <string * Syntax.qfsyn> ask
 %%
 main:
 | modelSpec declSpec comSpec EOF {($1,$2,$3)}
 | modelSpec comSpec EOF {($1,[],$2)}
-; 
+| modelSpec declSpec EOF {($1,$2,[])}
+| modelSpec EOF {($1,[],[])}
+;
+ask:
+| ASK STRING qformula eol {($2,$3)}
+;    
 modelSpec:
 | KRIPKE STRING SPACE STRING EVAL STRING eol {Syntax.MODEL ($2,$4,$6)}
 ;
@@ -64,7 +71,7 @@ comSpec:
 | com comSpec {$1 :: $2}
 ;
 com:
-| ASK qformula eol {Syntax.ASK $2}
+| ask {Syntax.ASK (fst $1,snd $1)}
 | CHECK STRING formula eol {Syntax.CHECK ($2,$3)}
 | OUTPUT STRING eol {Syntax.OUTPUT ($2,None)};
 | OUTPUT STRING states eol {Syntax.OUTPUT ($2,Some $3)} 
@@ -76,18 +83,10 @@ eol:
 | EOL {}
 ;
 qformula:
-  TRUE {Syntax.QFALSE}
-| FALSE {Syntax.QTRUE}
+| FLOAT { Syntax.QFLOAT $1 }
 | LPAREN qformula RPAREN { $2 }
-| NOT qformula { Syntax.QNOT $2 }
-| qformula AND qformula { Syntax.QAND ($1,$3) }
-| qformula OR qformula { Syntax.QOR ($1,$3) }
-| qaformula OP qaformula { Syntax.QOP ($2,$1,$3) }
-| COUNT qaformula { Syntax.QCOUNT $2 }
-;
-qaformula:
-  formula { Syntax.QFSYN $1 }
-| INT { Syntax.QINT $1 }
+| qformula OP qformula { Syntax.QOP ($2,$1,$3) }
+| COUNT formula { Syntax.QCOUNT $2 }
 ;
 formula:
 | LPAREN formula RPAREN {$2}

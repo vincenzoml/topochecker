@@ -9,13 +9,9 @@ type formula =
   | Ex of formula
   | Af of formula
   | Eu of formula * formula     
-
-type qatom = Qint of int | Qformula of formula
       
 type qformula =
-    QT
-  | QNot of qformula
-  | QAnd of qformula * qformula
-  | QOp of (int -> int -> bool) * qatom * qatom
-  | QCount of qatom
+  | QFloat of float
+  | QOp of (float -> float -> bool) * qformula * qformula
+  | QCount of formula
       

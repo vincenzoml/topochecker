@@ -147,24 +147,17 @@ let precompute model =
   | _ ->
      let slice = cache f in
      fun state point -> isTrue(Array2.get slice state point)
-
-let achecker nb checker a =
-  match a with
-    Qint i -> i
-  | Qformula f -> let res = ref 0 in
-		  let c = checker f 0 in 
-		  for i = 0 to nb-1 do 
-		    if c i
-		    then res := !res + 1
-		  done;
-		  !res
-		    
+  		    
 let rec qchecker nb checker qf =
   match qf with
-    QT -> Util.valTrue
-  | QNot qf1 -> valNot (qchecker nb checker qf1)
-  | QAnd (qf1,qf2) -> valAnd (qchecker nb checker qf1) (qchecker nb checker qf2)
-  | QOp (qop,a1,a2) -> ofBool (qop (achecker nb checker a1) (achecker nb checker a2))
-  | QCount f -> float_of_int (achecker nb checker f)
+  | QFloat f -> f
+  | QOp (qop,f1,f2) -> ofBool (qop (qchecker nb checker f1) (qchecker nb checker f2))
+  | QCount f -> float_of_int (let res = ref 0 in
+			      let c = checker f 0 in 
+			      for i = 0 to nb-1 do 
+				if c i
+				then res := !res + 1
+			      done;
+			      !res)
 
      

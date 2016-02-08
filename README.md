@@ -126,6 +126,17 @@ representation of the evaluation of formulas in the experiment over
 space, in the dot file format.
 
 
+Server mode
+===========
+
+Below, a long explanation of the syntax of experiments is
+given. However, if no output file is specified, and no commands are
+given, the system will run in "servere mode". In this mode,
+topochecker will wait for input on stdin. Only commands of the form
+"Ask ID QFMLA;" are accepted, and results are returned one by one as
+described in more detail below.
+
+
 Syntax of experiment description files
 ======================================
 
@@ -199,9 +210,13 @@ Syntax of commands
 
 Possible commands are:
 
-`Check "COLOR" FORMULA;`
+`Check "COLOR" FMLA;`
 
 (mind the semicolon!). COLOR is an integer, which can also be in hexadecimal form (0xNNNNNN); this RGB color is used to color the output for the specified formula. Colours are currently just summed for different formulas.
+
+`Ask "ID" QFORMULA;
+
+ID is a string; QFORMULA is a quantitative formula, with syntax described later in this document. Result is a floating point value <VALUE> which is printed on stdout in the format "ID: <VALUE>"
 
 `Output "filename";`
 `Output "filename" state1,state2,...
@@ -220,6 +235,8 @@ FMLA ::=
        | [string OP INTEGER]		(quantitative check, OP is <, <=, ==, !=, >, >=)
        | TT                             (true)
        | FF                             (false)
+       | FMLA & FMLA			(and)
+       | FMLA | FMLA 			(or)
        | (FMLA)                         (subformula)
        | identifier                     (as declared with Let ide = FMLA)
        | identifier(arg1,...,argN)      (as declared with Let ide(arg1,...,argN) = FMLA)
@@ -236,6 +253,15 @@ FMLA ::=
        | E FMLA U FMLA                  (EU from CTL)
        | A FMLA U FMLA                  (AU from CTL)
 ```
+
+Quantitative formulas are described by the following syntax
+
+QFMLA ::=
+         float				(floating point constant)
+       | (QFMLA)			(subformula)
+       | QFMLA OP QFMLA 		(quantitative check, OP as above)
+       | # QFMLA  			(count points in space satisfying QFMLA in state 0)
+	
 
 Special treatment of deadlocks and reserved names of atomic propositions
 ========================================================================
