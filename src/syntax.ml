@@ -37,7 +37,7 @@ type dseq = decl list
 type com =
     CHECK of string * fsyn
   | OUTPUT of string * (string list option)
-  | ASK of string * qfsyn      
+  | ASK of string * (string list) * qfsyn      
 type cseq = com list
 		      
 type experiment = model * dseq * cseq

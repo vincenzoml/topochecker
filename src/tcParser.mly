@@ -44,7 +44,7 @@
 %start main
 %start ask
 %type <Syntax.experiment> main
-%type <string * Syntax.qfsyn> ask
+%type <string * (string list) * Syntax.qfsyn> ask
 %%
 main:
 | modelSpec declSpec comSpec EOF {($1,$2,$3)}
@@ -53,10 +53,17 @@ main:
 | modelSpec EOF {($1,[],[])}
 ;
 ask:
-| ASK STRING qformula eol {($2,$3)}
-;    
+| ASK STRING qformula eol {($2,[],$3)}
+| ASK STRING LPAREN stringlist RPAREN qformula eol { ($2,$4,$6) }
+;
+stringlist:
+| STRING { [$1] }
+| STRING COMMA stringlist { $1::$3 }
+;
 modelSpec:
 | KRIPKE STRING SPACE STRING EVAL STRING eol {Syntax.MODEL ($2,$4,$6)}
+| SPACE STRING EVAL STRING eol {Syntax.MODEL ("",$2,$4)}
+| SPACE STRING eol {Syntax.MODEL ("",$2,"")}
 ;
 declSpec:
 | decl {[$1]}
@@ -71,7 +78,6 @@ comSpec:
 | com comSpec {$1 :: $2}
 ;
 com:
-| ask {Syntax.ASK (fst $1,snd $1)}
 | CHECK STRING formula eol {Syntax.CHECK ($2,$3)}
 | OUTPUT STRING eol {Syntax.OUTPUT ($2,None)};
 | OUTPUT STRING states eol {Syntax.OUTPUT ($2,Some $3)} 

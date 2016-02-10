@@ -30,11 +30,11 @@ let write_state model state colored_truth_vals (output : out_channel) =
        let col = vertex_color colored_truth_vals state point in
        if col == 0 then []
        else [`Color col; `Style `Filled]);
-    PrinterGraph.vertex_name_fn := model.Model.local_state.ModelLoader.spaceid;
+    PrinterGraph.vertex_name_fn := model.Model.spaceid;
     Printer.output_graph output model.Model.space
 
 let alternate_write_state model state colored_truth_vals (output : out_channel) space_fname =
-  (* TODO this is a quick hack *)
+  (* TODO this is a quick hack for quick saving... *)
   let input = open_in space_fname in
   let l1 = input_line input in
   if not (Str.string_match (Str.regexp_case_fold "[' ' '\t']*digraph[^{]*") l1 0)
@@ -52,13 +52,16 @@ let alternate_write_state model state colored_truth_vals (output : out_channel) 
 	done
       with End_of_file -> close_in input
     end
-
+      
 let run_interactive model env checker =
   try
     while true do
       let line = read_line () in
-      let (ide,qformula) = ModelLoader.load_ask_query env line in
-      Printf.printf "%s: %f\n%!" ide (Checker.qchecker (Model.Graph.nb_vertex model.Model.space) checker qformula)
+      let (ide,points,qformula) = ModelLoader.load_ask_query env line in
+      let res =  (Checker.qchecker (List.map model.Model.idspace points)
+		    (Model.Graph.nb_vertex model.Model.space) checker qformula)
+      in
+      Printf.printf "%s: %f\n%!" ide res
     done
   with End_of_file -> ()
       
@@ -80,10 +83,8 @@ let main args =
     List.fold_left
       (fun accum command ->
 	match command with
-	  ModelLoader.Ask (ide,qformula) ->
-	    (Printf.printf "%s: %f\n%!" ide (Checker.qchecker (Model.Graph.nb_vertex model.Model.space) checker qformula);
-	     accum
-	    )
+	  ModelLoader.Ask (ide,ids,qformula) ->
+	    Util.debug "Ask queries are supported only in server mode (see readme)"; []
 	| ModelLoader.Check (color,formula) ->
 	   (match accum with
 	     [] ->
@@ -111,15 +112,21 @@ let main args =
 	   | _ ->
 	      let aux fn =
 		match states with
-		  None -> for state = 0 to Model.Graph.nb_vertex model.Model.kripke - 1 do fn state done
-	     | Some lst -> List.iter fn lst
+		  None ->
+		    for state = 0
+		      to Model.Graph.nb_vertex model.Model.kripke - 1
+		    do
+		      fn state;
+		    done;
+		| Some lst -> List.iter fn lst
 	      in
 	      let fn state =
-		let out_name =  (Printf.sprintf "%s-%s.dot" fname (model.Model.local_state.ModelLoader.kripkeid state)) in
+		let out_name =  (Printf.sprintf "%s-%s.dot" fname (model.Model.kripkeid state)) in
 		let output = open_out out_name in
-		alternate_write_state model state (List.rev colored_truth_vals) output model.Model.local_state.ModelLoader.spacefname;
-		close_out output in
-	   aux fn) 
+		alternate_write_state model state (List.rev colored_truth_vals) output model.Model.local_state.DotParser.spacefname;
+		close_out output
+	      in
+	      aux fn)
 	 products;
        Util.debug "All done."
      end

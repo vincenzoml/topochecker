@@ -11,7 +11,7 @@ PACKAGES=-package ocamlgraph -package csv
 OCAMLC = ocamlfind ocamlc $(PACKAGES) $(ALIBS)
 OCAMLOPT = ocamlfind ocamlopt $(PACKAGES) $(LIBS)
 OCAMLMKTOP = ocamlfind ocamlmktop $(PACKAGES) $(ALIBS)
-DEPS=util.cmx logic.cmx syntax.cmx tcParser.cmx tcLexer.cmx model.cmx tcParser.cmx checker.cmx modelLoader.cmx
+DEPS=util.cmx logic.cmx syntax.cmx tcParser.cmx tcLexer.cmx model.cmx tcParser.cmx checker.cmx dotParser.cmx modelLoader.cmx
 ADEPS=$(DEPS:.cmx=.cmo)
 MAIN=main
 RLFE=$(shell which rlfe)

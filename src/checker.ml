@@ -132,32 +132,42 @@ let precompute model =
 	    Array2.set slice state point valTrue;
 	    Model.Graph.iter_pred
 	      (fun state -> if isTrue (Array2.get a1 state point) &&
-				 isFalse (Array2.get a2 state point) &&
-				   isFalse (Array2.get slice state point)
-			    then (Array2.set slice state point valUtil;
-				  Stack.push (state,point) accum))
+		  isFalse (Array2.get a2 state point) &&
+		  isFalse (Array2.get slice state point)
+		then (Array2.set slice state point valUtil;
+		      Stack.push (state,point) accum))
 	      model.kripke state;
 	  done
       );
       slice in
   fun f ->
-  match f with
-    Prop "deadlock" -> 
-    fun state point -> model.deadlocks state
+    match f with
+      Prop "deadlock" -> 
+	fun state point ->
+	  (match model.deadlocks with
+	    None -> false
+	  | Some f -> f state)
   | _ ->
      let slice = cache f in
      fun state point -> isTrue(Array2.get slice state point)
   		    
-let rec qchecker nb checker qf =
+let rec qchecker points nb checker qf =
   match qf with
   | QFloat f -> f
-  | QOp (qop,f1,f2) -> ofBool (qop (qchecker nb checker f1) (qchecker nb checker f2))
+  | QOp (qop,f1,f2) -> ofBool (qop (qchecker points nb checker f1) (qchecker points nb checker f2))
   | QCount f -> float_of_int (let res = ref 0 in
-			      let c = checker f 0 in 
-			      for i = 0 to nb-1 do 
-				if c i
-				then res := !res + 1
-			      done;
+			      let c = checker f 0 in
+			      if [] = points then
+				for i = 0 to nb-1 do 
+				  if c i
+				  then res := !res + 1
+				done
+			      else
+				List.iter
+				  (fun i ->
+				    if c i
+				    then res := !res + 1)
+				  points;
 			      !res)
 
      
