@@ -25,6 +25,8 @@ Let Phi3 = T(safe,green);
 Let Phi4 = (red & safe) & (T(safe,green));
 Let Phi5 = T(safe,Phi4);
 
+Output "output";
+
 Check "0x010101" black;
 Check "0x00FF00" green;
 Check "0xFFFFFF" white;

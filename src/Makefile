@@ -5,13 +5,13 @@ TOP=topochecker.top
 #Command to compile without explicit dependencies:
 #ocamlbuild -cflags -I,+ocamlgraph,-I,+csv -libs ocamlgraph/graph,csv/csv,bigarray,str main.native
 
-LIBS=graph.cmxa bigarray.cmxa str.cmxa csv.cmxa
+LIBS=batteries.cmxa unix.cmxa graph.cmxa str.cmxa csv.cmxa
 ALIBS=$(LIBS:.cmxa=.cma)
 PACKAGES=-package ocamlgraph -package csv
 OCAMLC = ocamlfind ocamlc $(PACKAGES) $(ALIBS)
 OCAMLOPT = ocamlfind ocamlopt $(PACKAGES) $(LIBS)
 OCAMLMKTOP = ocamlfind ocamlmktop $(PACKAGES) $(ALIBS)
-DEPS=util.cmx logic.cmx syntax.cmx tcParser.cmx tcLexer.cmx model.cmx tcParser.cmx checker.cmx dotParser.cmx modelLoader.cmx
+DEPS=util.cmx logic.cmx syntax.cmx tcParser.cmx tcLexer.cmx model.cmx tcParser.cmx checker.cmx niftiParser.cmx dotParser.cmx modelLoader.cmx
 ADEPS=$(DEPS:.cmx=.cmo)
 MAIN=main
 RLFE=$(shell which rlfe)
@@ -26,12 +26,19 @@ endif
 
 TARGET=slow
 
-ifneq ($(shell which ocamlbuild),)
+OCAMLBUILD_EXE=$(shell which ocamlbuild)
+
+ifneq ($(OCAMLBUILD_EXE),)
 	TARGET=fast
+	OCAMLBUILD=ocamlbuild -use-ocamlfind -package batteries -package unix -package ocamlgraph -package csv -package graphics 
 endif
 
-
 $(EXE): $(TARGET)
+
+
+
+%:
+	$(OCAMLBUILD) $@
 
 slow: $(DEPS) $(MAIN).cmx
 	make fastclean
@@ -39,7 +46,7 @@ slow: $(DEPS) $(MAIN).cmx
 
 fast:
 	make slowclean
-	ocamlbuild -use-ocamlfind -package ocamlgraph -package csv -libs bigarray,str main.native && cp -L main.native $(EXE) && rm main.native
+	$(OCAMLBUILD) main.native && cp -L main.native $(EXE) && rm main.native
 
 $(TOP): $(ADEPS)
 	$(OCAMLMKTOP) $^ -o $@

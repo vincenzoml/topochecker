@@ -1,4 +1,7 @@
 Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
+
+Output "output";
+
 Check "0xFF0000" N ![a];
 
 

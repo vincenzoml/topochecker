@@ -10,7 +10,7 @@ view: run
 
 run: maketool generate_model.native
 	./generate_model.native green layers/00_ground.bmp black layers/01_walls.bmp red layers/02_firstaid.bmp brown layers/03_obstacles.bmp danger layers/04_danger.bmp blue layers/05_agents_blue.bmp cyan layers/06_agents_cyan.bmp purple layers/07_agents_purple.bmp yellow layers/08_agents_yellow.bmp
-	../../src/topochecker test.topochecker output
+	../../src/topochecker test.topochecker
 
 %.native: *.ml
 	ocamlbuild -use-ocamlfind -pkg camlimages,camlimages.all_formats $@

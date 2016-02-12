@@ -81,27 +81,113 @@ let parse_eval filename states points stateid pointid =
        Util.fail "states and points must be integers in the evaluation function"
   );
   Csv.close_in csv_chan;
-  prop_tbl
+  let res = Model.H.create (Model.H.length prop_tbl) in
+  Model.H.iter (fun k v -> Model.H.add res k (Array2.get v)) prop_tbl;
+  res
+
+module PrinterGraph =
+  struct
+    include Model.Graph
+
+    let vertex_attributes_fn = ref (fun v -> Util.fail "Printer not initialized")
+    let vertex_name_fn = ref (fun v -> Util.fail "Printer not initialized")
+
+    let edge_attributes e = []
+    let default_edge_attributes g = [`Dir `Forward]
+    let get_subgraph g = None
+    let vertex_attributes v = !vertex_attributes_fn v
+    let graph_attributes g = []
+    let vertex_name v = !vertex_name_fn v
+    let default_vertex_attributes g = []			      
+  end
+
+module Printer = Graph.Graphviz.Neato(PrinterGraph)
+
+let vertex_color colored_truth_vals state point =
+    List.fold_left
+      (fun accum (color,truth_val) -> 
+       if truth_val state point
+       then (int_of_string color) (* accum + color *) 
+       else accum)
+      0x000000 colored_truth_vals
+      
+let write_state spacegraph spaceid state colored_truth_vals (output : out_channel) =
+    PrinterGraph.vertex_attributes_fn :=
+      (fun point ->
+       let col = vertex_color colored_truth_vals state point in
+       if col == 0 then []
+       else [`Color col; `Style `Filled]);
+    PrinterGraph.vertex_name_fn := spaceid;
+    Printer.output_graph output spacegraph
+
+let alternate_write_state spacefname spacegraph spaceid state colored_truth_vals (output : out_channel) space_fname =
+  (* TODO this is a quick hack for quick saving... *)
+  let input = open_in space_fname in
+  let l1 = input_line input in
+  if not (Str.string_match (Str.regexp_case_fold "[' ' '\t']*digraph[^{]*") l1 0)
+  then (close_in input; write_state spacegraph spaceid state colored_truth_vals output)
+  else
+    begin
+      Printf.fprintf output "%s\n" l1;
+      for point = 0 to Model.Graph.nb_vertex spacegraph - 1 do
+	let col = vertex_color colored_truth_vals state point in
+	Printf.fprintf output "%d [fillcolor=\"#%06X\",style=\"filled\"];\n" point (if col == 0 then 0xFFFFFF else col);
+      done;
+      try
+	while true do
+	  Printf.fprintf output "%s\n" (input_line input)
+	done
+      with End_of_file -> close_in input
+    end
+
+let write_dot_model spacefname kripkegraph spacegraph kripkeid spaceid fname states colored_truth_vals =
+  match colored_truth_vals with
+    [] -> ()
+  | _ ->
+     let aux fn =
+       match states with
+	 None ->
+	   for state = 0
+	     to Model.Graph.nb_vertex kripkegraph - 1
+	   do
+	     fn state;
+	   done;
+       | Some lst -> List.iter fn lst
+     in
+     let fn state =
+       let out_name =  (Printf.sprintf "%s-%s.dot" fname (kripkeid state)) in
+       let output = open_out out_name in
+       alternate_write_state spacefname spacegraph spaceid state (List.rev colored_truth_vals) output spacefname;
+       close_out output
+     in
+     aux fn
         
 let load_dot_model dir k s e =
-  let (spacef,evalf) =  (Util.mkfname dir s,Util.mkfname dir e) in
-  let (kripke,(k_id_of_int,k_int_of_id)) =
-    if k = ""
-    then (Model.default_kripke (),(string_of_int,int_of_string))
-    else (Parser.parse (Util.mkfname dir k),ParserSig.read ())
-  in
-  ParserSig.reset ();
-  let space = Parser.parse spacef in
-  let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
-  ParserSig.reset ();
-  let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex space) k_int_of_id s_int_of_id in  
-  { Model.kripke = kripke;
-    Model.space = space;
-    Model.deadlocks = None;
-    kripkeid = k_id_of_int;
-    idkripke = k_int_of_id;
-    spaceid = s_id_of_int;
-    idspace = s_int_of_id;
-    Model.local_state =
-      {	spacefname = spacef };
-    Model.eval = propTbl }
+  if not (Filename.check_suffix s ".dot" && Filename.check_suffix k ".dot") then None
+  else
+    let (spacef,evalf) =  (Util.mkfname dir s,Util.mkfname dir e) in
+    let (kripke,(k_id_of_int,k_int_of_id)) =
+      if k = ""
+      then (Model.default_kripke (),(string_of_int,int_of_string))
+      else (Parser.parse (Util.mkfname dir k),ParserSig.read ())
+    in
+    ParserSig.reset ();
+    let spaceg = Parser.parse spacef in
+    let space = { Model.num_nodes = Model.Graph.nb_vertex spaceg;
+		  Model.iter_pre = (fun v fn -> Model.Graph.iter_pred fn spaceg v);
+		  Model.iter_post = (fun v fn -> Model.Graph.iter_succ fn spaceg v) }
+    in
+    let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
+    ParserSig.reset ();
+    let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex spaceg) k_int_of_id s_int_of_id in
+    Some
+      { Model.kripke = kripke;
+	Model.space = space;
+	Model.deadlocks = None;
+	Model.write_output = write_dot_model spacef kripke spaceg k_id_of_int s_id_of_int;
+	kripkeid = k_id_of_int;
+	idkripke = k_int_of_id;
+	spaceid = s_id_of_int;
+	idspace = s_int_of_id;
+	Model.eval = propTbl }
+      

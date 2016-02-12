@@ -5,14 +5,14 @@ open Util
        
 let precompute model =
   let num_states = Graph.nb_vertex model.kripke in
-  let num_points = Graph.nb_vertex model.space in
+  let num_points =  model.space.num_nodes in
   let count = Array1.create int c_layout num_states in 
   let rec cache f =
     try
       H.find model.eval f 
     with Not_found ->
       let slice = Array2.create float64 c_layout num_states num_points in
-      H.add model.eval f slice;
+      H.add model.eval f (Array2.get slice);
       let iter fn = for state = 0 to num_states - 1 do
 		      for point = 0 to num_points - 1 do
 			Array2.set slice state point (fn state point)
@@ -25,25 +25,25 @@ let precompute model =
 	  let a1 = cache (Prop p) in
 	  for state = 0 to num_states - 1 do
 	    for point = 0 to num_points - 1 do
-	      Array2.set slice state point (Util.ofBool (Syntax.opsem op (Array2.get a1 state point) n))
+	      Array2.set slice state point (Util.ofBool (Syntax.opsem op (a1 state point) n))
 	    done
 	  done
        | Not f1 -> let a1 = cache f1 in
-		   iter (fun state point -> valNot (Array2.get a1 state point))
+		   iter (fun state point -> valNot (a1 state point))
        | And (f1,f2) -> let a1 = cache f1 in
 			let a2 = cache f2 in
-			iter (fun state point -> valAnd (Array2.get a1 state point) (Array2.get a2 state point))
+			iter (fun state point -> valAnd (a1 state point) (a2 state point))
        | Near f1 ->
 	  Array2.fill slice valFalse;
 	  let a1 = cache f1 in
 	  for state = 0 to num_states - 1 do
 	    for point = 0 to num_points - 1 do
-	      if isTrue (Array2.get a1 state point) then
+	      if isTrue (a1 state point) then
 		begin
 		  Array2.set slice state point valTrue;
-		  Graph.iter_succ (fun point' ->
-				   Array2.set slice state point' valTrue)
-				  model.space point
+		  model.space.iter_post point
+		    (fun point' ->
+		      Array2.set slice state point' valTrue)
 		end
 	    done
 	  done
@@ -54,26 +54,25 @@ let precompute model =
           let accum = Stack.create () in
 	  for state = 0 to num_states - 1 do
             for point = 0 to num_points - 1 do
-	      Array2.set slice state point (Array2.get a1 state point);
-	      if isTrue (Array2.get a1 state point) || isTrue (Array2.get a2 state point) then
-		Model.Graph.iter_succ
-		  (fun point -> if (isFalse (Array2.get a1 state point)) &&
-				     (isFalse(Array2.get a2 state point)) &&
-				       (isFalse(Array2.get slice state point))
-				then (Array2.set slice state point valUtil; Stack.push point accum))
-		  model.space point
+	      Array2.set slice state point (a1 state point);
+	      if isTrue (a1 state point) || isTrue (a2 state point) then
+		model.space.iter_post point
+		  (fun point -> if (isFalse (a1 state point)) &&
+		      (isFalse(a2 state point)) &&
+		      (isFalse(Array2.get slice state point))
+		    then (Array2.set slice state point valUtil;
+			  Stack.push point accum))
 	    done;
 	    while not (Stack.is_empty accum) do
 	      let point = Stack.pop accum in
 	      Array2.set slice state point valFalse;
-	      Model.Graph.iter_pred (fun point ->
-				     if isTrue (Array2.get slice state point) then
-				       begin
-					 Array2.set slice state point valFalse;
-					 if isFalse (Array2.get a2 state point)
-					 then Stack.push point accum
-				       end
-				    ) model.space point
+	      model.space.iter_pre point (fun point ->
+		if isTrue (Array2.get slice state point) then
+		  begin
+		    Array2.set slice state point valFalse;
+		    if isFalse (a2 state point)
+		    then Stack.push point accum
+		  end)
 	    done;
 	  done;
        | Af f1 ->
@@ -81,7 +80,7 @@ let precompute model =
 	  for point = 0 to num_points - 1 do
 	    let accum = Stack.create () in		  	    
 	    for state = 0 to num_states - 1 do
-	      if Util.isTrue (Array2.get a1 state point)
+	      if Util.isTrue (a1 state point)
 	      then (Array1.set count state 0; Array2.set slice state point valTrue; Stack.push state accum)
 	      else Array1.set count state (Model.Graph.out_degree model.kripke state)
 	    done;
@@ -101,7 +100,7 @@ let precompute model =
 	  let a1 = cache f1 in
 	  for state = 0 to num_states - 1 do
 	    for point = 0 to num_points - 1 do
-	      if isTrue (Array2.get a1 state point)
+	      if isTrue (a1 state point)
 	      then Model.Graph.iter_pred
 		     (fun state -> Array2.set slice state point valTrue)
 		     model.kripke state
@@ -114,12 +113,12 @@ let precompute model =
 	  let accum = Stack.create () in
 	  for state = 0 to num_states - 1 do
 	    for point = 0 to num_points - 1 do
- 	      if isTrue (Array2.get a2 state point) then
+ 	      if isTrue (a2 state point) then
 		begin
 		  Array2.set slice state point valTrue;
 		  Model.Graph.iter_pred
-		    (fun state -> if isTrue (Array2.get a1 state point) &&
-				       isFalse (Array2.get a2 state point) &&
+		    (fun state -> if isTrue (a1 state point) &&
+				       isFalse (a2 state point) &&
 					 isFalse (Array2.get slice state point)
 				  then (Array2.set slice state point valUtil;
 					Stack.push (state,point) accum))
@@ -131,15 +130,15 @@ let precompute model =
 	    let (state,point) = Stack.pop accum in
 	    Array2.set slice state point valTrue;
 	    Model.Graph.iter_pred
-	      (fun state -> if isTrue (Array2.get a1 state point) &&
-		  isFalse (Array2.get a2 state point) &&
+	      (fun state -> if isTrue (a1 state point) &&
+		  isFalse (a2 state point) &&
 		  isFalse (Array2.get slice state point)
 		then (Array2.set slice state point valUtil;
 		      Stack.push (state,point) accum))
 	      model.kripke state;
 	  done
       );
-      slice in
+      (Array2.get slice) in
   fun f ->
     match f with
       Prop "deadlock" -> 
@@ -149,7 +148,7 @@ let precompute model =
 	  | Some f -> f state)
   | _ ->
      let slice = cache f in
-     fun state point -> isTrue(Array2.get slice state point)
+     fun state point -> isTrue (slice state point)
   		    
 let rec qchecker points nb checker qf =
   match qf with

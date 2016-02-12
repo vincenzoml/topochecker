@@ -43,8 +43,10 @@
 %token EOF 
 %start main
 %start ask
+%start stringlist
 %type <Syntax.experiment> main
 %type <string * (string list) * Syntax.qfsyn> ask
+%type <string list> stringlist
 %%
 main:
 | modelSpec declSpec comSpec EOF {($1,$2,$3)}
@@ -56,7 +58,11 @@ ask:
 | ASK STRING qformula eol {($2,[],$3)}
 | ASK STRING LPAREN stringlist RPAREN qformula eol { ($2,$4,$6) }
 ;
+tuple:
+  RPAREN stringlist LPAREN { $2 }
 stringlist:
+| LPAREN innerstringlist RPAREN { $2 }  
+innerstringlist:
 | STRING { [$1] }
 | STRING COMMA stringlist { $1::$3 }
 ;

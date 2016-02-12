@@ -116,14 +116,10 @@ Usage
 
 Usage:
 
-`topochecker EXPERIMENT_FILENAME OUTPUT_PREFIX`
+`topochecker EXPERIMENT_FILENAME`
 
 This will run the model checker on an experiment described by the file
-at EXPERIMENT_FILENAME and write the output as OUTPUT_PREFIX-nn.dot
-where nn is replaced by the name of each state in the Kripke structure
-of the experiment, and each file OUTPUT_PREFIX-nn.dot is a graphical
-representation of the evaluation of formulas in the experiment over
-space, in the dot file format.
+at EXPERIMENT_FILENAME
 
 
 Server mode
@@ -156,6 +152,10 @@ a line is ignored by the model checker.
 
 Model declaration
 -----------------
+
+
+Dot file format:
+----------------
 
 Model declaration takes the form:
 
@@ -194,6 +194,18 @@ combination is done. The first value found in the csv is the one
 accepted for the given atomic proposition if more than one row for the
 same pair of ids, and the same atomic formula, is found.
 
+Nifti medical imaging file format
+---------------------------------
+
+Model declaration takes the form
+
+Space "space.nifti";
+
+This requires medcon (open source converter for medical images) to be
+available in the current path. The only atomic proposition is "value"
+and it takes numeric values used in the same way as for dot
+files. Output is written in raw+header file format.
+
 
 Macro declaration
 -----------------
@@ -219,8 +231,13 @@ g(mind the semicolon!). COLOR is an integer, which can also be in hexadecimal fo
 `Output "filename";`
 `Output "filename" state1,state2,...
 
-Outputs to a set of files named "filename-STATEID", closing the previous ones. If no
-"Output" commands are present, the second argument from the command line is used. If a list of states is additionally specified, then only these states are saved.
+Outputs to a set of files named "filename-STATEID", closing the
+previous ones.  The output is written as OUTPUT_PREFIX-nn.dot where nn
+is replaced by the name of each state in the Kripke structure of the
+experiment, and each file OUTPUT_PREFIX-nn.dot is a graphical
+representation of the evaluation of formulas in the experiment over
+space, in the dot file format. If a list of states is additionally
+specified, then only these states are saved.
 
 Syntax of formulas
 ------------------
