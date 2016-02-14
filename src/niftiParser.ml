@@ -69,10 +69,10 @@ let coords_of_int i dims =
     let v = !r in
     q := v / products.(k);
     r := v mod products.(k);
-    res.(!j) <- !q;
+    res.(k+1) <- !q;
     j := !j + 1;    
   done;
-  res.(!j) <- !r;
+  res.(0) <- !r;
   res
     
     
@@ -88,12 +88,13 @@ let iter_neighbour dims i fn =
     if x >= 0 then 
       begin
 	coords.(i) <- x;
-	fn (int_of_coords coords dims)
+	fn (int_of_coords coords dims);
       end;
     if y < dims.(i) then
       begin
 	coords.(i) <- y;
-	fn (int_of_coords coords dims)
+	let id = int_of_coords coords dims in
+	fn id;
       end;
     coords.(i) <- orig
   done
@@ -108,7 +109,6 @@ let load_nifti_model dir k s e =
 	"Atomic propositions in nifti models are embedded in the image and should not be specified in external files.";
       let file = Filename.temp_file (Filename.basename s) "raw" in
       let header = Filename.temp_file (Filename.basename s) "header" in
-      Printf.printf "%s %s\n%!" file header;
       let call =  (Printf.sprintf "medcon -f \"%s\" -c - bin 1> \"%s\" 2> \"%s\"" (Util.mkfname dir s) file header) in
       let unixres = BatUnix.system call in
       match unixres with
