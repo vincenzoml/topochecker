@@ -17,3 +17,4 @@ src/topochecker
 examples/test-*/output
 src/_build
 src/main.native
+test-square_grid*out*.dot
