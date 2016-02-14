@@ -141,23 +141,31 @@ let load_nifti_model dir k s e =
 	     deadlocks = None;
 	     write_output = (fun filename _ coloured_truth_vals ->
 	       let root = Util.mkfname dir filename in
-	       let h = open_out (Printf.sprintf "%s.hdr" root)  in
-	       List.iter (fun s -> Printf.fprintf h "%s\n%!" s) header.full;
-	       close_out h;
-	       let r = Unix.openfile (Printf.sprintf "%s.raw" root) [Unix.O_RDWR;Unix.O_CREAT;Unix.O_TRUNC] 0o644 in
+	       (* let h = open_out (Printf.sprintf "%s.hdr" root)  in
+	       	  List.iter (fun s -> Printf.fprintf h "%s\n%!" s) 
+		  header.full; 
+		  close_out h; *)
+	       let orig = Unix.openfile s [Unix.O_RDONLY] 0o644 in
+	       let r = Unix.openfile
+		 (Printf.sprintf "%s.nii" root)
+		 [Unix.O_RDWR;Unix.O_CREAT;Unix.O_TRUNC] 0o644 in
 	       let v1 = Array1.create header.valtype c_layout
-		 (Array1.dim vect - 1) in
-	       let v2 = Array1.map_file r header.valtype c_layout true
-		 (Array1.dim vect - 1) 
+		 (Array1.dim vect)
 	       in
+	       let v3 = Array1.map_file orig header.valtype c_layout false ~-1 in
+	       let v2 = Array1.map_file r header.valtype c_layout true (Array1.dim v3) in
+
 	       List.iter (fun (colour,truth) ->
 		 for i = 0 to Array1.dim vect - 2 do
 		   if truth 0 i then Array1.set v1 i (int_of_string colour)
 		 done
 	       ) coloured_truth_vals;
-	       Array1.blit v1 v2;
+	       let delta = (Array1.dim v2) - (Array1.dim v1) in
+	       Array1.blit (Array1.sub v3 0 delta) (Array1.sub v2 0 delta);
+	       Array1.blit v1 (Array1.sub v2 delta (Array1.dim v1));
 	       Unix.close r;
+	       Unix.close orig
 	     )
-	   })          
+	   })         
       | _ -> Util.fail (Printf.sprintf "Error in conversion: %s" call))
       

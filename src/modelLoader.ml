@@ -18,9 +18,10 @@ let load_model dir kripkef spacef evalf =
   let i = ref 0 in
   let res = ref None in
   while !i < Array.length model_loaders && !res = None do
-    match model_loaders.(!i) dir kripkef spacef evalf with
+    (match model_loaders.(!i) dir kripkef spacef evalf with
       None -> ()
-    | Some r -> res := Some r    
+    | Some r -> res := Some r);
+    i := !i + 1;
   done;
   match !res with
     None -> Util.fail (Printf.sprintf "model kripke=%s space=%s eval=%s not loadable" kripkef spacef evalf)
