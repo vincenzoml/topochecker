@@ -17,4 +17,6 @@ src/topochecker
 examples/test-*/output
 src/_build
 src/main.native
-test-square_grid*out*.dot
+examples/*/out*.dot
+examples/*_generator/*.dot
+examples/*_generator/*.csv
