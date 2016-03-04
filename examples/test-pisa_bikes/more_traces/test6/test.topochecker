@@ -1,6 +1,0 @@
-Kripke "mc_kripke.dot" Space "mc_space.dot" Eval "mc_eval.csv";
-
-Let full = [vacant == 0];
-
-Output "tail";
-Check "0x0000FF" full & ( N ( A X ( full & ( N ( A X ( full & N ( A X full)))))));

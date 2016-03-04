@@ -12,7 +12,7 @@ let load_ask_query env string =
     
 let model_loaders =
 (*  [|DotParser.load_dot_model; NiftiParser.load_nifti_model; IlcParser.load_ilc_model|] *)
-  [|DotParser.load_dot_model;NiftiParser.load_nifti_model|]
+  [|DotParser.load_dot_model;NiftiParser.load_nifti_model;BmpParser.load_bmp_model|]
     
 let load_model dir kripkef spacef evalf =  
   let i = ref 0 in

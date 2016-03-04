@@ -15,7 +15,7 @@ let load_bmp_model dir k s e =
 	let dims = [|f.Bmp.bmpInfoHeader.Bmp.biWidth;f.Bmp.bmpInfoHeader.Bmp.biHeight|] in	
 	let h = Model.H.create 10 in
 	let ch = Model.CH.create 10 in 
-	let rgb = Array.init 3 (fun _ -> Array1.create Float64 c_layout len) in
+	let rgb = Array.init 3 (fun _ -> Array1.create float64 c_layout len) in
 	for i = 0 to len - 1 do
 	  for j = 0 to 2 do
 	    Array1.set (Array.get rgb j) i (float_of_int (Char.code (Bytes.get f.Bmp.bmpBytes ((3*i)+j ))))

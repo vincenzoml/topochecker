@@ -36,8 +36,11 @@
 %token RCURLY
 %token KRIPKE
 %token SPACE
-%token EVAL       
+%token EVAL      
 %token CHECK
+%token MODELS
+%token GROUP
+%token SHARE
 %token ASK
 %token OUTPUT
 %token EOF 
@@ -100,10 +103,20 @@ qformula:
 | qformula OP qformula { Syntax.QOP ($2,$1,$3) }
 | COUNT formula { Syntax.QCOUNT $2 }
 ;
+cformula:
+| TRUE { Syntax.CTRUE }
+| FALSE { Syntax.CFALSE }
+| NOT cformula { Syntax.CNOT $2 }
+| cformula AND cformula { Syntax.CAND ($1,$3) }
+| cformula OR cformula { Syntax.COR ($1,$3) }	  
+| GROUP formula { Syntax.CGROUP $2 }
+| formula SHARE cformula { Syntax.CSHARE ($1,$3) }
+;
 formula:
 | LPAREN formula RPAREN {$2}
 | TRUE {Syntax.TRUE}
 | FALSE {Syntax.FALSE}
+| LCURLY cformula RCURLY { Syntax.COLL $2 }
 | IDE {Syntax.CALL ($1,[])}
 | IDE actualarglist {Syntax.CALL ($1,$2)}
 | LBRACKET IDE RBRACKET {Syntax.PROP $2}

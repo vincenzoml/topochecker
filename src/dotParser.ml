@@ -45,7 +45,7 @@ module ParserSig =
 module Parser = Graph.Dot.Parse(Graph.Builder.I(Model.Graph))(ParserSig)
 
 let parse_eval filename states points stateid pointid =
-  let prop_tbl = Model.H.create 100 in
+  let prop_tbl = Model.H.create 10 in
   let chan = open_in filename in
   let csv_chan = Csv.of_channel ~separator:',' chan in
   (try
@@ -179,10 +179,12 @@ let load_dot_model dir k s e =
     in
     let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
     ParserSig.reset ();
+    let ch = Model.CH.create 10 in
     let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex spaceg) k_int_of_id s_int_of_id in
     Some
       { Model.kripke = kripke;
 	Model.space = space;
+	Model.collective_eval = ch;
 	Model.deadlocks = None;
 	Model.write_output = write_dot_model spacef kripke spaceg k_id_of_int s_id_of_int;
 	kripkeid = k_id_of_int;

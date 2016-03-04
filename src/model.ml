@@ -1,16 +1,20 @@
 open Logic
 open Bigarray
 
-(* float, float64_elt *)
-(* type ('a,'b) slice = ('a,'b,c_layout) Bigarray.Array2.t *)
-
 module H = Hashtbl.Make(
 	       struct
 		 type t = Logic.formula
 		 let equal = (=)
 		 let hash = Hashtbl.hash
 	       end)					  
-  
+
+module CH = Hashtbl.Make (
+		struct
+		  type t = Logic.cformula
+		  let equal = (=)
+		  let hash = Hashtbl.hash
+		end)
+		       
 module Vertex =
   struct
     type t = int
@@ -43,7 +47,9 @@ type model =
     spaceid : int -> string;
     idspace : string -> int;
     write_output : string -> (int list option) -> (string * (int -> int -> bool)) list -> unit; (* filename -> optional list of states -> list of pairs colour,truth table *)
-    eval : (int -> int -> float) H.t }
+    eval : (int -> int -> float) H.t;
+    collective_eval : (int -> float) CH.t
+  }
       
 let default_kripke () =
   let g = Graph.create () in

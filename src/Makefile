@@ -1,17 +1,16 @@
 .PHONY: clean almostclean export slow fast slowclean fastclean
-EXE=topochecker
 TOP=topochecker.top
 
 #Command to compile without explicit dependencies:
 #ocamlbuild -cflags -I,+ocamlgraph,-I,+csv -libs ocamlgraph/graph,csv/csv,bigarray,str main.native
 
-LIBS=batteries.cmxa unix.cmxa graph.cmxa str.cmxa csv.cmxa
+LIBS=bigarray.cmxa unix.cmxa graph.cmxa str.cmxa csv.cmxa
 ALIBS=$(LIBS:.cmxa=.cma)
-PACKAGES=-package ocamlgraph -package csv
+PACKAGES=-package csv -I $(shell ocamlfind printconf path)/ocamlgraph
 OCAMLC = ocamlfind ocamlc $(PACKAGES) $(ALIBS)
 OCAMLOPT = ocamlfind ocamlopt $(PACKAGES) $(LIBS)
 OCAMLMKTOP = ocamlfind ocamlmktop $(PACKAGES) $(ALIBS)
-DEPS=util.cmx logic.cmx syntax.cmx tcParser.cmx tcLexer.cmx model.cmx tcParser.cmx checker.cmx niftiParser.cmx dotParser.cmx modelLoader.cmx
+DEPS=util.cmx logic.cmx syntax.cmx tcParser.cmx tcLexer.cmx model.cmx tcParser.cmx checker.cmx bmp.cmx bmpParser.cmx niftiParser.cmx dotParser.cmx modelLoader.cmx
 ADEPS=$(DEPS:.cmx=.cmo)
 MAIN=main
 RLFE=$(shell which rlfe)
@@ -24,23 +23,34 @@ ifneq ($(RLFE),)
 endif
 endif
 
+ifneq ($(WINDIR),)
+	WINDOWS=true
+	EXE=topochecker.exe
+else
+	WINDOWS=false
+	EXE=topochecker
+endif
+
 TARGET=slow
 
 OCAMLBUILD_EXE=$(shell which ocamlbuild)
 
 ifneq ($(OCAMLBUILD_EXE),)
-	TARGET=fast
-	OCAMLBUILD=ocamlbuild -use-ocamlfind -package batteries -package unix -package ocamlgraph -package csv -package graphics 
+	ifeq ($(WINDOWS),false)
+		TARGET=fast
+		OCAMLBUILD=ocamlbuild -package bytes -package bigarray -package str -package unix -package ocamlgraph -package csv
+	endif
 endif
+
 
 $(EXE): $(TARGET)
 
+#%:
+#	$(OCAMLBUILD) $@
 
+slow: fastclean doslow
 
-%:
-	$(OCAMLBUILD) $@
-
-slow: $(DEPS) $(MAIN).cmx
+doslow: $(DEPS) $(MAIN).cmx
 	make fastclean
 	$(OCAMLOPT) $^ -o $(EXE)
 

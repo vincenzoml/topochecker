@@ -12,6 +12,7 @@ src/tcLexer.ml
 src/tcParser.ml
 src/tcParser.mli
 src/topochecker
+src/topochecker.exe
 *~
 *.hist
 examples/test-*/output
