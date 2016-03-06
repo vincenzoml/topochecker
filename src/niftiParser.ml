@@ -76,6 +76,7 @@ let load_nifti_model dir k s e =
 	   Model.H.add h (Logic.Prop "value") (fun k s -> float_of_int (Array1.get vect s));
 	   { Model.kripke = Model.default_kripke ();
 	     Model.collective_eval = ch;
+	     Model.iter_ball = None;
 	     Model.space =
 	       { Model.num_nodes = (Array1.dim vect);
 		 Model.iter_pre = (Util.iter_neighbour header.dims);

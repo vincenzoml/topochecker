@@ -46,6 +46,7 @@ type model =
     idkripke : string -> int;
     spaceid : int -> string;
     idspace : string -> int;
+    iter_ball : (int -> float -> (int -> unit) -> unit) option; 
     write_output : string -> (int list option) -> (string * (int -> int -> bool)) list -> unit; (* filename -> optional list of states -> list of pairs colour,truth table *)
     eval : (int -> int -> float) H.t;
     collective_eval : (int -> float) CH.t

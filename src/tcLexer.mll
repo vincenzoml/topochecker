@@ -12,6 +12,7 @@
 | "G" {G}
 | "F" {F}
 | "X" {X}
+| "SCMP" {STATCMP}
 | "Gr" {GROUP}
 | "-<" {SHARE}
 | "Let" {LET}

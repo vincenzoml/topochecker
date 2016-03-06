@@ -16,6 +16,7 @@
 %token G
 %token X
 %token F
+%token STATCMP
 %token OR
 %token NOT
 %token NEAR
@@ -112,6 +113,9 @@ cformula:
 | GROUP formula { Syntax.CGROUP $2 }
 | formula SHARE cformula { Syntax.CSHARE ($1,$3) }
 ;
+num:
+| FLOAT {$1}
+| INT {float_of_int $1}
 formula:
 | LPAREN formula RPAREN {$2}
 | TRUE {Syntax.TRUE}
@@ -120,8 +124,7 @@ formula:
 | IDE {Syntax.CALL ($1,[])}
 | IDE actualarglist {Syntax.CALL ($1,$2)}
 | LBRACKET IDE RBRACKET {Syntax.PROP $2}
-| LBRACKET IDE OP FLOAT RBRACKET {Syntax.VPROP ($2,$3,$4)}
-| LBRACKET IDE OP INT RBRACKET {Syntax.VPROP ($2,$3,(float_of_int $4))}
+| LBRACKET IDE OP num RBRACKET {Syntax.VPROP ($2,$3,$4)}
 | NOT formula {Syntax.NOT $2}
 | formula AND formula {Syntax.AND ($1,$3)}
 | formula OR formula {Syntax.OR ($1,$3)}
@@ -137,6 +140,7 @@ formula:
 | A F formula {Syntax.AF $3}
 | E formula U formula {Syntax.EU ($2,$4)}
 | A formula U formula {Syntax.AU ($2,$4)}
+| STATCMP LPAREN IDE COMMA FLOAT COMMA OP num RPAREN LBRACKET  formula {Syntax.STATCMP ($3,$11,$5,$7,$8)}
 ;
 formalarglist:
 | LPAREN innerformalarglist RPAREN {$2}

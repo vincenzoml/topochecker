@@ -186,6 +186,7 @@ let load_dot_model dir k s e =
 	Model.space = space;
 	Model.collective_eval = ch;
 	Model.deadlocks = None;
+	Model.iter_ball = None;
 	Model.write_output = write_dot_model spacef kripke spaceg k_id_of_int s_id_of_int;
 	kripkeid = k_id_of_int;
 	idkripke = k_int_of_id;

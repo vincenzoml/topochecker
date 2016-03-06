@@ -26,6 +26,15 @@ let load_bmp_model dir k s e =
 		  [(0,"red");(1,"green");(2,"blue")];
 	{ Model.kripke = Model.default_kripke ();
 	  Model.collective_eval = ch;
+	  Model.iter_ball =
+	    Some
+	      (fun center radius fn ->
+	       let coords = Util.coords_of_int center dims in
+	       Util.iter_hypercube dims coords radius
+				   (fun point ->
+				    if Util.in_range point dims &&
+					 Util.euclidean_distance coords point <= radius
+				    then fn (Util.int_of_coords point dims)));
 	  Model.space =
 	    { Model.num_nodes = len;
 	      Model.iter_pre = (Util.iter_neighbour dims);

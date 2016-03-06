@@ -5,7 +5,8 @@ type formula =
   | Not of formula
   | And of formula * formula
   | Near of formula
-  | Surrounded of formula * formula 
+  | Surrounded of formula * formula
+  | Statcmp of string * formula * float * string * float
   | Ex of formula
   | Af of formula
   | Eu of formula * formula
