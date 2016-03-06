@@ -17,8 +17,9 @@ type fsyn =
   | NEARN of (int * fsyn)
   | INT of fsyn
   | SURROUNDED of (fsyn * fsyn)
-  | CALL of ide * (fsyn list)
-  | STATCMP of (string * fsyn * float * string * float)
+  | CALL of ide * (fsyn list)		    
+  | STATCMP of (string * fsyn * float * string * float * float * float * int)
+  (* atom fmla radius operator threshold bin_min bin_max nbins *)
   | EX of fsyn	    
   | AX of fsyn
   | EG of fsyn
@@ -95,7 +96,7 @@ let rec formula_of_fsyn env f =
   | NEARN (n,f1) -> if n <= 0 then formula_of_fsyn env f1 else Near (formula_of_fsyn env (NEARN(n-1,f1)))
   | INT f1 -> Not (Near (Not (formula_of_fsyn env f1)))
   | SURROUNDED (f1,f2) -> Surrounded (formula_of_fsyn env f1,formula_of_fsyn env f2)
-  | STATCMP (p,f,rad,op,thr) -> Statcmp (p,formula_of_fsyn env f,rad,op,thr)
+  | STATCMP (p,f,rad,op,thr,min,max,nbins) -> Statcmp (p,formula_of_fsyn env f,rad,op,thr,min,max,nbins)
   | EX f1 -> Ex (formula_of_fsyn env f1)
   | AX f1 -> Not (Ex (Not (formula_of_fsyn env f1)))
   | EG f1 -> Not (Af (Not (formula_of_fsyn env f1)))

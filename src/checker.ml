@@ -7,8 +7,6 @@ let precompute model =
   let num_states = Graph.nb_vertex model.kripke in
   let num_points =  model.space.num_nodes in
   let count = Array1.create int c_layout num_states in (* auxiliary *)
-  let bin1 = Hashtbl.create 1000 (* auxiliary *) in
-  let bin2 = Hashtbl.create 1000 (* auxiliary *) in
   let rec cache f =
     try
       H.find model.eval f 
@@ -41,28 +39,32 @@ let precompute model =
 	  | And (f1,f2) -> let a1 = cache f1 in
 			   let a2 = cache f2 in
 			   iter (fun state point -> valAnd (a1 state point) (a2 state point))
-	  | Statcmp (p,f,rad,op,thr) ->
+	  | Statcmp (p,f,rad,op,thr,min,max,nbins) ->
 	     (match model.iter_ball with
 		None -> Util.fail "model does not have distances but SCMP operator used"
 	      | Some ib ->
-		 iter (fun state point ->		  
-		       Hashtbl.clear bin1;
-		       Hashtbl.clear bin2; 
-		       let a1 = cache (Prop p) in
-		       let a2 = cache f in
-		       let bin bins value =
-			 try
-			   let x = Hashtbl.find bins value in
-			   Hashtbl.remove bins value;
-			   Hashtbl.add bins value (x+1)
-			 with Not_found ->
-			   Hashtbl.add bins value 1
-		       in
-		       ib point rad (fun point -> bin bin1 (a1 state point));
-		       for point = 0 to num_points - 1 do
-			 if Util.isTrue (a2 state point) then bin bin2 (a1 state point) else ()
-		       done;
-		       Util.statcmp bin1 bin2 thr))
+		 let step = max -. min /. (float_of_int nbins) in
+		 let v1 = Array.make nbins 0 in
+		 let v2 = Array.make nbins 0 in
+		 let a1 = cache (Prop p) in
+		 let a2 = cache f in		 
+		 let bin bins value =
+		   if (value < min) || (value >= max) then ()
+		   else let i = (int_of_float ((value -. min) /. step)) - 1 in
+			bins.(i) <- bins.(i) + 1
+		 in
+		 for state = 0 to num_states - 1 do
+		   Util.reset v2 0;
+		   for point = 0 to num_points - 1 do
+		     if Util.isTrue (a2 state point) then bin v2 (a1 state point) else ()
+		   done;
+		   for point = 0 to num_points - 1 do
+		     Util.reset v1 0;
+		     ib point rad (fun point -> bin v1 (a1 state point));
+		     let res = Util.statcmp v1 v2 min max in
+		     Array2.set slice state point (Util.ofBool (Syntax.opsem op res thr))
+		   done
+		 done)
 	  | Near f1 ->
 	     Array2.fill slice valFalse;
 	     let a1 = cache f1 in

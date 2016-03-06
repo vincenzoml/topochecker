@@ -98,9 +98,33 @@ let iter_hypercube dims coord radius fn =
       done
   in
   iter_hypercube_rec (Array.length dims - 1)
-		     
-let statcmp bin1 bin2 thr = fail "Comparison of istograms not implemented"
 
+let avg v =
+  let len = Array.length v in
+  let sum = ref 0 in
+  for i = 0 to len - 1 do
+    sum := !sum + v.(i) 
+  done;
+  (float_of_int !sum) /. (float_of_int len)
+	    
+let statcmp v1 v2 min max =
+  assert_samelen v1 v2;
+  let nbins = Array.length v1 in
+  assert (nbins > 0);
+  let avg1 = avg v1 in
+  let avg2 = avg v2 in
+  let num = ref 0.0 in
+  let den1 = ref 0.0 in
+  let den2 = ref 0.0 in
+  for i = 0 to nbins - 1 do
+    let t1 = (float_of_int v1.(i)) -. avg1 in
+    let t2 = (float_of_int v2.(i)) -. avg2 in
+    num := !num +. (t1 *. t2);
+    den1 := !den1 +. (t1 ** 2.0);
+    den2 := !den2 +. (t2 ** 2.0);
+  done;
+  !num /. (!den1 *. !den2)
+    
 let sqr x = x * x
 				 
 let euclidean_distance v1 v2 =
@@ -111,6 +135,11 @@ let euclidean_distance v1 v2 =
   done;
   sqrt (float_of_int !res)
 
+let reset vect value =
+  for i = 0 to Array.length vect - 1 do
+    vect.(i) <- value
+  done
+    
 
        
 

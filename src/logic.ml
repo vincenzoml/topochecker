@@ -6,7 +6,7 @@ type formula =
   | And of formula * formula
   | Near of formula
   | Surrounded of formula * formula
-  | Statcmp of string * formula * float * string * float
+  | Statcmp of string * formula * float * string * float * float * float * int
   | Ex of formula
   | Af of formula
   | Eu of formula * formula
