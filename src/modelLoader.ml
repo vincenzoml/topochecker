@@ -10,31 +10,28 @@ let load_ask_query env string =
   let (id,points,qfsyn) = TcParser.ask TcLexer.token lexbuf in  
   (id,points,Syntax.qformula_of_qfsyn env qfsyn)
     
-let model_loaders =
-(*  [|DotParser.load_dot_model; NiftiParser.load_nifti_model; IlcParser.load_ilc_model|] *)
-  [|DotParser.load_dot_model;NiftiParser.load_nifti_model;BmpParser.load_bmp_model|]
+let uri_model_loaders = (* todo add uri parser for dot models! *)
+  [("med",NiftiParser.load_nifti_model)]
     
-let load_model dir kripkef spacef evalf =  
-  let i = ref 0 in
-  let res = ref None in
-  while !i < Array.length model_loaders && !res = None do
-    (match model_loaders.(!i) dir kripkef spacef evalf with
-      None -> ()
-    | Some r -> res := Some r);
-    i := !i + 1;
-  done;
-  match !res with
-    None -> Util.fail (Printf.sprintf "model kripke=%s space=%s eval=%s not loadable" kripkef spacef evalf)
-  | Some model -> Model.completeDeadlocks model
-    
+let load_model dir model =
+  match model with
+    Syntax.URI uri ->
+    let [protocol;data] = Str.split (Str.regexp ":") uri in
+    let components : string list = Str.split (Str.regexp ",") data in
+    let bindings : (string * string) list = List.map (fun x -> match Str.bounded_split (Str.regexp "=") x 2 with [s] -> ("",s) | [s1;s2] -> (s1,s2)) components in
+    let loader = List.assoc protocol uri_model_loaders in
+    Model.completeDeadlocks (loader bindings) 
+  | Syntax.MODEL (kripkef,spacef,evalf) -> (* deprecated *)
+     Model.completeDeadlocks (DotParser.load_dot_model dir kripkef spacef evalf)
+	
 let load_experiment =
   fun path ->
   let (dir,file) = (Filename.dirname path,Filename.basename path) in
   let desc = open_in (Util.mkfname dir file) in
   let lexbuf = Lexing.from_channel desc in
   try
-    let (Syntax.MODEL (kripkef,spacef,evalf),dseq,commands) = TcParser.main TcLexer.token lexbuf in
-    let model = load_model dir kripkef spacef evalf in
+    let (msyn,dseq,commands) = TcParser.main TcLexer.token lexbuf in
+    let model = load_model dir msyn in
     let env = Syntax.env_of_dseq dseq in
     let commands = List.map (function
       | Syntax.CHECK (color,fsyn) -> Check (color,Syntax.formula_of_fsyn env fsyn)

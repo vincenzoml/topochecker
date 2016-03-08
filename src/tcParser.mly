@@ -37,7 +37,8 @@
 %token RCURLY
 %token KRIPKE
 %token SPACE
-%token EVAL      
+%token EVAL
+%token MODEL
 %token CHECK
 %token MODELS
 %token GROUP
@@ -74,6 +75,7 @@ modelSpec:
 | KRIPKE STRING SPACE STRING EVAL STRING eol {Syntax.MODEL ($2,$4,$6)}
 | SPACE STRING EVAL STRING eol {Syntax.MODEL ("",$2,$4)}
 | SPACE STRING eol {Syntax.MODEL ("",$2,"")}
+| MODEL STRING eol {Syntax.URI ($2)}
 ;
 declSpec:
 | decl {[$1]}

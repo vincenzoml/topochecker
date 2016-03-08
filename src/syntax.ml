@@ -2,7 +2,9 @@ open Logic
 
 type ide = string
 type propsyn = string
-type model = MODEL of (string*string*string) (* Kripke, Space, Eval *)
+type model =
+    MODEL of (string*string*string) (* Kripke, Space, Eval *)
+  | URI of string
 			
 type fsyn =
     TRUE

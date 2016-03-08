@@ -42,6 +42,7 @@
 | "Ask" {ASK}
 | "Kripke" {KRIPKE}
 | "Space" {SPACE}
+| "Model" {MODEL}
 | "Eval" {EVAL}
 | "Output" {OUTPUT}
 | "#" {COUNT}

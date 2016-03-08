@@ -163,34 +163,31 @@ let write_dot_model spacefname kripkegraph spacegraph kripkeid spaceid fname sta
      aux fn
         
 let load_dot_model dir k s e =
-  if not (Filename.check_suffix s ".dot" && Filename.check_suffix k ".dot") then None
-  else
-    let (spacef,evalf) =  (Util.mkfname dir s,Util.mkfname dir e) in
-    let (kripke,(k_id_of_int,k_int_of_id)) =
-      if k = ""
-      then (Model.default_kripke (),(string_of_int,int_of_string))
-      else (Parser.parse (Util.mkfname dir k),ParserSig.read ())
-    in
-    ParserSig.reset ();
-    let spaceg = Parser.parse spacef in
-    let space = { Model.num_nodes = Model.Graph.nb_vertex spaceg;
-		  Model.iter_pre = (fun v fn -> Model.Graph.iter_pred fn spaceg v);
-		  Model.iter_post = (fun v fn -> Model.Graph.iter_succ fn spaceg v) }
-    in
-    let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
-    ParserSig.reset ();
-    let ch = Model.CH.create 10 in
-    let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex spaceg) k_int_of_id s_int_of_id in
-    Some
-      { Model.kripke = kripke;
-	Model.space = space;
-	Model.collective_eval = ch;
-	Model.deadlocks = None;
-	Model.iter_ball = None;
-	Model.write_output = write_dot_model spacef kripke spaceg k_id_of_int s_id_of_int;
-	kripkeid = k_id_of_int;
-	idkripke = k_int_of_id;
-	spaceid = s_id_of_int;
-	idspace = s_int_of_id;
-	Model.eval = propTbl }
-      
+  let (spacef,evalf) =  (Util.mkfname dir s,Util.mkfname dir e) in
+  let (kripke,(k_id_of_int,k_int_of_id)) =
+    if k = ""
+    then (Model.default_kripke (),(string_of_int,int_of_string))
+    else (Parser.parse (Util.mkfname dir k),ParserSig.read ())
+  in
+  ParserSig.reset ();
+  let spaceg = Parser.parse spacef in
+  let space = { Model.num_nodes = Model.Graph.nb_vertex spaceg;
+		Model.iter_pre = (fun v fn -> Model.Graph.iter_pred fn spaceg v);
+		Model.iter_post = (fun v fn -> Model.Graph.iter_succ fn spaceg v) }
+  in
+  let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
+  ParserSig.reset ();
+  let ch = Model.CH.create 10 in
+  let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex spaceg) k_int_of_id s_int_of_id in
+  { Model.kripke = kripke;
+    Model.space = space;
+    Model.collective_eval = ch;
+    Model.deadlocks = None;
+    Model.iter_ball = None;
+    Model.write_output = write_dot_model spacef kripke spaceg k_id_of_int s_id_of_int;
+    kripkeid = k_id_of_int;
+    idkripke = k_int_of_id;
+    spaceid = s_id_of_int;
+    idspace = s_int_of_id;
+    Model.eval = propTbl }
+    
