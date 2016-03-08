@@ -4,6 +4,7 @@ type endian = Big | Little
 
 type ('a,'b) header =
   { dims : int array;
+    pixdims : float array;
     valtype : ('a,'b) kind;
     endian : endian;
     full : string list }
@@ -46,7 +47,14 @@ let load_global_header fname =
   for i = 0 to dim - 1 do
     dims.(i) <- int_of_string (read (Printf.sprintf "dim[%d]" (i+1)))
   done;
+  let pixdims = Array.make dim 0.0 in
+  for i = 0 to dim - 1 do
+    let tmp=read (Printf.sprintf "pixdim[%d]" (i+1)) in
+    let tmp2=String.sub tmp 0 (String.index tmp '[' - 1) in
+    pixdims.(i) <- float_of_string tmp2;
+  done;
   { dims = dims;
+    pixdims = pixdims;
     valtype = (match read "type" with "4" -> int16_unsigned | _ -> Util.fail "Value type not supported in nifti");
     endian = (match read "endian" with "1" -> Little | _ -> Util.fail "Big endian not supported in nifti");
     full = List.rev !lines }
@@ -56,6 +64,7 @@ let load_raw rawfile header =
   let vect = Array1.map_file (Unix.openfile rawfile [Unix.O_RDONLY] 0o644) header.valtype c_layout false ~-1 in
   (vect,header)
 
+(*dir: directory, s=file name, k,e=""*)
 let load_nifti_model dir k s e =
   if not (Filename.check_suffix s ".nii") then None
   else
@@ -71,12 +80,22 @@ let load_nifti_model dir k s e =
       match unixres with
 	Unix.WEXITED 0 ->
 	  (let (vect,header) = load_raw file header in
+	   let dims = header.dims in
+	   let pixdims = header.pixdims in
 	   let h = Model.H.create 1 in
 	   let ch = Model.CH.create 10 in
 	   Model.H.add h (Logic.Prop "value") (fun k s -> float_of_int (Array1.get vect s));
 	   { Model.kripke = Model.default_kripke ();
 	     Model.collective_eval = ch;
-	     Model.iter_ball = None;
+	     (*distance 1 not euclidean*)
+	     Model.iter_ball =
+	       Some
+		 (fun center radius fn ->
+		   let coords = Util.coords_of_int center dims in
+		   Util.iter_hypercube_w dims pixdims coords radius
+		     (fun point ->
+		       if Util.in_range point dims
+		       then fn (Util.int_of_coords point dims)));
 	     Model.space =
 	       { Model.num_nodes = (Array1.dim vect);
 		 Model.iter_pre = (Util.iter_neighbour header.dims);

@@ -99,6 +99,34 @@ let iter_hypercube dims coord radius fn =
   in
   iter_hypercube_rec (Array.length dims - 1)
 
+let world2vox dist pixdims =
+  let vs = Array.make (Array.length pixdims) 0 in
+  for i = 0 to (Array.length pixdims - 1) do
+      (*maybe ceil better*)
+      vs.(i) <- int_of_float (dist /. pixdims.(i));
+  done;
+  vs
+    
+let iter_hypercube_w dims pixdims coord radius fn =
+  assert_samelen dims coord;
+  let cursor = Array.make (Array.length coord) 0 in
+  let ir = world2vox radius pixdims in
+  let rec iter_hypercube_rec n =
+    let st = max 0 (coord.(n) - ir.(n)) in
+    let en = min (coord.(n) + ir.(n)) (dims.(n) - 1) in
+    if n = 0 then
+      for i = st to en do
+	cursor.(n) <- i;
+	fn cursor
+      done
+    else
+      for i = st to en do
+	cursor.(n) <- i;
+	iter_hypercube_rec (n - 1)
+      done
+  in
+  iter_hypercube_rec (Array.length dims - 1)
+
 let avg v =
   let len = Array.length v in
   let sum = ref 0 in
@@ -106,7 +134,8 @@ let avg v =
     sum := !sum + v.(i) 
   done;
   (float_of_int !sum) /. (float_of_int len)
-	    
+
+(*test divide by 0*)
 let statcmp v1 v2 min max =
   assert_samelen v1 v2;
   let nbins = Array.length v1 in
@@ -123,7 +152,7 @@ let statcmp v1 v2 min max =
     den1 := !den1 +. (t1 ** 2.0);
     den2 := !den2 +. (t2 ** 2.0);
   done;
-  !num /. (!den1 *. !den2)
+  !num /. ((sqrt !den1) *. (sqrt !den2))
     
 let sqr x = x * x
 				 

@@ -43,15 +43,15 @@ let precompute model =
 	     (match model.iter_ball with
 		None -> Util.fail "model does not have distances but SCMP operator used"
 	      | Some ib ->
-		 let step = max -. min /. (float_of_int nbins) in
+		 let step = (max -. min) /. (float_of_int nbins) in
 		 let v1 = Array.make nbins 0 in
 		 let v2 = Array.make nbins 0 in
 		 let a1 = cache (Prop p) in
 		 let a2 = cache f in		 
-		 let bin bins value =
+		 let bin bins value =		   
 		   if (value < min) || (value >= max) then ()
-		   else let i = (int_of_float ((value -. min) /. step)) - 1 in
-			bins.(i) <- bins.(i) + 1
+		   else let i = (int_of_float ((value -. min) /. step)) in
+			bins.(i) <- bins.(i) + 1;
 		 in
 		 for state = 0 to num_states - 1 do
 		   Util.reset v2 0;
