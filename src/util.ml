@@ -102,8 +102,7 @@ let iter_hypercube dims coord radius fn =
 let world2vox dist pixdims =
   let vs = Array.make (Array.length pixdims) 0 in
   for i = 0 to (Array.length pixdims - 1) do
-      (*maybe ceil better*)
-      vs.(i) <- int_of_float (dist /. pixdims.(i));
+      vs.(i) <- int_of_float (ceil (dist /. pixdims.(i)));
   done;
   vs
     
@@ -135,8 +134,7 @@ let avg v =
   done;
   (float_of_int !sum) /. (float_of_int len)
 
-(*test divide by 0*)
-let statcmp v1 v2 min max =
+let statcmp v1 v2 =
   assert_samelen v1 v2;
   let nbins = Array.length v1 in
   assert (nbins > 0);
@@ -152,7 +150,9 @@ let statcmp v1 v2 min max =
     den1 := !den1 +. (t1 ** 2.0);
     den2 := !den2 +. (t2 ** 2.0);
   done;
-  !num /. ((sqrt !den1) *. (sqrt !den2))
+  try !num /. ((sqrt !den1) *. (sqrt !den2))
+  with
+    Division_by_zero -> if den1=den2 then 1. else 0. (*in case v1 and/or v2 would be uniform*)
     
 let sqr x = x * x
 				 

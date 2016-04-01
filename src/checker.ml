@@ -47,7 +47,7 @@ let precompute model =
 		 let v1 = Array.make nbins 0 in
 		 let v2 = Array.make nbins 0 in
 		 let a1 = cache (Prop p) in
-		 let a2 = cache f in		 
+		 let a2 = cache f in
 		 let bin bins value =		   
 		   if (value < min) || (value >= max) then ()
 		   else let i = (int_of_float ((value -. min) /. step)) in
@@ -61,7 +61,7 @@ let precompute model =
 		   for point = 0 to num_points - 1 do
 		     Util.reset v1 0;
 		     ib point rad (fun point -> bin v1 (a1 state point));
-		     let res = Util.statcmp v1 v2 min max in
+		     let res = Util.statcmp v1 v2 in
 		     Array2.set slice state point (Util.ofBool (Syntax.opsem op res thr))
 		   done
 		 done)

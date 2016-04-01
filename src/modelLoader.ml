@@ -16,14 +16,14 @@ let uri_model_loaders = (* todo add uri parser for dot models! *)
 let load_model dir model =
   match model with
     Syntax.URI uri ->
-    let [protocol;data] = Str.split (Str.regexp ":") uri in
-    let components : string list = Str.split (Str.regexp ",") data in
-    let bindings : (string * string) list = List.map (fun x -> match Str.bounded_split (Str.regexp "=") x 2 with [s] -> ("",s) | [s1;s2] -> (s1,s2)) components in
-    let loader = List.assoc protocol uri_model_loaders in
-    Model.completeDeadlocks (loader bindings) 
+      let [protocol;data] = Str.split (Str.regexp ":") uri in
+      let components : string list = Str.split (Str.regexp ",") data in
+      let bindings = List.map (fun x -> match Str.bounded_split (Str.regexp "=") x 2 with [s] -> ("",s) | [s1;s2] -> (s1,s2)) components in
+      let loader = List.assoc protocol uri_model_loaders in      
+      Model.completeDeadlocks (loader bindings) 
   | Syntax.MODEL (kripkef,spacef,evalf) -> (* deprecated *)
      Model.completeDeadlocks (DotParser.load_dot_model dir kripkef spacef evalf)
-	
+       
 let load_experiment =
   fun path ->
   let (dir,file) = (Filename.dirname path,Filename.basename path) in

@@ -8,9 +8,10 @@ LIBS=bigarray.cmxa unix.cmxa graph.cmxa str.cmxa csv.cmxa
 ALIBS=$(LIBS:.cmxa=.cma)
 PACKAGES=-package csv -I $(shell ocamlfind printconf path)/ocamlgraph
 OCAMLC = ocamlfind ocamlc $(PACKAGES) $(ALIBS)
-OCAMLOPT = ocamlfind ocamlopt $(PACKAGES) $(LIBS)
+OCAMLOPT = ocamlfind ocamlopt -p $(PACKAGES) $(LIBS)
 OCAMLMKTOP = ocamlfind ocamlmktop $(PACKAGES) $(ALIBS)
 DEPS=util.cmx logic.cmx syntax.cmx tcParser.cmx tcLexer.cmx model.cmx tcParser.cmx checker.cmx bmp.cmx bmpParser.cmx niftiParser.cmx dotParser.cmx modelLoader.cmx
+#OPTFLAGS = -p
 ADEPS=$(DEPS:.cmx=.cmo)
 MAIN=main
 RLFE=$(shell which rlfe)
@@ -52,7 +53,7 @@ slow: fastclean doslow
 
 doslow: $(DEPS) $(MAIN).cmx
 	make fastclean
-	$(OCAMLOPT) $^ -o $(EXE)
+	$(OCAMLOPT) $(OPTFLAGS) $^ -o $(EXE)
 
 fast:
 	make slowclean
@@ -65,8 +66,8 @@ toptest: $(TOP)
 	$(RLFE) -h .hist ./$(TOP)
 
 tcParser.cmx: tcParser.ml
-	$(OCAMLOPT) -c tcParser.mli
-	$(OCAMLOPT) -c tcParser.ml
+	$(OCAMLOPT) $(OPTFLAGS) -c tcParser.mli
+	$(OCAMLOPT) $(OPTFLAGS) -c tcParser.ml
 
 tcParser.cmo: tcParser.ml
 	$(OCAMLC) -c tcParser.mli
@@ -79,7 +80,7 @@ tcLexer.ml: tcLexer.mll
 	ocamlyacc $^
 
 %.cmx: %.ml
-	$(OCAMLOPT) -c $^ -o $@
+	$(OCAMLOPT) $(OPTFLAGS) -c $^ -o $@
 
 %.cmo: %.ml
 	$(OCAMLC) -c $^ -o $@
