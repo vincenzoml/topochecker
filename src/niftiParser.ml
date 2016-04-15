@@ -43,7 +43,12 @@ let load_raw rawfile header =
      done
    with End_of_file -> ());
   close_in f;
-  let dim = int_of_string (read "dim[0]") in
+  let dim =
+    try
+      int_of_string (read "dim[0]")
+    with
+      a -> 2
+  in
   let dims = Array.make dim 0 in
   for i = 0 to dim - 1 do
     dims.(i) <- int_of_string (read (Printf.sprintf "dim[%d]" (i+1)))
@@ -62,6 +67,7 @@ let load_raw rawfile header =
     endian = (match read "endian" with "1" -> Little | _ -> Util.fail "Big endian not supported in nifti");
     full_header = List.rev !lines;
     raw_data = vect }
+    
 
 let load_nifti s =
   let file = Filename.temp_file (Filename.basename s) "raw" in
@@ -77,7 +83,7 @@ let load_nifti s =
     | Unix.WSTOPPED i -> Some (Printf.sprintf "stopped with signal %d" i)
   in
   match error with
-    None -> load_raw file header
+    None ->   load_raw file header;
   | Some s -> Util.fail (Printf.sprintf "Error while loading nifti. Medcon %s" s)
 			
 (*dir: directory, s=file name, k,e=""*)
