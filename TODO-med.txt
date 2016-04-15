@@ -1,0 +1,5 @@
+- Save intermediate maps
+
+- Optimization of logical operators (& |)
+
+- Ipointense, iperintense operators
