@@ -59,6 +59,10 @@ fast:
 	make slowclean
 	$(OCAMLBUILD) main.native && cp -L main.native $(EXE) && rm main.native
 
+fastprof:
+	make slowclean
+	$(OCAMLBUILD) main.p.native
+
 $(TOP): $(ADEPS)
 	$(OCAMLMKTOP) $^ -o $@
 
