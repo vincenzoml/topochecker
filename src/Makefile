@@ -6,12 +6,12 @@ TOP=topochecker.top
 
 LIBS=bigarray.cmxa unix.cmxa graph.cmxa str.cmxa csv.cmxa
 ALIBS=$(LIBS:.cmxa=.cma)
-PACKAGES=-package csv -I $(shell ocamlfind printconf path)/ocamlgraph
+PACKAGES=-package csv -I $(shell ocamlfind query ocamlgraph) -I $(shell ocamlfind query bytes)
+OPTFLAGS = -p
 OCAMLC = ocamlfind ocamlc $(PACKAGES) $(ALIBS)
-OCAMLOPT = ocamlfind ocamlopt -p $(PACKAGES) $(LIBS)
+OCAMLOPT = ocamlfind ocamlopt $(OPTFLAG) $(PACKAGES) $(LIBS)
 OCAMLMKTOP = ocamlfind ocamlmktop $(PACKAGES) $(ALIBS)
-DEPS=util.cmx logic.cmx syntax.cmx tcParser.cmx tcLexer.cmx model.cmx tcParser.cmx checker.cmx bmp.cmx bmpParser.cmx niftiParser.cmx dotParser.cmx modelLoader.cmx
-#OPTFLAGS = -p
+DEPS=util.cmx logic.cmx syntax.cmx tcParser.cmx tcLexer.cmx model.cmx checker.cmx bmp.cmx bmpParser.cmx niftiParser.cmx dotParser.cmx modelLoader.cmx
 ADEPS=$(DEPS:.cmx=.cmo)
 MAIN=main
 RLFE=$(shell which rlfe)

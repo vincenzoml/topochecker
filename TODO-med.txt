@@ -3,3 +3,5 @@
 - Optimization of logical operators (& |)
 
 - Ipointense, iperintense operators
+
+- provide a fast version of hypercube?
