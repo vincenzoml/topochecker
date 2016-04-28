@@ -47,7 +47,7 @@ let load_raw rawfile header =
     try
       int_of_string (read "dim[0]")
     with
-      a -> 2
+      a -> 2 (*TODO:check if always true*)
   in
   let dims = Array.make dim 0 in
   for i = 0 to dim - 1 do
@@ -112,8 +112,8 @@ let load_nifti_model bindings =
 	      then fn (Util.int_of_coords point dims)));
      Model.space =
        { Model.num_nodes = (Array1.dim main.raw_data);
-	 Model.iter_pre = (Util.iter_neighbour main.dims);
-	 Model.iter_post = (Util.iter_neighbour main.dims)};
+	 Model.iter_pre = (Util.iter_neighbour Util.Euclidean dims pixdims);
+	 Model.iter_post = (Util.iter_neighbour Util.Euclidean dims pixdims)};
      Model.eval = h;
      Model.kripkeid = string_of_int;
      Model.idkripke = int_of_string;

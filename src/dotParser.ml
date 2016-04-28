@@ -172,8 +172,8 @@ let load_dot_model dir k s e =
   ParserSig.reset ();
   let spaceg = Parser.parse spacef in
   let space = { Model.num_nodes = Model.Graph.nb_vertex spaceg;
-		Model.iter_pre = (fun v fn -> Model.Graph.iter_pred fn spaceg v);
-		Model.iter_post = (fun v fn -> Model.Graph.iter_succ fn spaceg v) }
+		Model.iter_pre = (fun v fn -> Model.Graph.iter_pred (fun x -> fn x 1.0) spaceg v);
+		Model.iter_post = (fun v fn -> Model.Graph.iter_succ (fun x -> fn x 1.0) spaceg v) }
   in
   let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
   ParserSig.reset ();

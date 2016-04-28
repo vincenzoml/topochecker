@@ -6,6 +6,8 @@ let valUtil = 2.0
 let valAnd x y = if x = 1.0 && y = 1.0 then 1.0 else 0.0
 let valNot x = if x = 0.0 then 1.0 else 0.0
 let ofBool x = if x then valTrue else valFalse
+    
+type connectivity = CityBlock | Chessboard | Euclidean | SubDim
 					
 let debug s =
   Printf.eprintf "debug: %s\n%!" s		 
@@ -40,24 +42,58 @@ let coords_of_int i dims =
   done;
   res.(0) <- !r;
   res
-    
-let iter_neighbour dims i fn =
+
+let iter_neighbour connect dims pixdims i fn =
   let coords = coords_of_int i dims in
-  for i = 0 to Array.length coords - 1 do
-    let (orig,x,y) = (coords.(i),coords.(i) - 1,coords.(i) + 1) in
-    if x >= 0 then 
-      begin
-	coords.(i) <- x;
-	fn (int_of_coords coords dims);
-      end;
-    if y < dims.(i) then
-      begin
-	coords.(i) <- y;
-	let id = int_of_coords coords dims in
-	fn id;
-      end;
-    coords.(i) <- orig
-  done
+  let recdims =
+    match connect with
+    | SubDim -> Array.length coords - 2
+    | a -> Array.length coords - 1
+  in
+  match connect with
+  | CityBlock ->
+     for i=0 to recdims do
+       let (orig,x,y) = (coords.(i),coords.(i) - 1,coords.(i) + 1) in
+       if x >= 0 then 
+	 begin
+	   coords.(i) <- x;
+	   let id = int_of_coords coords dims in
+	   fn id 1.0;
+	 end;
+       if y < dims.(i) then
+	 begin
+	   coords.(i) <- y;
+	   let id = int_of_coords coords dims in
+	   fn id 1.0;
+	 end;
+       coords.(i) <- orig
+     done
+  | a ->
+     let cursor = Array.make (Array.length coords) 0 in
+     let rec iter_hypercube_rec n c =
+       let st = max 0 (coords.(n) - 1) in
+       let en = min (coords.(n) + 1) (dims.(n) - 1) in
+       if n = 0 && c > 0 then
+	 for i = st to en do
+	   cursor.(n) <- i;
+	   let id = int_of_coords cursor dims in
+	   fn id
+	     (match connect with
+	     | Chessboard -> 1.0;
+	     | a ->
+		let rec dist m =
+		  if m<0 then 0.0
+		  else ((float_of_int (coords.(m) - cursor.(m))) *. pixdims.(m))**2.0 +. (dist (m-1))
+		in sqrt(dist (Array.length coords - 1));
+	     )
+	 done
+       else
+	 for i = st to en do
+	   cursor.(n) <- i;
+	   iter_hypercube_rec (n - 1) (c + abs(cursor.(n) - coords.(n)))
+	 done
+     in
+     iter_hypercube_rec (Array.length dims - 1) 0
 
 let assert_samelen a b = assert (Array.length a = Array.length b) 
     
@@ -70,7 +106,6 @@ let in_range coord dims =
     i := !i+1
   done;
   !res
-    
 
 let vop1 op v =
   Array.init (Array.length v) (fun i -> op v.(i))	     
@@ -78,7 +113,8 @@ let vop1 op v =
 let vop2 op v1 v2 =
   assert_samelen v1 v2;
   Array.init (Array.length v1) (fun i -> op v1.(i) v2.(i))
-	     
+
+(*similar code used in iter_neighbour. Join!*)    
 let iter_hypercube dims coord radius fn =
   assert_samelen dims coord;
   let cursor = Array.make (Array.length coord) 0 in

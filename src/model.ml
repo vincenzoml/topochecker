@@ -35,8 +35,8 @@ module Graph = Graph.Imperative.Digraph.ConcreteBidirectionalLabeled
 
 type simple_graph =
   { num_nodes : int;
-    iter_pre : int -> (int -> unit) -> unit;
-    iter_post : int -> (int -> unit) -> unit }
+    iter_pre : int -> (int -> float -> unit) -> unit;
+    iter_post : int -> (int -> float -> unit) -> unit }
   
 type model =
   { kripke : Graph.t;

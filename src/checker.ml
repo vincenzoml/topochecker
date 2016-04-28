@@ -74,7 +74,7 @@ let precompute model =
 		   begin
 		     Array2.set slice state point valTrue;
 		     model.space.iter_post point
-					   (fun point' ->
+					   (fun point' w ->
 					    Array2.set slice state point' valTrue)
 		   end
 	       done
@@ -89,7 +89,7 @@ let precompute model =
 		 Array2.set slice state point (a1 state point);
 		 if isTrue (a1 state point) || isTrue (a2 state point) then
 		   model.space.iter_post point
-					 (fun point -> if (isFalse (a1 state point)) &&
+					 (fun point w -> if (isFalse (a1 state point)) &&
 							    (isFalse(a2 state point)) &&
 							      (isFalse(Array2.get slice state point))
 						       then (Array2.set slice state point valUtil;
@@ -98,7 +98,7 @@ let precompute model =
 	       while not (Stack.is_empty accum) do
 		 let point = Stack.pop accum in
 		 Array2.set slice state point valFalse;
-		 model.space.iter_pre point (fun point ->
+		 model.space.iter_pre point (fun point w ->
 					     if isTrue (Array2.get slice state point) then
 					       begin
 						 Array2.set slice state point valFalse;

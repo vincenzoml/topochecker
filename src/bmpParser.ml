@@ -37,8 +37,8 @@ let load_bmp_model dir k s e =
 				    then fn (Util.int_of_coords point dims)));
 	  Model.space =
 	    { Model.num_nodes = len;
-	      Model.iter_pre = (Util.iter_neighbour dims);
-	      Model.iter_post = (Util.iter_neighbour dims)};
+	      Model.iter_pre = (Util.iter_neighbour Util.CityBlock dims [|1.0;1.0|]);
+	      Model.iter_post = (Util.iter_neighbour Util.CityBlock dims [|1.0;1.0|])};
 	  Model.eval = h;
 	  Model.kripkeid = string_of_int;
 	  Model.idkripke = int_of_string;
