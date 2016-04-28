@@ -6,7 +6,18 @@ let valUtil = 2.0
 let valAnd x y = if x = 1.0 && y = 1.0 then 1.0 else 0.0
 let valNot x = if x = 0.0 then 1.0 else 0.0
 let ofBool x = if x then valTrue else valFalse
-    
+
+module IntOrdT : sig type t=int val compare: int -> int -> int end = struct
+  type t = int
+  let compare = Pervasives.compare
+end
+module PointsSet = Set.Make(IntOrdT)
+
+type simple_graph =
+  { num_nodes : int;
+    iter_pre : int -> (int -> float -> unit) -> unit;
+    iter_post : int -> (int -> float -> unit) -> unit }
+  
 type connectivity = CityBlock | Chessboard | Euclidean | SubDim
 					
 let debug s =
@@ -17,7 +28,11 @@ let fail s =
   exit 1
     
 let mkfname dir file =
-  if Filename.is_relative file then dir ^ Filename.dir_sep ^ file else file	
+  if Filename.is_relative file then dir ^ Filename.dir_sep ^ file else file
+
+let assert_samelen a b = assert (Array.length a = Array.length b)
+
+let sqr x = x *. x
 
 let int_of_coords coords dims =
   let (r,_,_) = Array.fold_left (fun (acc,fac,dim) coord -> (coord * fac + acc,dims.(dim)*fac,dim+1)) (0,1,0) coords in
@@ -42,6 +57,14 @@ let coords_of_int i dims =
   done;
   res.(0) <- !r;
   res
+
+let euclidean_distance v1 v2 pixdims =
+  assert_samelen v1 v2;
+  let res = ref 0.0 in
+  for i = 0 to Array.length v1 - 1 do
+    res := !res +. (sqr (float_of_int (v1.(i) - v2.(i)) *. pixdims.(i)));
+  done;
+  sqrt !res
 
 let iter_neighbour connect dims pixdims i fn =
   let coords = coords_of_int i dims in
@@ -74,28 +97,24 @@ let iter_neighbour connect dims pixdims i fn =
        let st = max 0 (coords.(n) - 1) in
        let en = min (coords.(n) + 1) (dims.(n) - 1) in
        if n = 0 && c > 0 then
-	 for i = st to en do
-	   cursor.(n) <- i;
-	   let id = int_of_coords cursor dims in
-	   fn id
-	     (match connect with
-	     | Chessboard -> 1.0;
-	     | a ->
-		let rec dist m =
-		  if m<0 then 0.0
-		  else ((float_of_int (coords.(m) - cursor.(m))) *. pixdims.(m))**2.0 +. (dist (m-1))
-		in sqrt(dist (Array.length coords - 1));
-	     )
-	 done
-       else
+	 begin 
+	   for i = st to en do
+	     cursor.(n) <- i;
+	     let id = int_of_coords cursor dims in
+	     fn id
+	       (match connect with
+	       | Chessboard -> 1.0;
+	       | a -> euclidean_distance coords cursor pixdims;
+	       )
+	   done
+	 end
+       else if n>0 then
 	 for i = st to en do
 	   cursor.(n) <- i;
 	   iter_hypercube_rec (n - 1) (c + abs(cursor.(n) - coords.(n)))
 	 done
      in
      iter_hypercube_rec (Array.length dims - 1) 0
-
-let assert_samelen a b = assert (Array.length a = Array.length b) 
     
 let in_range coord dims =
   assert_samelen coord dims;
@@ -189,24 +208,25 @@ let statcmp v1 v2 =
   try !num /. ((sqrt !den1) *. (sqrt !den2))
   with
     Division_by_zero -> if den1=den2 then 1. else 0. (*in case v1 and/or v2 would be uniform*)
-    
-let sqr x = x * x
-				 
-let euclidean_distance v1 v2 =
-  assert_samelen v1 v2;
-  let res = ref 0 in
-  for i = 0 to Array.length v1 - 1 do
-    res := !res + (sqr (v1.(i) - v2.(i)));
-  done;
-  sqrt (float_of_int !res)
 
 let reset vect value =
   for i = 0 to Array.length vect - 1 do
     vect.(i) <- value
   done
-    
 
-       
-
-
-       
+let edge phi graph =
+  let num_points = graph.num_nodes in
+  let edgeset = ref PointsSet.empty in
+  for point = 0 to num_points - 1 do
+    let pp = phi point in
+    graph.iter_post point
+      (fun p w ->
+	let pp' = phi p in
+	let xor = pp +. pp' in
+	if xor = 1.0 then
+	  begin
+	      edgeset := PointsSet.add point !edgeset;
+	      edgeset := PointsSet.add p !edgeset;
+	  end)
+  done;
+  !edgeset

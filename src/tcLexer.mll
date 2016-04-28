@@ -13,6 +13,7 @@
 | "F" {F}
 | "X" {X}
 | "SCMP" {STATCMP}
+| "EUCL" {EUCL}
 | "Gr" {GROUP}
 | "-<" {SHARE}
 | "Let" {LET}

@@ -32,21 +32,17 @@ module Edge =
     
 module Graph = Graph.Imperative.Digraph.ConcreteBidirectionalLabeled
   (Vertex)(Edge)
-
-type simple_graph =
-  { num_nodes : int;
-    iter_pre : int -> (int -> float -> unit) -> unit;
-    iter_post : int -> (int -> float -> unit) -> unit }
   
 type model =
   { kripke : Graph.t;
-    space : simple_graph;
+    space : Util.simple_graph;
     deadlocks : (int -> bool) option;
     kripkeid : int -> string;
     idkripke : string -> int;
     spaceid : int -> string;
     idspace : string -> int;
-    iter_ball : (int -> float -> (int -> unit) -> unit) option; 
+    iter_ball : (int -> float -> (int -> unit) -> unit) option;
+    euclidean_distance : (int -> int -> float) option;
     write_output : string -> (int list option) -> (string * (int -> int -> bool)) list -> unit; (* filename -> optional list of states -> list of pairs colour,truth table *)
     eval : (int -> int -> float) H.t;
     collective_eval : (int -> float) CH.t

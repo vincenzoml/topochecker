@@ -171,9 +171,9 @@ let load_dot_model dir k s e =
   in
   ParserSig.reset ();
   let spaceg = Parser.parse spacef in
-  let space = { Model.num_nodes = Model.Graph.nb_vertex spaceg;
-		Model.iter_pre = (fun v fn -> Model.Graph.iter_pred (fun x -> fn x 1.0) spaceg v);
-		Model.iter_post = (fun v fn -> Model.Graph.iter_succ (fun x -> fn x 1.0) spaceg v) }
+  let space = { Util.num_nodes = Model.Graph.nb_vertex spaceg;
+		Util.iter_pre = (fun v fn -> Model.Graph.iter_pred (fun x -> fn x 1.0) spaceg v);
+		Util.iter_post = (fun v fn -> Model.Graph.iter_succ (fun x -> fn x 1.0) spaceg v) }
   in
   let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
   ParserSig.reset ();
@@ -184,6 +184,7 @@ let load_dot_model dir k s e =
     Model.collective_eval = ch;
     Model.deadlocks = None;
     Model.iter_ball = None;
+    Model.euclidean_distance = None;
     Model.write_output = write_dot_model spacef kripke spaceg k_id_of_int s_id_of_int;
     kripkeid = k_id_of_int;
     idkripke = k_int_of_id;

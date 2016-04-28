@@ -17,6 +17,7 @@
 %token X
 %token F
 %token STATCMP
+%token EUCL
 %token OR
 %token NOT
 %token NEAR
@@ -143,6 +144,7 @@ formula:
 | E formula U formula {Syntax.EU ($2,$4)}
 | A formula U formula {Syntax.AU ($2,$4)}
 | STATCMP LPAREN IDE COMMA num COMMA OP num COMMA num COMMA num COMMA INT RPAREN formula {Syntax.STATCMP ($3,$16,$5,$7,$8,$10,$12,$14)}
+| EUCL LPAREN formula COMMA OP num RPAREN {Syntax.EUCL ($3,$5,$6)}
 ;
 formalarglist:
 | LPAREN innerformalarglist RPAREN {$2}

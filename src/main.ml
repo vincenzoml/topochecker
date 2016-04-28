@@ -5,7 +5,7 @@ let run_interactive model env checker =
       let line = read_line () in
       let (ide,points,qformula) = ModelLoader.load_ask_query env line in
       let res =  (Checker.qchecker (List.map model.Model.idspace points)
-		    (model.Model.space.Model.num_nodes) checker qformula)
+		    (model.Model.space.Util.num_nodes) checker qformula)
       in
       Printf.printf "%s: %f\n%!" ide res
     done

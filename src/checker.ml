@@ -65,6 +65,28 @@ let precompute model =
 		     Array2.set slice state point (Util.ofBool (Syntax.opsem op res thr))
 		   done
 		 done)
+	  | Eucl (f,op,thr) ->
+	     (match model.euclidean_distance with
+	     | None -> Util.fail "model does not have distances but EUCL operator used"
+	     | Some ib ->
+		let a1 = cache f in
+		for state = 0 to num_states - 1 do
+		  let edgeS = Util.edge (a1 state) model.space in
+		  for point = 0 to num_points - 1 do
+		    let dst = ref infinity in
+		    (* if PointsSet.mem point edgeS then *)
+		    (*   dst := 0.0 *)
+		    (* else *)
+		      Util.PointsSet.iter
+		  	(fun e ->
+		  	  let s = if isTrue (a1 state point) then -1.0 else 1.0 in
+		  	  let d = ib point e in
+			  
+		  	  if (d < abs_float(!dst)) then dst := d*.s) edgeS;
+		  Array2.set slice state point (Util.ofBool (Syntax.opsem op !dst thr))
+		  done
+		done
+	     )
 	  | Near f1 ->
 	     Array2.fill slice valFalse;
 	     let a1 = cache f1 in
@@ -78,7 +100,7 @@ let precompute model =
 					    Array2.set slice state point' valTrue)
 		   end
 	       done
-	  done
+	     done
 	  | Surrounded (f1,f2) ->
 	     Array2.fill slice valFalse;
 	     let a1 = cache f1 in

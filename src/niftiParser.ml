@@ -110,10 +110,17 @@ let load_nifti_model bindings =
 	    (fun point ->
 	      if Util.in_range point dims
 	      then fn (Util.int_of_coords point dims)));
+     Model.euclidean_distance =
+       Some
+	 (fun p1 p2 ->
+	   let v1 = Util.coords_of_int p1 dims in
+	   let v2 = Util.coords_of_int p2 dims in
+	   Util.euclidean_distance v1 v2 pixdims
+	 );
      Model.space =
-       { Model.num_nodes = (Array1.dim main.raw_data);
-	 Model.iter_pre = (Util.iter_neighbour Util.Euclidean dims pixdims);
-	 Model.iter_post = (Util.iter_neighbour Util.Euclidean dims pixdims)};
+       { Util.num_nodes = (Array1.dim main.raw_data);
+	 Util.iter_pre = (Util.iter_neighbour Util.CityBlock dims pixdims);
+	 Util.iter_post = (Util.iter_neighbour Util.CityBlock dims pixdims)};
      Model.eval = h;
      Model.kripkeid = string_of_int;
      Model.idkripke = int_of_string;
