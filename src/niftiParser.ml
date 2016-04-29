@@ -119,8 +119,8 @@ let load_nifti_model bindings =
 	 );
      Model.space =
        { Util.num_nodes = (Array1.dim main.raw_data);
-	 Util.iter_pre = (Util.iter_neighbour Util.CityBlock dims pixdims);
-	 Util.iter_post = (Util.iter_neighbour Util.CityBlock dims pixdims)};
+	 Util.iter_pre = (Util.iter_neighbour Util.Euclidean dims pixdims);
+	 Util.iter_post = (Util.iter_neighbour Util.Euclidean dims pixdims)};
      Model.eval = h;
      Model.kripkeid = string_of_int;
      Model.idkripke = int_of_string;

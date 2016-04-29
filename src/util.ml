@@ -214,6 +214,7 @@ let reset vect value =
     vect.(i) <- value
   done
 
+(* Interior and exterior? Iter post and pre?*)
 let edge phi graph =
   let num_points = graph.num_nodes in
   let edgeset = ref PointsSet.empty in
@@ -225,7 +226,9 @@ let edge phi graph =
 	let xor = pp +. pp' in
 	if xor = 1.0 then
 	  begin
+	    if not (PointsSet.mem point !edgeset) then
 	      edgeset := PointsSet.add point !edgeset;
+	    if not (PointsSet.mem p !edgeset) then
 	      edgeset := PointsSet.add p !edgeset;
 	  end)
   done;

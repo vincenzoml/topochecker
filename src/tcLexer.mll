@@ -14,6 +14,7 @@
 | "X" {X}
 | "SCMP" {STATCMP}
 | "EUCL" {EUCL}
+| "MDDT" {MDDT}
 | "Gr" {GROUP}
 | "-<" {SHARE}
 | "Let" {LET}

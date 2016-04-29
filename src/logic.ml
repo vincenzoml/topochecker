@@ -8,6 +8,7 @@ type formula =
   | Surrounded of formula * formula
   | Statcmp of string * formula * float * string * float * float * float * int
   | Eucl of formula * string * float
+  | ModDijkstraDT of formula * string * float
   | Ex of formula
   | Af of formula
   | Eu of formula * formula

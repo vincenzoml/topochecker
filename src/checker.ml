@@ -2,6 +2,12 @@ open Logic
 open Model
 open Bigarray
 open Util
+
+module IntOrdDst : sig type t=(float*int) val compare: (float*int) -> (float*int) -> int end = struct
+  type t = (float*int)
+  let compare = Pervasives.compare
+end
+module DDTSet = Set.Make(IntOrdDst)
        
 let precompute model =
   let num_states = Graph.nb_vertex model.kripke in
@@ -74,19 +80,49 @@ let precompute model =
 		  let edgeS = Util.edge (a1 state) model.space in
 		  for point = 0 to num_points - 1 do
 		    let dst = ref infinity in
-		    (* if PointsSet.mem point edgeS then *)
-		    (*   dst := 0.0 *)
-		    (* else *)
+		    if PointsSet.mem point edgeS then
+		      dst := 0.0
+		    else
 		      Util.PointsSet.iter
 		  	(fun e ->
 		  	  let s = if isTrue (a1 state point) then -1.0 else 1.0 in
 		  	  let d = ib point e in
-			  
 		  	  if (d < abs_float(!dst)) then dst := d*.s) edgeS;
 		  Array2.set slice state point (Util.ofBool (Syntax.opsem op !dst thr))
 		  done
 		done
 	     )
+	  | ModDijkstraDT (f,op,thr) ->
+	     let a1 = cache f in
+	     Array2.fill slice infinity;
+	     for state = 0 to num_states - 1 do
+	       let edgeS = Util.edge (a1 state) model.space in
+	       let lSet = ref DDTSet.empty in
+	       Util.PointsSet.iter (fun e -> lSet:=DDTSet.add (0.0,e) !lSet;Array2.set slice state e 0.0) edgeS;
+	       while (not (DDTSet.is_empty !lSet)) do
+		 let e = DDTSet.min_elt !lSet in
+		 lSet:=DDTSet.remove e !lSet;
+		 match e with
+		 | (dst,point) ->
+		    model.space.iter_post point (*pre or post?*)
+		      (fun p w ->
+			let dn=Array2.get slice state p in
+			if dn>(dst+.w) then
+			  begin
+			    Array2.set slice state p (dst+.w);
+			    lSet:=DDTSet.add (dst+.w,p) !lSet;
+			  end)
+	       done;
+	       for point = 0 to num_points - 1 do
+		 let s=
+		   if isTrue (a1 state point) then
+		     -1.0
+		   else
+		     1.0 in
+		 let d = s*.(Array2.get slice state point) in
+		 Array2.set slice state point (Util.ofBool (Syntax.opsem op d thr))
+	       done
+	     done
 	  | Near f1 ->
 	     Array2.fill slice valFalse;
 	     let a1 = cache f1 in
