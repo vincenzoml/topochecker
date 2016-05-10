@@ -7,6 +7,8 @@ let valAnd x y = if x = 1.0 && y = 1.0 then 1.0 else 0.0
 let valNot x = if x = 0.0 then 1.0 else 0.0
 let ofBool x = if x then valTrue else valFalse
 
+let toBool f x y = isTrue (f x y)
+    
 module IntOrdT : sig type t=int val compare: int -> int -> int end = struct
   type t = int
   let compare = Pervasives.compare

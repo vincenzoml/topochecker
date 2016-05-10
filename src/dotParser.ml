@@ -177,11 +177,9 @@ let load_dot_model dir k s e =
   in
   let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
   ParserSig.reset ();
-  let ch = Model.CH.create 10 in
   let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex spaceg) k_int_of_id s_int_of_id in
   { Model.kripke = kripke;
     Model.space = space;
-    Model.collective_eval = ch;
     Model.deadlocks = None;
     Model.iter_ball = None;
     Model.euclidean_distance = None;

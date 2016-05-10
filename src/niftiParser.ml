@@ -94,13 +94,11 @@ let load_nifti_model bindings =
    let dims = main.dims in
    let pixdims = main.pixdims in
    let h = Model.H.create 1 in
-   let ch = Model.CH.create 10 in
    (* TODO: check that all the images have the same dimensions *)
    List.iter (fun (prop,img) -> 
 	      Model.H.add h (Logic.Prop prop)
 			  (fun k s -> float_of_int (Array1.get img.raw_data s))) prop_img;
    { Model.kripke = Model.default_kripke ();
-     Model.collective_eval = ch;
      (*distance 1 not euclidean*)
      Model.iter_ball =
        Some

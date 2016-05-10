@@ -1,3 +1,4 @@
 Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
+Output "out";
 Check "0xFF0000" [a>63.0];
 

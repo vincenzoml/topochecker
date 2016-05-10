@@ -1,19 +1,16 @@
 open Logic
 open Bigarray
 
-module H = Hashtbl.Make(
-	       struct
-		 type t = Logic.formula
-		 let equal = (=)
-		 let hash = Hashtbl.hash
-	       end)					  
-
-module CH = Hashtbl.Make (
-		struct
-		  type t = Logic.cformula
-		  let equal = (=)
-		  let hash = Hashtbl.hash
-		end)
+module H =
+struct
+  include (** For extending, not used so far **)
+    Hashtbl.Make(
+      struct
+	type t = Logic.formula
+	let equal = (=)
+	let hash = Hashtbl.hash
+      end)
+end
 		       
 module Vertex =
   struct
@@ -36,7 +33,7 @@ module Graph = Graph.Imperative.Digraph.ConcreteBidirectionalLabeled
 type model =
   { kripke : Graph.t;
     space : Util.simple_graph;
-    deadlocks : (int -> bool) option;
+    deadlocks : (int -> float) option;
     kripkeid : int -> string;
     idkripke : string -> int;
     spaceid : int -> string;
@@ -45,7 +42,6 @@ type model =
     euclidean_distance : (int -> int -> float) option;
     write_output : string -> (int list option) -> (string * (int -> int -> bool)) list -> unit; (* filename -> optional list of states -> list of pairs colour,truth table *)
     eval : (int -> int -> float) H.t;
-    collective_eval : (int -> float) CH.t
   }
       
 let default_kripke () =
@@ -77,4 +73,4 @@ let completeDeadlocks model =
     None -> model
   | Some vect ->
      { model with
-       deadlocks = (Some (fun state -> Util.isTrue (Array1.get vect state))) }
+       deadlocks = (Some (fun state -> Array1.get vect state)) }

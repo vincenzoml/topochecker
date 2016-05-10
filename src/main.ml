@@ -35,7 +35,7 @@ let _ =
 	   (match accum with
 	     [] -> Util.fail "no output file specified"
 	   | (fname,fmlas)::rem ->
-	      (fname,(color,(checker formula))::fmlas)::rem)
+	      (fname,(color,(Util.toBool (checker formula)))::fmlas)::rem)
 	| ModelLoader.Output (fname,states) ->
 	   ((fname,states),[])::accum)
       [] commands 

@@ -9,7 +9,6 @@ type model =
 type fsyn =
     TRUE
   | FALSE
-  | COLL of cfsyn
   | NOT of fsyn
   | AND of (fsyn * fsyn)
   | OR of (fsyn * fsyn)
@@ -34,15 +33,6 @@ type fsyn =
   | AF of fsyn
   | EU of fsyn * fsyn
   | AU of fsyn * fsyn
-
- and cfsyn =
-     CTRUE
-   | CFALSE
-   | CNOT of cfsyn
-   | CAND of cfsyn * cfsyn
-   | COR of cfsyn * cfsyn
-   | CGROUP of fsyn
-   | CSHARE of fsyn * cfsyn 
       
 type qfsyn =
   | QFLOAT of float
@@ -94,7 +84,6 @@ let rec formula_of_fsyn env f =
      VProp (prop,op,n)
   | TRUE -> T
   | FALSE -> Not T
-  | COLL cf -> Coll (cformula_of_cfsyn env cf)
   | NOT f1 -> Not (formula_of_fsyn env f1)     
   | AND (f1,f2) -> And (formula_of_fsyn env f1,formula_of_fsyn env f2)
   | OR (f1,f2) -> Not (And (Not (formula_of_fsyn env f1),Not (formula_of_fsyn env f2)))
@@ -118,16 +107,6 @@ let rec formula_of_fsyn env f =
   | CALL (ide,actuals) ->
      let (formals,body) = apply env ide in
      formula_of_fsyn (zipenv env formals (List.map (fun x -> ([],x)) actuals)) body
-  and
-    cformula_of_cfsyn env cf =
-    match cf with
-      CTRUE -> CT
-    | CFALSE -> CNot CT
-    | CNOT cf -> CNot (cformula_of_cfsyn env cf)
-    | CAND (cf1,cf2) -> CAnd (cformula_of_cfsyn env cf1,cformula_of_cfsyn env cf2)
-    | COR (cf1,cf2) -> CNot (CAnd (CNot (cformula_of_cfsyn env cf1),CNot (cformula_of_cfsyn env cf2)))
-    | CGROUP f -> CGroup (formula_of_fsyn env f)
-    | CSHARE (f,cf) -> CShare (formula_of_fsyn env f,cformula_of_cfsyn env cf)
     
        
 let rec qformula_of_qfsyn env qf =
