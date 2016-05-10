@@ -23,10 +23,13 @@ let compute model =
   fun formula cache ->
     match formula with
       T -> Fun (fun state point -> valTrue)
-    | Prop p -> Fun (cache (Prop p))
-    | VProp (p,op,n) -> Fun (fun state point -> Util.ofBool (Syntax.opsem op (cache (Prop p) state point) n))
-    | Not f1 -> Fun (fun state point -> valNot (cache f1 state point))
-    | And (f1,f2) -> Fun (fun state point -> valAnd (cache f1 state point) (cache f2 state point))
+    | Prop p -> let a1 = cache (Prop p) in Fun a1
+    | VProp (p,op,n) -> let a1 = cache (Prop p) in Fun (fun state point -> Util.ofBool (Syntax.opsem op (a1 state point) n))
+    | Not f1 -> let a1 = cache f1 in Fun (fun state point -> valNot (a1 state point))
+    | And (f1,f2) ->
+       let a1 = cache f1 in
+       let a2 = cache f2 in
+       Fun (fun state point -> valAnd (a1 state point) (a2 state point))
     | Statcmp (p,f,rad,op,thr,min,max,nbins) ->
        new_slice
 	 (fun slice ->
