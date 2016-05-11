@@ -21,10 +21,11 @@ let _ =
   in
   Util.debug "Step 1/3: Loading experiment...";
   let (model,env,commands) = ModelLoader.load_experiment expfname in
+  Model.load_cache model;
   (* TODO: check for output commands here! *)
   Util.debug "Step 2/3: Precomputing model checking table...";
   let t = Sys.time () in
-  let checker = Checker.precompute model in
+  let checker = Checker.precompute model in  
   let products =
     List.fold_left
       (fun accum command ->
@@ -50,5 +51,6 @@ let _ =
      begin
        Util.debug "Step 3/3: Writing output files...";
        List.iter (fun ((fname,states),(coloured_truth_vals)) -> model.Model.write_output fname states coloured_truth_vals) products;
+       Model.save_cache model;
        Util.debug "All done."
      end

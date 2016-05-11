@@ -38,8 +38,7 @@ type qfsyn =
   | QFLOAT of float
   | QOP of string * qfsyn * qfsyn
   | QCOUNT of fsyn
-		
-		
+				
 type decl = LET of ide * ide list * fsyn
 type dseq = decl list
 
@@ -75,7 +74,8 @@ let opsem op =
   | ">=" -> (>=)
   | x -> Util.fail (Printf.sprintf "unknown operator %s" x)
      
-let env_of_dseq ds = List.fold_left (fun env (LET (name,args,body)) -> bind env name (args,body)) empty ds  
+let env_of_dseq ds = List.fold_left (fun env (LET (name,args,body)) ->
+  bind env name (args,body)) empty ds
 		   
 let rec formula_of_fsyn env f =
   match f with
@@ -106,8 +106,7 @@ let rec formula_of_fsyn env f =
      And(Not (Eu (Not ff2,And(Not ff1,Not ff2))),Af ff2)
   | CALL (ide,actuals) ->
      let (formals,body) = apply env ide in
-     formula_of_fsyn (zipenv env formals (List.map (fun x -> ([],x)) actuals)) body
-    
+     formula_of_fsyn (zipenv env formals (List.map (fun x -> ([],x)) actuals)) body    
        
 let rec qformula_of_qfsyn env qf =
   match qf with

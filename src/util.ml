@@ -8,7 +8,7 @@ let valNot x = if x = 0.0 then 1.0 else 0.0
 let ofBool x = if x then valTrue else valFalse
 
 let toBool f x y = isTrue (f x y)
-    
+     
 module IntOrdT : sig type t=int val compare: int -> int -> int end = struct
   type t = int
   let compare = Pervasives.compare
@@ -235,3 +235,21 @@ let edge phi graph =
 	  end)
   done;
   !edgeset
+
+let sha256 s =
+  let (i,o) = Unix.open_process "sha256sum" in
+  output_string o s;
+  close_out o;
+  let res = really_input_string i 64 in
+  let status = Unix.close_process (i,o) in
+  match status with
+    Unix.WEXITED 0 -> res
+  | _ -> fail "error in invoking sha256sum"
+
+let fSha256 f =
+  let i = Unix.open_process_in (Printf.sprintf "sha256sum \"%s\"" f) in
+  let res = really_input_string i 64 in
+  let status = Unix.close_process_in i in
+  match status with
+    Unix.WEXITED 0 -> res
+  | _ -> fail "error in invoking sha256sum"

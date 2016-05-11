@@ -41,6 +41,7 @@
 %token SPACE
 %token EVAL
 %token MODEL
+%token DUMP
 %token CHECK
 %token MODELS
 %token GROUP

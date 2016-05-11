@@ -8,12 +8,12 @@ module IntOrdDst : sig type t=(float*int) val compare: (float*int) -> (float*int
   let compare = Pervasives.compare
 end
 module DDTSet = Set.Make(IntOrdDst)
-
-type result = Slice of (float,float64_elt,c_layout) Array2.t | Fun of (int -> int -> float)
+  
+type result = Slice of Slice.slice | Fun of (int -> int -> float)
 
 let apply h result = match result with
     Fun f -> f
-  | Slice s -> Array2.get s
+  | Slice s -> Array2.unsafe_get s
     
 let compute model =
   let num_states = Graph.nb_vertex model.kripke in
@@ -55,7 +55,7 @@ let compute model =
 		  Util.reset v1 0;
 		  ib point rad (fun point -> bin v1 (a1 state point));
 		  let res = Util.statcmp v1 v2 in
-		  Array2.set slice state point (Util.ofBool (Syntax.opsem op res thr))
+		  Array2.unsafe_set slice state point (Util.ofBool (Syntax.opsem op res thr))
 		done
 	      done))
     | Eucl (f,op,thr) ->
@@ -77,7 +77,7 @@ let compute model =
 		  	let s = if isTrue (a1 state point) then -1.0 else 1.0 in
 		  	let d = ib point e in
 		  	if (d < abs_float(!dst)) then dst := d*.s) edgeS;
-		  Array2.set slice state point (Util.ofBool (Syntax.opsem op !dst thr))
+		  Array2.unsafe_set slice state point (Util.ofBool (Syntax.opsem op !dst thr))
 		done
 	      done))
     | ModDijkstraDT (f,op,thr) ->
@@ -88,7 +88,7 @@ let compute model =
 	   for state = 0 to num_states - 1 do
 	     let edgeS = Util.edge (a1 state) model.space in
 	     let lSet = ref DDTSet.empty in
-	     Util.PointsSet.iter (fun e -> lSet:=DDTSet.add (0.0,e) !lSet;Array2.set slice state e 0.0) edgeS;
+	     Util.PointsSet.iter (fun e -> lSet:=DDTSet.add (0.0,e) !lSet;Array2.unsafe_set slice state e 0.0) edgeS;
 	     while (not (DDTSet.is_empty !lSet)) do
 	       let e = DDTSet.min_elt !lSet in
 	       lSet:=DDTSet.remove e !lSet;
@@ -96,10 +96,10 @@ let compute model =
 	       | (dst,point) ->
 		  model.space.iter_post point (*pre or post?*)
 		    (fun p w ->
-		      let dn=Array2.get slice state p in
+		      let dn=Array2.unsafe_get slice state p in
 		      if dn>(dst+.w) then
 			begin
-			  Array2.set slice state p (dst+.w);
+			  Array2.unsafe_set slice state p (dst+.w);
 			  lSet:=DDTSet.add (dst+.w,p) !lSet;
 			end)
 	     done;
@@ -109,8 +109,8 @@ let compute model =
 		   -1.0
 		 else
 		   1.0 in
-	       let d = s*.(Array2.get slice state point) in
-	       Array2.set slice state point (Util.ofBool (Syntax.opsem op d thr))
+	       let d = s*.(Array2.unsafe_get slice state point) in
+	       Array2.unsafe_set slice state point (Util.ofBool (Syntax.opsem op d thr))
 	     done
 	   done)
     | Near f1 ->
@@ -122,10 +122,10 @@ let compute model =
 	     for point = 0 to num_points - 1 do
 	       if isTrue (a1 state point) then
 		 begin
-		   Array2.set slice state point valTrue;
+		   Array2.unsafe_set slice state point valTrue;
 		   model.space.iter_post point
 		     (fun point' w ->
-		       Array2.set slice state point' valTrue)
+		       Array2.unsafe_set slice state point' valTrue)
 		 end
 	     done
 	   done)
@@ -138,22 +138,22 @@ let compute model =
            let accum = Stack.create () in
 	   for state = 0 to num_states - 1 do
              for point = 0 to num_points - 1 do
-	       Array2.set slice state point (a1 state point);
+	       Array2.unsafe_set slice state point (a1 state point);
 	       if isTrue (a1 state point) || isTrue (a2 state point) then
 		 model.space.iter_post point
 		   (fun point w -> if (isFalse (a1 state point)) &&
 		       (isFalse(a2 state point)) &&
-		       (isFalse(Array2.get slice state point))
-		     then (Array2.set slice state point valUtil;
+		       (isFalse(Array2.unsafe_get slice state point))
+		     then (Array2.unsafe_set slice state point valUtil;
 			   Stack.push point accum))
 	     done;
 	     while not (Stack.is_empty accum) do
 	       let point = Stack.pop accum in
-	       Array2.set slice state point valFalse;
+	       Array2.unsafe_set slice state point valFalse;
 	       model.space.iter_pre point (fun point w ->
-		 if isTrue (Array2.get slice state point) then
+		 if isTrue (Array2.unsafe_get slice state point) then
 		   begin
-		     Array2.set slice state point valFalse;
+		     Array2.unsafe_set slice state point valFalse;
 		     if isFalse (a2 state point)
 		     then Stack.push point accum
 		   end)
@@ -167,17 +167,17 @@ let compute model =
 	     let accum = Stack.create () in		  	    
 	     for state = 0 to num_states - 1 do
 	       if Util.isTrue (a1 state point)
-	       then (Array1.set count state 0; Array2.set slice state point valTrue; Stack.push state accum)
-	       else Array1.set count state (Model.Graph.out_degree model.kripke state)
+	       then (Array1.unsafe_set count state 0; Array2.unsafe_set slice state point valTrue; Stack.push state accum)
+	       else Array1.unsafe_set count state (Model.Graph.out_degree model.kripke state)
 	     done;
 	     while not (Stack.is_empty accum) do
 	       let state = Stack.pop accum in
 	       Model.Graph.iter_pred
 		 (fun state ->
-		   let c = Array1.get count state in
-		   if c > 0 then Array1.set count state (c-1);		 
+		   let c = Array1.unsafe_get count state in
+		   if c > 0 then Array1.unsafe_set count state (c-1);		 
 		   if c = 1 then (Stack.push state accum;
-				  Array2.set slice state point valTrue))
+				  Array2.unsafe_set slice state point valTrue))
 		 model.kripke state
 	     done	      
 	   done)	   
@@ -190,7 +190,7 @@ let compute model =
 	     for point = 0 to num_points - 1 do
 	       if isTrue (a1 state point)
 	       then Model.Graph.iter_pred
-		 (fun state -> Array2.set slice state point valTrue)
+		 (fun state -> Array2.unsafe_set slice state point valTrue)
 		 model.kripke state
 	     done
 	   done)
@@ -205,12 +205,12 @@ let compute model =
 	     for point = 0 to num_points - 1 do
  	       if isTrue (a2 state point) then
 		 begin
-		   Array2.set slice state point valTrue;
+		   Array2.unsafe_set slice state point valTrue;
 		   Model.Graph.iter_pred
 		     (fun state -> if isTrue (a1 state point) &&
 			 isFalse (a2 state point) &&
-			 isFalse (Array2.get slice state point)
-		       then (Array2.set slice state point valUtil;
+			 isFalse (Array2.unsafe_get slice state point)
+		       then (Array2.unsafe_set slice state point valUtil;
 			     Stack.push (state,point) accum))
 		     model.kripke state
 		 end;		
@@ -218,36 +218,35 @@ let compute model =
 	   done;	    
 	   while not (Stack.is_empty accum) do
 	     let (state,point) = Stack.pop accum in
-	     Array2.set slice state point valTrue;
+	     Array2.unsafe_set slice state point valTrue;
 	     Model.Graph.iter_pred
 	       (fun state -> if isTrue (a1 state point) &&
 		   isFalse (a2 state point) &&
-		   isFalse (Array2.get slice state point)
-		 then (Array2.set slice state point valUtil;
+		   isFalse (Array2.unsafe_get slice state point)
+		 then (Array2.unsafe_set slice state point valUtil;
 		       Stack.push (state,point) accum))
 	       model.kripke state;
 	   done)
-
-(*     
-  H.add model.eval f (Array2.get slice);
-*)
 	 
-let precompute model f =
-  let rec cache f =
-    try H.find model.eval f
-    with Not_found ->
-      match f with
-	Prop "deadlock" ->
-	  fun state point ->
-	    (match model.deadlocks with
-	      None -> valFalse
-	    | Some f -> f state)
-      | _ ->
-	 let res = compute model f cache in
-	 match res with
-	   Fun fn -> fn
-	 | Slice s -> let fn = Array2.get s in (H.add model.eval f fn; fn)
-  in cache f
+let rec precompute model f =  
+  try H.find model.eval f
+  with Not_found ->
+    match f with
+      Prop "deadlock" ->
+	fun state point ->
+	  (match model.deadlocks with
+	    None -> valFalse
+	  | Some f -> f state)
+    | _ ->
+       let res = compute model f (precompute model) in
+       match res with
+	 Fun fn -> fn
+       | Slice s -> let fn = Array2.unsafe_get s in
+		    (H.add model.eval f fn;
+		     (match model.hash_and_cache with
+		       None -> ()
+		     | Some (_,cache) -> H.add cache f s);
+		     fn)
   	   
 let rec qchecker points nb checker qf =
   match qf with

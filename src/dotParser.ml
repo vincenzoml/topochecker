@@ -179,6 +179,7 @@ let load_dot_model dir k s e =
   ParserSig.reset ();
   let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex spaceg) k_int_of_id s_int_of_id in
   { Model.kripke = kripke;
+    Model.hash_and_cache = None;
     Model.space = space;
     Model.deadlocks = None;
     Model.iter_ball = None;
