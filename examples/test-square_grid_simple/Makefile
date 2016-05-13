@@ -8,7 +8,7 @@ run: maketool
 maketool:
 	cd ../../src && make
 
-clean: almostclean 
-	rm -rf output *~
+clean: 
+	rm -rf out* *~ *.fmla *.slice
 
 

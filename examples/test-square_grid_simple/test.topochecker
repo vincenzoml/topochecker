@@ -4,5 +4,6 @@ Let everywhere(phi) = [phi];
 
 
 Output "out";
+Check "a";
 Check "0xFF0000" N ([a] S [b]); 
 

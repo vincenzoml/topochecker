@@ -3,7 +3,8 @@
   exception Eof
 }
   rule token = parse
-  [' ' '\t' '\n'] { token lexbuf }    
+    [' ' '\t'] { token lexbuf }
+| '\n' { Lexing.new_line lexbuf; token lexbuf }
 | "//"[^'\n']* { token lexbuf } 
 | '"' { STRING (stringl (Buffer.create 30) lexbuf) }
 | "E" {E}

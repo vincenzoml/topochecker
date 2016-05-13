@@ -47,5 +47,5 @@ let load_experiment =
     let line = curr.Lexing.pos_lnum in
     let cnum = curr.Lexing.pos_cnum - curr.Lexing.pos_bol in
     let tok = Lexing.lexeme lexbuf in
-    Util.fail (Printf.sprintf "filename: %s, line %d, character %d, token %s: %s\n%!" file line cnum tok msg)
+    Util.fail (Printf.sprintf "%s:%d:%d: token %s: %s\n%!" file line cnum tok msg)
       
