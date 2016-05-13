@@ -164,10 +164,10 @@ let write_dot_model spacefname kripkegraph spacegraph kripkeid spaceid fname sta
         
 let load_dot_model dir k s e =
   let (spacef,evalf) =  (Util.mkfname dir s,Util.mkfname dir e) in
-  let (kripke,(k_id_of_int,k_int_of_id)) =
+  let (hashk,kripke,(k_id_of_int,k_int_of_id)) =
     if k = ""
-    then (Model.default_kripke (),(string_of_int,int_of_string))
-    else (Parser.parse (Util.mkfname dir k),ParserSig.read ())
+    then (Util.sha256 k,Model.default_kripke (),(string_of_int,int_of_string))
+    else let f = Util.mkfname dir k in (Util.fSha256 f,Parser.parse f,ParserSig.read ())
   in
   ParserSig.reset ();
   let spaceg = Parser.parse spacef in
@@ -176,10 +176,14 @@ let load_dot_model dir k s e =
 		Util.iter_post = (fun v fn -> Model.Graph.iter_succ (fun x -> fn x 1.0) spaceg v) }
   in
   let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
+  let c = Model.H.create 1 in
+  let hashs = Util.fSha256 spacef in
+  let hashe = Util.fSha256 evalf in
+  let hash = Util.sha256 (String.concat "" [hashk;hashs;hashe]) in
   ParserSig.reset ();
   let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex spaceg) k_int_of_id s_int_of_id in
   { Model.kripke = kripke;
-    Model.hash_and_cache = None;
+    Model.hash_and_cache = Some (hash,c);
     Model.space = space;
     Model.deadlocks = None;
     Model.iter_ball = None;

@@ -1,7 +1,7 @@
 type formula =
     T
   | Prop of string
-  | VProp of (string * string * float)
+  | VProp of string * string * float
   | Not of formula
   | And of formula * formula
   | Near of formula

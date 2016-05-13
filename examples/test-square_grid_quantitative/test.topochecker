@@ -1,4 +1,4 @@
 Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
-Output "out";
-Check "0xFF0000" [a>63.0];
+Output "output/out";
+Check "0xFF0000" TT S [a>63.0];
 

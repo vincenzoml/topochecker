@@ -10,7 +10,7 @@ maketool:
 	cd ../../src && make
 
 almostclean: 
-	rm -rf *.cm* a.out *~ \#* *.o output
+	rm -rf *.cm* a.out *~ \#* *.o output *.slice *.fmla
 
 clean: almostclean 
 	rm -f kripke.dot space.dot eval.csv
