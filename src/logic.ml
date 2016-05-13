@@ -6,9 +6,10 @@ type formula =
   | And of formula * formula
   | Near of formula
   | Surrounded of formula * formula
-  | Statcmp of string * formula * float * string * float * float * float * int
-  | Eucl of formula * string * float
-  | ModDijkstraDT of formula * string * float
+  | Statcmp of string * formula * float * float * float * int
+  | Eucl of formula
+  | ModDijkstraDT of formula
+  | Threshold of string * float * formula
   | Ex of formula
   | Af of formula
   | Eu of formula * formula
@@ -23,13 +24,13 @@ let rec string_of_formula formula =
     | And (f1,f2) -> Printf.sprintf "%s & %s" (string_of_formula f1) (string_of_formula f2)
     | Near f -> Printf.sprintf "N %s" (string_of_formula f)
     | Surrounded (f1,f2) -> Printf.sprintf "%s S %s" (string_of_formula f1) (string_of_formula f2)
-    | Statcmp (s1,f,k1,s2,k2,k3,k4,i) -> Printf.sprintf "SCMP(%s,%s,%f,%s,%f,%f,%f,%d)" s1 (string_of_formula f) k1 s2 k2 k3 k4 i
-    | Eucl (f,s,k) -> Printf.sprintf "Eucl(%s %f) %s" s k (string_of_formula f)
-    | ModDijkstraDT (f,s,k) -> Printf.sprintf "ModDijkstraDT(%s %f) %s" s k (string_of_formula f)
+    | Statcmp (s1,f,k1,k3,k4,i) -> Printf.sprintf "SCMP(%s,%s,%f,%f,%f,%d)" s1 (string_of_formula f) k1 k3 k4 i
+    | Eucl f -> Printf.sprintf "Eucl %s" (string_of_formula f)
+    | ModDijkstraDT f -> Printf.sprintf "ModDijkstraDT %s" (string_of_formula f)
+    | Threshold (s,k,f) -> Printf.sprintf "Thr(%s,%f) %s" s k (string_of_formula f)
     | Ex f -> Printf.sprintf "EX %s" (string_of_formula f)
     | Af f -> Printf.sprintf "AF %s" (string_of_formula f)
-    | Eu (f1,f2) -> Printf.sprintf "%s EU %s" (string_of_formula f1) (string_of_formula f2))
-     
+    | Eu (f1,f2) -> Printf.sprintf "%s EU %s" (string_of_formula f1) (string_of_formula f2))     
       
 type qformula =
   | QFloat of float

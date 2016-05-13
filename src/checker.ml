@@ -30,7 +30,10 @@ let compute model =
        let a1 = cache f1 in
        let a2 = cache f2 in
        Fun (fun state point -> valAnd (a1 state point) (a2 state point))
-    | Statcmp (p,f,rad,op,thr,min,max,nbins) ->
+    | Threshold (op,thr,f) ->
+       let a = cache f in
+       Fun (fun state point ->  Util.ofBool (Syntax.opsem op (a state point) thr))
+    | Statcmp (p,f,rad,min,max,nbins) ->
        new_slice
 	 (fun slice ->
 	   (match model.iter_ball with
@@ -55,10 +58,10 @@ let compute model =
 		  Util.reset v1 0;
 		  ib point rad (fun point -> bin v1 (a1 state point));
 		  let res = Util.statcmp v1 v2 in
-		  Array2.unsafe_set slice state point (Util.ofBool (Syntax.opsem op res thr))
+		  Array2.unsafe_set slice state point res
 		done
 	      done))
-    | Eucl (f,op,thr) ->
+    | Eucl f ->
        new_slice
 	 (fun slice ->
 	   (match model.euclidean_distance with
@@ -77,10 +80,10 @@ let compute model =
 		  	let s = if isTrue (a1 state point) then -1.0 else 1.0 in
 		  	let d = ib point e in
 		  	if (d < abs_float(!dst)) then dst := d*.s) edgeS;
-		  Array2.unsafe_set slice state point (Util.ofBool (Syntax.opsem op !dst thr))
+		  Array2.unsafe_set slice state point !dst
 		done
 	      done))
-    | ModDijkstraDT (f,op,thr) ->
+    | ModDijkstraDT f ->
        new_slice
 	 (fun slice ->
 	   let a1 = cache f in
@@ -110,7 +113,7 @@ let compute model =
 		 else
 		   1.0 in
 	       let d = s*.(Array2.unsafe_get slice state point) in
-	       Array2.unsafe_set slice state point (Util.ofBool (Syntax.opsem op d thr))
+	       Array2.unsafe_set slice state point d
 	     done
 	   done)
     | Near f1 ->
