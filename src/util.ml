@@ -253,3 +253,12 @@ let fSha256 f =
   match status with
     Unix.WEXITED 0 -> res
   | _ -> fail "error in invoking sha256sum"
+
+let fsSha256 flist =
+  try
+    Some (sha256 (String.concat ""  (List.map fSha256 flist)))
+  with
+    _ -> None
+
+let mapO f s = match s with None -> None | Some x -> Some (f x)
+  
