@@ -83,6 +83,20 @@ let compute model =
 		  Array2.unsafe_set slice state point !dst
 		done
 	      done))
+    | EDT f ->
+       new_slice
+	 (fun slice ->
+	   (match model.euclidean_distance with
+	   | None -> Util.fail "model does not have distances but EUCL operator used"
+	   | Some ib ->
+	      let a1 = cache f in
+	      for state = 0 to num_states - 1 do
+		(* F_0 *)
+		for point = 0 to num_points - 1 do
+		  let dt = if isTrue (a1 state point) then (float_of_int point) else -1.0 in
+		  Array2.unsafe_set slice state point dt;
+		done
+	   ))
     | ModDijkstraDT f ->
        new_slice
 	 (fun slice ->

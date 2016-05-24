@@ -23,6 +23,8 @@ type fsyn =
   (* atom fmla radius operator threshold bin_min bin_max nbins *)
   | EUCL of (fsyn * string * float)
   (* fmla operator threshold *)
+  | EDT of (fsyn * string * float)
+  (* fmla operator threshold *)
   | MDDT of (fsyn * string * float)
   (* fmla operator threshold *)
   | EX of fsyn	    
@@ -93,6 +95,7 @@ let rec formula_of_fsyn env f =
   | SURROUNDED (f1,f2) -> Surrounded (formula_of_fsyn env f1,formula_of_fsyn env f2)
   | STATCMP (p,f,rad,op,thr,min,max,nbins) -> Threshold (op,thr,Statcmp (p,formula_of_fsyn env f,rad,min,max,nbins))
   | EUCL (f,op,thr) -> Threshold (op,thr,Eucl (formula_of_fsyn env f))
+  | EDT (f,op,thr) -> Threshold (op,thr,EDT (formula_of_fsyn env f))
   | MDDT (f,op,thr) -> Threshold (op,thr,ModDijkstraDT (formula_of_fsyn env f))
   | EX f1 -> Ex (formula_of_fsyn env f1)
   | AX f1 -> Not (Ex (Not (formula_of_fsyn env f1)))

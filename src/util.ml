@@ -68,12 +68,66 @@ let euclidean_distance v1 v2 pixdims =
   done;
   sqrt !res
 
+
+let int_exp x y = int_of_float ((float_of_int x) ** (float_of_int y))
+
+let iter_nonempty_subsets b k g =
+  assert ((b mod 2) = 1);
+  let bs = Array.create b 0 in
+  for n=0 to (b-1) / 2 do
+      bs.(n) <- n
+  done;
+  for n= (b-1) / 2 + 1 to b-1 do
+      bs.(n) <- (n-b)
+  done;
+  let arg = Array.create k 0 in
+  for i = 1 to (int_exp b k) - 1 do
+    let x = ref i in
+    for j = 0 to k-1 do
+      arg.(j) <- bs.(!x mod b);
+      x :=  !x / b
+    done;
+    g arg
+  done
+
+
+let iter_nonempty_subsetsRot b k r g=
+  assert ((b mod 2) = 1);
+  let bs = Array.create b 0 in
+  for n=0 to (b-1) / 2 do
+      bs.(n) <- n
+  done;
+  for n= (b-1) / 2 + 1 to b-1 do
+      bs.(n) <- (n-b)
+  done;
+  let arg = Array.create k 0 in
+  let l = int_exp b k in
+  for i = 1 to l - 1 do
+    let ri = ((i-1+r) mod (l-1)) + 1 in
+    let x = ref ri in
+    for j = 0 to k-1 do
+      arg.(j) <- bs.(!x mod b);
+      x :=  !x / b
+    done;
+    g arg
+  done
+
+let in_range coord dims =
+  assert_samelen coord dims;
+  let res = ref true in
+  let i = ref 0 in
+  while (!i < Array.length coord) && !res do
+    res := (!res && (0 <= coord.(!i)) && (coord.(!i) < dims.(!i)));
+    i := !i+1
+  done;
+  !res
+
 let iter_neighbour connect dims pixdims i fn =
   let coords = coords_of_int i dims in
   let recdims =
     match connect with
     | SubDim -> Array.length coords - 2
-    | a -> Array.length coords - 1
+    | _ -> Array.length coords - 1
   in
   match connect with
   | CityBlock ->
@@ -93,40 +147,55 @@ let iter_neighbour connect dims pixdims i fn =
 	 end;
        coords.(i) <- orig
      done
-  | a ->
-     let cursor = Array.make (Array.length coords) 0 in
-     let rec iter_hypercube_rec n c =
-       let st = max 0 (coords.(n) - 1) in
-       let en = min (coords.(n) + 1) (dims.(n) - 1) in
-       if n = 0 && c > 0 then
-	 begin 
-	   for i = st to en do
-	     cursor.(n) <- i;
-	     let id = int_of_coords cursor dims in
-	     fn id
-	       (match connect with
-	       | Chessboard -> 1.0;
-	       | a -> euclidean_distance coords cursor pixdims;
-	       )
-	   done
-	 end
-       else if n>0 then
-	 for i = st to en do
-	   cursor.(n) <- i;
-	   iter_hypercube_rec (n - 1) (c + abs(cursor.(n) - coords.(n)))
-	 done
-     in
-     iter_hypercube_rec (Array.length dims - 1) 0
-    
-let in_range coord dims =
-  assert_samelen coord dims;
-  let res = ref true in
-  let i = ref 0 in
-  while (!i < Array.length coord) && !res do
-    res := (!res && (0 <= coord.(!i)) && (coord.(!i) < dims.(!i)));
-    i := !i+1
-  done;
-  !res
+  | _ ->
+     (* (\*subdim not yet implemented*\) *)
+     (* let cursor = Array.make (Array.length coords) 0 in *)
+     (* let w=1 in *)
+     (* let rec iter_hypercube_rec n c = *)
+     (*   let st = max 0 (coords.(n) - w) in *)
+     (*   let en = min (coords.(n) + w) (dims.(n) - 1) in *)
+     (*   if n = 0 && c > 0 then *)
+     (* 	 begin *)
+     (* 	   for i = st to en do *)
+     (* 	     cursor.(n) <- i; *)
+     (* 	     let id = int_of_coords cursor dims in *)
+     (* 	     fn id *)
+     (* 	       (match connect with *)
+     (* 	       | Chessboard -> 1.0; *)
+     (* 	       | a -> euclidean_distance coords cursor pixdims; *)
+     (* 	       ) *)
+     (* 	   done *)
+     (* 	 end *)
+     (*   else if n>0 then *)
+     (* 	 for i = st to en do *)
+     (* 	   cursor.(n) <- i; *)
+     (* 	   iter_hypercube_rec (n - 1) (c + abs(cursor.(n) - coords.(n))) *)
+     (* 	 done *)
+     (* in *)
+     (* iter_hypercube_rec recdims 0 *)
+
+     let l = int_exp 3 recdims in
+     let w=1 in
+     let r=Random.int (l-1) in
+     iter_nonempty_subsetsRot (2*w+1) (recdims+1) r
+       (fun v ->
+     	 let cursor = Array.make (Array.length coords) 0 in
+     	 for n=0 to recdims do
+     	   cursor.(n)<-coords.(n)-v.(n)
+     	 done;
+     	 for n=recdims+1 to (Array.length coords - 1) do
+     	   cursor.(n)<-coords.(n)
+     	 done;
+     	 if in_range cursor dims then
+     	   begin
+     	     let id = int_of_coords cursor dims in
+     	     fn id
+     	       (match connect with
+     	       | Chessboard -> 1.0;
+     	       | a -> euclidean_distance coords cursor pixdims;
+     	       )
+     	   end
+       )
 
 let vop1 op v =
   Array.init (Array.length v) (fun i -> op v.(i))	     
@@ -222,19 +291,35 @@ let edge phi graph =
   let edgeset = ref PointsSet.empty in
   for point = 0 to num_points - 1 do
     let pp = phi point in
-    graph.iter_post point
-      (fun p w ->
-	let pp' = phi p in
-	let xor = pp +. pp' in
-	if xor = 1.0 then
-	  begin
-	    if not (PointsSet.mem point !edgeset) then
-	      edgeset := PointsSet.add point !edgeset;
-	    if not (PointsSet.mem p !edgeset) then
+    (* graph.iter_post point *)
+    (*   (fun p w -> *)
+    (* 	let pp' = phi p in *)
+    (* 	let xor = pp +. pp' in *)
+    (* 	if xor = 1.0 then *)
+    (* 	  begin *)
+    (* 	    if not (PointsSet.mem point !edgeset) then *)
+    (* 	      edgeset := PointsSet.add point !edgeset; *)
+    (* 	    if not (PointsSet.mem p !edgeset) then *)
+    (* 	      edgeset := PointsSet.add p !edgeset; *)
+    (* 	  end) *)
+
+    (*interior edge*)
+    if isFalse pp then
+      graph.iter_post point
+	(fun p w ->
+    	  let pp' = phi p in
+	  if (isTrue pp') && not (PointsSet.mem point !edgeset) then
+	    begin
 	      edgeset := PointsSet.add p !edgeset;
-	  end)
+	    end)
   done;
   !edgeset
+
+
+let really_input_string ic len =
+  let s = Bytes.create len in
+  really_input ic s 0 len;
+  Bytes.unsafe_to_string s
 
 let sha256 s =
   let (i,o) = Unix.open_process "sha256sum" in

@@ -8,6 +8,7 @@ type formula =
   | Surrounded of formula * formula
   | Statcmp of string * formula * float * float * float * int
   | Eucl of formula
+  | EDT of formula
   | ModDijkstraDT of formula
   | Threshold of string * float * formula
   | Ex of formula
@@ -26,6 +27,7 @@ let rec string_of_formula formula =
     | Surrounded (f1,f2) -> Printf.sprintf "%s S %s" (string_of_formula f1) (string_of_formula f2)
     | Statcmp (s1,f,k1,k3,k4,i) -> Printf.sprintf "SCMP(%s,%s,%f,%f,%f,%d)" s1 (string_of_formula f) k1 k3 k4 i
     | Eucl f -> Printf.sprintf "Eucl %s" (string_of_formula f)
+    | EDT f -> Printf.sprintf "EDT %s" (string_of_formula f)
     | ModDijkstraDT f -> Printf.sprintf "ModDijkstraDT %s" (string_of_formula f)
     | Threshold (s,k,f) -> Printf.sprintf "Thr(%s,%f) %s" s k (string_of_formula f)
     | Ex f -> Printf.sprintf "EX %s" (string_of_formula f)
