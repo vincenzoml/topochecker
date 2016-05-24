@@ -89,19 +89,17 @@ let load_nifti s =
 (*dir: directory, s=file name, k,e=""*)
 let load_nifti_model bindings =
   (let prop_img = List.map (fun (name,file) -> ((match name with "" -> "value" | s -> s),load_nifti file)) bindings in
-   let hashes = List.map (fun (_,file) -> Util.fSha256 file) bindings in
-   let hash = Util.sha256 (String.concat "" hashes) in
+   let hash = Util.mapO (fun x -> (x,Model.H.create 1)) (Util.fsSha256 (List.map (fun (_,file) -> Util.fSha256 file) bindings)) in
    let (_,origfname) = List.hd bindings in
    let (prop,main) = List.hd prop_img in
    let dims = main.dims in
    let pixdims = main.pixdims in
    let h = Model.H.create 1 in
-   let c = Model.H.create 1 in
    (* TODO: check that all the images have the same dimensions *)
    List.iter (fun (prop,img) -> 
 	      Model.H.add h (Logic.Prop prop)
 			  (fun k s -> float_of_int (Array1.get img.raw_data s))) prop_img;
-   { Model.hash_and_cache = Some (hash,c);
+   { Model.hash_and_cache = hash;
      Model.kripke = Model.default_kripke ();
      (*distance 1 not euclidean*)
      Model.iter_ball =
