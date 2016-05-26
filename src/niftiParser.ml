@@ -162,7 +162,7 @@ let load_nifti_model bindings =
        let v2 = Array1.map_file r main.valtype c_layout true (Array1.dim v3) in
        
        List.iter (fun (colour,truth) ->
-	 for i = 0 to Array1.dim main.raw_data - 2 do
+	 for i = 0 to Array1.dim main.raw_data - 1 do
 	   if truth 0 i then Array1.set v1 i (int_of_string colour)
 	 done
        ) coloured_truth_vals;
