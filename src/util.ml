@@ -1,3 +1,5 @@
+open Bigarray
+
 let isTrue x = x = 1.0
 let isFalse x = x = 0.0
 let valTrue = 1.0
@@ -15,11 +17,30 @@ module IntOrdT : sig type t=int val compare: int -> int -> int end = struct
 end
 module PointsSet = Set.Make(IntOrdT)
 
-type simple_graph =
-  { num_nodes : int;
-    iter_pre : int -> (int -> float -> unit) -> unit;
-    iter_post : int -> (int -> float -> unit) -> unit }
-  
+(* type simple_graph = *)
+(*   { num_nodes : int; *)
+(*     iter_pre : int -> (int -> float -> unit) -> unit; *)
+(*     iter_post : int -> (int -> float -> unit) -> unit } *)
+
+class virtual simple_graph = object
+  method virtual num_nodes : int
+  method virtual iter_pre : int -> (int -> float -> unit) -> unit
+  method virtual iter_post : int -> (int -> float -> unit) -> unit
+end
+
+(* TODO: assert graph.num_nodes = prod(dims) *)
+class virtual grid = object
+  inherit simple_graph
+  method virtual dims: int array
+  method virtual pixdims : float array
+end
+
+(* TODO: remove euclidean_distance from model *)
+class virtual euclidean_grid = object
+  inherit grid
+  method virtual euclidean_distance: int -> int -> float
+end
+
 type connectivity = CityBlock | Chessboard | Euclidean | SubDim
 					
 let debug s =
@@ -67,7 +88,6 @@ let euclidean_distance v1 v2 pixdims =
     res := !res +. (sqr (float_of_int (v1.(i) - v2.(i)) *. pixdims.(i)));
   done;
   sqrt !res
-
 
 let int_exp x y = int_of_float ((float_of_int x) ** (float_of_int y))
 
@@ -287,7 +307,7 @@ let reset vect value =
 
 (* Interior and exterior? Iter post and pre?*)
 let edge phi graph =
-  let num_points = graph.num_nodes in
+  let num_points = graph#num_nodes in
   let edgeset = ref PointsSet.empty in
   for point = 0 to num_points - 1 do
     let pp = phi point in
@@ -305,7 +325,7 @@ let edge phi graph =
 
     (*interior edge*)
     if isFalse pp then
-      graph.iter_post point
+      graph#iter_post point
 	(fun p w ->
     	  let pp' = phi p in
 	  if (isTrue pp') && not (PointsSet.mem point !edgeset) then
@@ -346,4 +366,108 @@ let fsSha256 flist =
     _ -> None
 
 let mapO f s = match s with None -> None | Some x -> Some (f x)
+
+(* Ciesielski et al. 2011 - utilities *)
+let populateR p d dims =
+  let pc = coords_of_int p dims in
+  let r = Array.make dims.(d) 0 in
+  let ndim = Array.length dims in
+  let pp = Array.make ndim 0 in
+  for nd = 0 to ndim-1 do
+    pp.(nd)<-pc.(nd);
+  done;
+  for n=0 to dims.(d)-1 do
+    pp.(d) <- n;
+    let ppid = int_of_coords pp dims in
+    r.(n) <- ppid
+  done;
+  r
+
+(* TODO: generalize to anisotropic voxels*)
+let medpoint u v x d dims =
+  let uc = coords_of_int u dims in
+  let vc = coords_of_int v dims in
+  let xc = coords_of_int x dims in
+  let den = vc.(d) - uc.(d) in
+  if den != 0 then
+    begin
+      let numc = vc.(d) + uc.(d) in
+      let num = ref 0 in
+      for n=0 to Array.length uc-1 do
+	if n!=d then
+	  num:=!num + int_of_float (sqr (float_of_int (xc.(n) - vc.(n))) -. sqr (float_of_int (xc.(n) - uc.(n))) )
+      done;
+      0.5 *. ((float_of_int !num) /. (float_of_int den) +. float_of_int numc)
+    end
+  else
+    float_of_int uc.(d)
+
+let cHECK u v w x d dims =
+  let xuv = medpoint u v x d dims in
+  let xvw = medpoint v w x d dims in
+  ceil xuv > floor xvw
+    
+let tRIM r d dims state slice =
+  let nd = dims.(d) in
+  let m = ref 0 in
+  let q = ref [] in
+  for i=0 to nd-1 do
+    let x = r.(i) in
+    let f = int_of_float (Array2.unsafe_get slice state x) in
+    if f >= 0 then
+      begin
+	m:=!m+1;
+	q:=f::!q;
+	if !m>2 then
+	  begin
+	    let u = List.nth !q (!m-2) in
+	    let v = f in
+	    let xuv = medpoint u v x d dims in
+	    if xuv >= float_of_int nd then
+	      begin
+		m:=!m-1;
+	      end
+	    else
+	      begin
+		let qm2 = List.nth !q (!m-2) in
+		while !m>2 & cHECK qm2 u v x d dims do
+		  q := List.rev (List.tl (List.rev !q));
+		  m:=!m-1;
+		done;
+		if !m=2 then
+		  begin
+		    let u = List.nth !q 1 in
+		    let v = List.nth !q 2 in
+		    let xuv = medpoint u v x d dims in
+		    if xuv < 0.0 then
+		      begin
+			q:=List.tl !q;
+			m:=1;
+		      end
+		  end
+	      end
+	  end;
+      end;
+  done;
+  !q
   
+let dimUp state p d dims delta slice=
+  let r = populateR p d dims in
+  let qlist = tRIM r d dims state slice in
+  let m = List.length qlist in
+  if m>0 then
+    begin
+      let l = ref 0 in
+      for n=0 to dims.(d)-1 do
+	let x = r.(n) in
+	let ta = Array.make m 0.0 in
+	if m>1 then
+	  begin
+	    List.iteri (fun i q -> ta.(i) <- delta x q) qlist;
+	    while !l<(m-1) & ta.(!l)>=ta.(!l+1) do
+	      l:=!l+1
+	    done;
+	  end;
+	Array2.unsafe_set slice state x (float_of_int (List.nth qlist !l));
+      done;
+    end;

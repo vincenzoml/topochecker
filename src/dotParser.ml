@@ -161,7 +161,15 @@ let write_dot_model spacefname kripkegraph spacegraph kripkeid spaceid fname sta
        close_out output
      in
      aux fn
-        
+
+class spaceDot spaceg =
+object
+  inherit Util.simple_graph
+  method num_nodes = Model.Graph.nb_vertex spaceg
+  method iter_pre = (fun v fn -> Model.Graph.iter_pred (fun x -> fn x 1.0) spaceg v)
+  method iter_post = (fun v fn -> Model.Graph.iter_succ (fun x -> fn x 1.0) spaceg v)
+end
+     
 let load_dot_model dir k s e =
   let (kripkef,spacef,evalf) =  (Util.mkfname dir k,Util.mkfname dir s,Util.mkfname dir e) in
   let (kripke,(k_id_of_int,k_int_of_id)) =
@@ -171,10 +179,7 @@ let load_dot_model dir k s e =
   in
   ParserSig.reset ();
   let spaceg = Parser.parse spacef in
-  let space = { Util.num_nodes = Model.Graph.nb_vertex spaceg;
-		Util.iter_pre = (fun v fn -> Model.Graph.iter_pred (fun x -> fn x 1.0) spaceg v);
-		Util.iter_post = (fun v fn -> Model.Graph.iter_succ (fun x -> fn x 1.0) spaceg v) }
-  in
+  let space = new spaceDot spaceg in
   let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
   let hash = Util.fsSha256 [kripkef;spacef;evalf] in
   ParserSig.reset ();
