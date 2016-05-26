@@ -1,9 +1,8 @@
 Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
 
-Let everywhere(phi) = [phi];
-
-
 Output "out";
-Check "a";
-Check "0xFF0000" N ([a] S [b]); 
+
+
+Check "0xFF0000" TT;
+
 
