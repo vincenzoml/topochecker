@@ -28,10 +28,10 @@ module Edge =
 module Graph = Graph.Imperative.Digraph.ConcreteBidirectionalLabeled
   (Vertex)(Edge)
   
-type model =
+type 'a model =
   { hash_and_cache : (string * slice H.t) option; (* enables caching *)
     kripke : Graph.t;
-    space : Util.simple_graph;
+    space : #Util.simple_graph as 'a;
     deadlocks : (int -> float) option;
     kripkeid : int -> string;
     idkripke : string -> int;
@@ -81,7 +81,7 @@ let load_cache model =
 	      let formula = Marshal.from_channel formula_chan in
 	      close_in formula_chan;
 	      if not (H.mem model.eval formula) then
-		let slice = load_slice slice_fname (Graph.nb_vertex model.kripke) (model.space.Util.num_nodes) in
+		let slice = load_slice slice_fname (Graph.nb_vertex model.kripke) (model.space#num_nodes) in
 		H.replace cache formula slice;
 		H.replace model.eval formula (Array2.unsafe_get slice);
       done

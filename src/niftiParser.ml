@@ -9,6 +9,21 @@ type ('a,'b) header =
     endian : endian;
     full_header : string list;
     raw_data : ('a,'b,c_layout) Array1.t }
+
+
+class spaceNifti numnodes dims pixdims=
+object
+  inherit Util.euclidean_grid
+  method num_nodes = numnodes
+  method iter_pre = Util.iter_neighbour Util.Euclidean dims pixdims
+  method iter_post =Util.iter_neighbour Util.Euclidean dims pixdims
+  method dims = dims
+  method pixdims = pixdims
+  method euclidean_distance = fun p1 p2 ->
+    let v1 = Util.coords_of_int p1 dims in
+    let v2 = Util.coords_of_int p2 dims in
+    Util.euclidean_distance v1 v2 pixdims
+end
   
 let load_raw rawfile header =
   let h = Hashtbl.create 100 in
@@ -117,10 +132,7 @@ let load_nifti_model bindings =
 	   let v2 = Util.coords_of_int p2 dims in
 	   Util.euclidean_distance v1 v2 pixdims
 	 );
-     Model.space =
-       { Util.num_nodes = (Array1.dim main.raw_data);
-	 Util.iter_pre = (Util.iter_neighbour Util.Euclidean dims pixdims);
-	 Util.iter_post = (Util.iter_neighbour Util.Euclidean dims pixdims)};
+     Model.space = new spaceNifti (Array1.dim main.raw_data) dims pixdims;
      Model.eval = h;
      Model.kripkeid = string_of_int;
      Model.idkripke = int_of_string;
@@ -150,7 +162,7 @@ let load_nifti_model bindings =
        let v2 = Array1.map_file r main.valtype c_layout true (Array1.dim v3) in
        
        List.iter (fun (colour,truth) ->
-	 for i = 0 to Array1.dim main.raw_data - 2 do
+	 for i = 0 to Array1.dim main.raw_data - 1 do
 	   if truth 0 i then Array1.set v1 i (int_of_string colour)
 	 done
        ) coloured_truth_vals;

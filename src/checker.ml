@@ -17,7 +17,7 @@ let apply h result = match result with
     
 let compute model =
   let num_states = Graph.nb_vertex model.kripke in
-  let num_points =  model.space.num_nodes in
+  let num_points =  model.space#num_nodes in
   let count = Array1.create int c_layout num_states in (* auxiliary *)
   let new_slice f = let slice = Array2.create float64 c_layout num_states num_points in (f slice;Slice slice) in
   fun formula cache ->
@@ -63,26 +63,72 @@ let compute model =
 	      done))
     | Eucl f ->
        new_slice
-	 (fun slice ->
-	   (match model.euclidean_distance with
-	   | None -> Util.fail "model does not have distances but EUCL operator used"
-	   | Some ib ->
-	      let a1 = cache f in
-	      for state = 0 to num_states - 1 do
-		let edgeS = Util.edge (a1 state) model.space in
-		for point = 0 to num_points - 1 do
-		  let dst = ref infinity in
-		  if PointsSet.mem point edgeS then
-		    dst := 0.0
-		  else
-		    Util.PointsSet.iter
-		      (fun e ->
-		  	let s = if isTrue (a1 state point) then -1.0 else 1.0 in
-		  	let d = ib point e in
-		  	if (d < abs_float(!dst)) then dst := d*.s) edgeS;
-		  Array2.unsafe_set slice state point !dst
-		done
-	      done))
+	 (fun slice -> (
+	   try
+	     let a1 = cache f in
+	     for state = 0 to num_states - 1 do
+	       let edgeS = Util.edge (a1 state) model.space in
+	       for point = 0 to num_points - 1 do
+		 let dst = ref infinity in
+		 if PointsSet.mem point edgeS then
+		   dst := 0.0
+		 else
+		   Util.PointsSet.iter
+		     (fun e ->
+		       let s = if isTrue (a1 state point) then -1.0 else 1.0 in
+		       let d = model.space#euclidean_distance point e in
+		       if (d < abs_float(!dst)) then dst := d*.s) edgeS;
+		 Array2.unsafe_set slice state point !dst
+	       done
+	     done
+	   with _ -> Util.fail "model does not have distances but EUCL operator used"))
+    | EDT f ->
+       new_slice
+    	 (fun slice -> (
+	   try
+    	     let a1 = cache f in
+    	     for state = 0 to num_states - 1 do
+    	       (* F_0 *)
+    	       for point = 0 to num_points - 1 do
+    		 let dt = if isTrue (a1 state point) then (float_of_int point) else -1.0 in
+    		 Array2.unsafe_set slice state point dt;
+    	       done;
+
+	       (* FT *)
+	       let ndim = Array.length model.space#dims in
+    	       for d=0 to ndim-1 do
+		 let cdn = model.space#num_nodes / model.space#dims.(d) in
+		 let p = Array.make ndim 0 in
+		 let cddims = Array.make (ndim-1) 0 in
+		 for dd=0 to d-1 do
+		   cddims.(dd)<-model.space#dims.(dd);
+		 done;
+		 for dd=d+1 to ndim - 1 do
+		   cddims.(dd-1)<-model.space#dims.(dd);
+		 done;
+		 for np = 0 to cdn - 1 do
+		   let npc = coords_of_int np cddims in
+		   p.(d)=0;
+		   for dd=0 to d-1 do
+		     p.(dd)<-npc.(dd);
+		   done;
+		   for dd=d+1 to ndim - 1 do
+		     p.(dd)<-npc.(dd-1);
+		   done;
+		   
+		   let pp = int_of_coords p model.space#dims in
+		   Util.dimUp state pp d (model.space#dims) (model.space#euclidean_distance) slice;
+		 done;
+	       done;
+
+	       (* DT *)
+	       for point = 0 to num_points - 1 do
+		 let cft = Array2.unsafe_get slice state point in
+		 let edt = model.space#euclidean_distance point (int_of_float cft) in
+		 Array2.unsafe_set slice state point edt
+	       done
+	     done
+	   with _ -> Util.fail "model is not a euclidean grid"))
     | ModDijkstraDT f ->
        new_slice
 	 (fun slice ->
@@ -97,7 +143,7 @@ let compute model =
 	       lSet:=DDTSet.remove e !lSet;
 	       match e with
 	       | (dst,point) ->
-		  model.space.iter_post point (*pre or post?*)
+		  model.space#iter_post point (*pre or post?*)
 		    (fun p w ->
 		      let dn=Array2.unsafe_get slice state p in
 		      if dn>(dst+.w) then
@@ -126,7 +172,7 @@ let compute model =
 	       if isTrue (a1 state point) then
 		 begin
 		   Array2.unsafe_set slice state point valTrue;
-		   model.space.iter_post point
+		   model.space#iter_post point
 		     (fun point' w ->
 		       Array2.unsafe_set slice state point' valTrue)
 		 end
@@ -143,7 +189,7 @@ let compute model =
              for point = 0 to num_points - 1 do
 	       Array2.unsafe_set slice state point (a1 state point);
 	       if isTrue (a1 state point) || isTrue (a2 state point) then
-		 model.space.iter_post point
+		 model.space#iter_post point
 		   (fun point w -> if (isFalse (a1 state point)) &&
 		       (isFalse(a2 state point)) &&
 		       (isFalse(Array2.unsafe_get slice state point))
@@ -153,7 +199,7 @@ let compute model =
 	     while not (Stack.is_empty accum) do
 	       let point = Stack.pop accum in
 	       Array2.unsafe_set slice state point valFalse;
-	       model.space.iter_pre point (fun point w ->
+	       model.space#iter_pre point (fun point w ->
 		 if isTrue (Array2.unsafe_get slice state point) then
 		   begin
 		     Array2.unsafe_set slice state point valFalse;
