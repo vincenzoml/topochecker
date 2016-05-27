@@ -411,6 +411,7 @@ let tRIM r d dims state slice =
   let nd = dims.(d) in
   let m = ref 0 in
   let q = ref [] in
+  
   for i=0 to nd-1 do
     let x = r.(i) in
     let f = int_of_float (Array2.unsafe_get slice state x) in
@@ -430,14 +431,15 @@ let tRIM r d dims state slice =
 	    else
 	      begin
 		let qm2 = List.nth !q (!m-2) in
-		while !m>2 & cHECK qm2 u v x d dims do
+		while !m>2 && cHECK qm2 u v x d dims do
 		  q := List.rev (List.tl (List.rev !q));
 		  m:=!m-1;
 		done;
+
 		if !m=2 then
 		  begin
-		    let u = List.nth !q 1 in
-		    let v = List.nth !q 2 in
+		    let u = List.nth !q 0 in
+		    let v = List.nth !q 1 in
 		    let xuv = medpoint u v x d dims in
 		    if xuv < 0.0 then
 		      begin
@@ -464,7 +466,7 @@ let dimUp state p d dims delta slice=
 	if m>1 then
 	  begin
 	    List.iteri (fun i q -> ta.(i) <- delta x q) qlist;
-	    while !l<(m-1) & ta.(!l)>=ta.(!l+1) do
+	    while !l<(m-1) && ta.(!l)>=ta.(!l+1) do
 	      l:=!l+1
 	    done;
 	  end;

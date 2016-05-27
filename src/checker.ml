@@ -89,14 +89,17 @@ let compute model =
     	     let a1 = cache f in
     	     for state = 0 to num_states - 1 do
     	       (* F_0 *)
+	       let edgeS = Util.edge (a1 state) model.space in
     	       for point = 0 to num_points - 1 do
-    		 let dt = if isTrue (a1 state point) then (float_of_int point) else -1.0 in
+    		 (* let dt = if isTrue (a1 state point) then (float_of_int point) else -1.0 in *)
+		 let dt = if PointsSet.mem point edgeS then (float_of_int point) else -1.0 in
     		 Array2.unsafe_set slice state point dt;
     	       done;
 
 	       (* FT *)
 	       let ndim = Array.length model.space#dims in
     	       for d=0 to ndim-1 do
+		 Printf.printf "ciccio fd init %d\n%!" d;
 		 let cdn = model.space#num_nodes / model.space#dims.(d) in
 		 let p = Array.make ndim 0 in
 		 let cddims = Array.make (ndim-1) 0 in
@@ -119,6 +122,7 @@ let compute model =
 		   let pp = int_of_coords p model.space#dims in
 		   Util.dimUp state pp d (model.space#dims) (model.space#euclidean_distance) slice;
 		 done;
+		 Printf.printf "ciccio fd end %d\n%!" d;
 	       done;
 
 	       (* DT *)
