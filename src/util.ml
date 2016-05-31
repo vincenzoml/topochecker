@@ -418,29 +418,30 @@ let tRIM r d dims state slice =
     if f >= 0 then
       begin
 	m:=!m+1;
-	q:=f::!q;
-	if !m>2 then
+	q:=List.rev (f::(List.rev !q)); (*TODO:optimize*)
+	if !m>1 then
 	  begin
 	    let u = List.nth !q (!m-2) in
 	    let v = f in
 	    let xuv = medpoint u v x d dims in
 	    if xuv >= float_of_int nd then
 	      begin
+		q := List.rev (List.tl (List.rev !q));
 		m:=!m-1;
 	      end
 	    else
 	      begin
-		let qm2 = List.nth !q (!m-2) in
-		while !m>2 && cHECK qm2 u v x d dims do
-		  q := List.rev (List.tl (List.rev !q));
-		  m:=!m-1;
-		done;
+		if !m>2 then
+		  begin
+		    let qm2 = List.nth !q (!m-3) in
+		    while !m>2 && (cHECK qm2 u v x d dims) do
+		      q := List.filter (fun c -> c<>u) !q;
+		      m:=!m-1;
+		    done;
+		  end;
 
 		if !m=2 then
 		  begin
-		    let u = List.nth !q 0 in
-		    let v = List.nth !q 1 in
-		    let xuv = medpoint u v x d dims in
 		    if xuv < 0.0 then
 		      begin
 			q:=List.tl !q;

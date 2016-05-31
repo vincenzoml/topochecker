@@ -99,7 +99,6 @@ let compute model =
 	       (* FT *)
 	       let ndim = Array.length model.space#dims in
     	       for d=0 to ndim-1 do
-		 Printf.printf "ciccio fd init %d\n%!" d;
 		 let cdn = model.space#num_nodes / model.space#dims.(d) in
 		 let p = Array.make ndim 0 in
 		 let cddims = Array.make (ndim-1) 0 in
@@ -111,7 +110,7 @@ let compute model =
 		 done;
 		 for np = 0 to cdn - 1 do
 		   let npc = coords_of_int np cddims in
-		   p.(d)=0;
+		   p.(d)<-0;
 		   for dd=0 to d-1 do
 		     p.(dd)<-npc.(dd);
 		   done;
@@ -121,14 +120,32 @@ let compute model =
 		   
 		   let pp = int_of_coords p model.space#dims in
 		   Util.dimUp state pp d (model.space#dims) (model.space#euclidean_distance) slice;
+		   (* Printf.printf "ciccio FT %d %d [ " d pp; *)
+		   (* let p2 = Array.make ndim 0 in *)
+		   (* for n = 0 to ndim-1 do *)
+		   (*   p2.(n)<-p.(n); *)
+		   (* done; *)
+		   (* for n = 0 to model.space#dims.(d)-1 do *)
+		   (*   p2.(d)<-p.(d)+n; *)
+		   (*   let pp2 =int_of_coords p2 model.space#dims in *)
+		   (*   Printf.printf "%d " (int_of_float (Array2.unsafe_get slice state pp2)); *)
+		   (* done; *)
+		   (* Printf.printf "]\n%!"; *)
 		 done;
-		 Printf.printf "ciccio fd end %d\n%!" d;
 	       done;
 
 	       (* DT *)
 	       for point = 0 to num_points - 1 do
-		 let cft = Array2.unsafe_get slice state point in
-		 let edt = model.space#euclidean_distance point (int_of_float cft) in
+		 let s = if isTrue (a1 state point) then
+		     -1.0
+		   else
+		     1.0 in
+		 let cft = int_of_float (Array2.unsafe_get slice state point) in
+		 let edt = if cft >= 0 then
+		     s*.(model.space#euclidean_distance point cft)
+		   else
+		     infinity
+		 in
 		 Array2.unsafe_set slice state point edt
 	       done
 	     done
