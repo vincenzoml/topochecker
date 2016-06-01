@@ -383,31 +383,30 @@ let populateR p d dims =
   done;
   r
 
-(* TODO: generalize to anisotropic voxels*)
-let midpoint u v x d dims =
+let midpoint u v x d dims pdims =
   let uc = coords_of_int u dims in
   let vc = coords_of_int v dims in
   let xc = coords_of_int x dims in
-  let den = vc.(d) - uc.(d) in
-  if den != 0 then
+  let den = pdims.(d) *. (float_of_int (vc.(d) - uc.(d))) in
+  if den != 0.0 then
     begin
       let numc = vc.(d) + uc.(d) in
-      let num = ref 0 in
+      let num = ref 0.0 in
       for n=0 to Array.length uc-1 do
 	if n!=d then
-	  num:=!num + int_of_float (sqr (float_of_int (xc.(n) - vc.(n))) -. sqr (float_of_int (xc.(n) - uc.(n))) )
+	  num:=!num +. (pdims.(n) *. (sqr(float_of_int (xc.(n) - vc.(n))) -. sqr(float_of_int (xc.(n) - uc.(n))) ))
       done;
-      0.5 *. ((float_of_int !num) /. (float_of_int den) +. float_of_int numc)
+      0.5 *. ((!num /.  den) +. float_of_int numc)
     end
   else
     float_of_int uc.(d)
 
-let cHECK u v w x d dims =
-  let xuv = midpoint u v x d dims in
-  let xvw = midpoint v w x d dims in
-  ceil xuv > floor xvw
+let cHECK u v w x d dims pdims=
+  let xuv = midpoint u v x d dims pdims in
+  let xvw = midpoint v w x d dims pdims in
+  xuv > xvw
     
-let tRIM r d dims state slice =
+let tRIM r d dims pdims state slice =
   let nd = dims.(d) in
   let q = Stack.create () in
 
@@ -420,7 +419,7 @@ let tRIM r d dims state slice =
 	else
 	   let u = Stack.top q in
 	   let v = f in
-	   let xuv = midpoint u v x d dims in
+	   let xuv = midpoint u v x d dims pdims in
 	   if xuv < float_of_int nd then
 	     begin
 	       let chk = ref true in
@@ -428,7 +427,7 @@ let tRIM r d dims state slice =
 		 let qm1 = Stack.pop q in
 		 let qm2 = Stack.top q in
 
-		 chk:=cHECK qm2 qm1 f x d dims;
+		 chk:=cHECK qm2 qm1 f x d dims pdims;
 		 if not !chk then
 		   begin
 		     Stack.push qm1 q;
@@ -438,7 +437,7 @@ let tRIM r d dims state slice =
 	       Stack.push f q;
 	       if Stack.length q == 2 then
 		 begin
-		   let x12 = midpoint q1 f x d dims in
+		   let x12 = midpoint q1 f x d dims pdims in
 		   if x12 < 0.0 then
 		     begin
 		       Stack.clear q;
@@ -452,9 +451,9 @@ let tRIM r d dims state slice =
   Stack.iter (fun qe -> qlist:=qe::(!qlist)) q;
   !qlist
   
-let dimUp state p d dims delta slice =
+let dimUp state p d dims pdims delta slice =
   let r = populateR p d dims in
-  let qlist = tRIM r d dims state slice in
+  let qlist = tRIM r d dims pdims state slice in
   let rec writeFx ql x =
     match ql with
     | [] -> ()
