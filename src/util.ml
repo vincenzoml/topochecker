@@ -384,7 +384,7 @@ let populateR p d dims =
   r
 
 (* TODO: generalize to anisotropic voxels*)
-let medpoint u v x d dims =
+let midpoint u v x d dims =
   let uc = coords_of_int u dims in
   let vc = coords_of_int v dims in
   let xc = coords_of_int x dims in
@@ -403,8 +403,8 @@ let medpoint u v x d dims =
     float_of_int uc.(d)
 
 let cHECK u v w x d dims =
-  let xuv = medpoint u v x d dims in
-  let xvw = medpoint v w x d dims in
+  let xuv = midpoint u v x d dims in
+  let xvw = midpoint v w x d dims in
   ceil xuv > floor xvw
     
 let tRIM r d dims state slice =
@@ -420,7 +420,7 @@ let tRIM r d dims state slice =
 	else
 	   let u = Stack.top q in
 	   let v = f in
-	   let xuv = medpoint u v x d dims in
+	   let xuv = midpoint u v x d dims in
 	   if xuv < float_of_int nd then
 	     begin
 	       let chk = ref true in
@@ -438,7 +438,7 @@ let tRIM r d dims state slice =
 	       Stack.push f q;
 	       if Stack.length q == 2 then
 		 begin
-		   let x12 = medpoint q1 f x d dims in
+		   let x12 = midpoint q1 f x d dims in
 		   if x12 < 0.0 then
 		     begin
 		       Stack.clear q;
