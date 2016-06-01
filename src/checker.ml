@@ -102,21 +102,30 @@ let compute model =
 		 let cdn = model.space#num_nodes / model.space#dims.(d) in
 		 let p = Array.make ndim 0 in
 		 let cddims = Array.make (ndim-1) 0 in
-		 for dd=0 to d-1 do
-		   cddims.(dd)<-model.space#dims.(dd);
-		 done;
-		 for dd=d+1 to ndim - 1 do
-		   cddims.(dd-1)<-model.space#dims.(dd);
-		 done;
+		 (* for dd=0 to d-1 do *)
+		 (*   cddims.(dd)<-model.space#dims.(dd); *)
+		 (* done; *)
+		 (* for dd=d+1 to ndim - 1 do *)
+		 (*   cddims.(dd-1)<-model.space#dims.(dd); *)
+		   (* done; *)
+		 
+		 Array.blit model.space#dims 0 cddims 0 d;
+		 if d<=ndim-2 then
+		   Array.blit model.space#dims (d+1) cddims d (ndim-1-d);
+
 		 for np = 0 to cdn - 1 do
 		   let npc = coords_of_int np cddims in
 		   p.(d)<-0;
-		   for dd=0 to d-1 do
-		     p.(dd)<-npc.(dd);
-		   done;
-		   for dd=d+1 to ndim - 1 do
-		     p.(dd)<-npc.(dd-1);
-		   done;
+		   Array.blit npc 0 p 0 d;
+		   if d<=ndim-2 then
+		     Array.blit npc d p (d+1) (ndim-1-d);
+		   
+		   (* for dd=0 to d-1 do *)
+		   (*   p.(dd)<-npc.(dd); *)
+		   (* done; *)
+		   (* for dd=d+1 to ndim - 1 do *)
+		   (*   p.(dd)<-npc.(dd-1); *)
+		   (* done; *)
 		   
 		   let pp = int_of_coords p model.space#dims in
 		   Util.dimUp state pp d (model.space#dims) (model.space#euclidean_distance) slice;

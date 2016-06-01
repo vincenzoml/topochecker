@@ -411,66 +411,62 @@ let tRIM r d dims state slice =
   let nd = dims.(d) in
   let m = ref 0 in
   let q = ref [] in
-  
-  for i=0 to nd-1 do
-    let x = r.(i) in
+
+  Array.iter (fun x ->
     let f = int_of_float (Array2.unsafe_get slice state x) in
     if f >= 0 then
       begin
-	m:=!m+1;
-	q:=List.rev (f::(List.rev !q)); (*TODO:optimize*)
-	if !m>1 then
-	  begin
-	    let u = List.nth !q (!m-2) in
-	    let v = f in
-	    let xuv = medpoint u v x d dims in
-	    if xuv >= float_of_int nd then
-	      begin
-		q := List.rev (List.tl (List.rev !q));
-		m:=!m-1;
-	      end
-	    else
-	      begin
-		if !m>2 then
-		  begin
-		    let qm2 = List.nth !q (!m-3) in
-		    while !m>2 && (cHECK qm2 u v x d dims) do
-		      q := List.filter (fun c -> c<>u) !q;
-		      m:=!m-1;
-		    done;
-		  end;
-
-		if !m=2 then
-		  begin
-		    if xuv < 0.0 then
-		      begin
-			q:=List.tl !q;
-			m:=1;
-		      end
-		  end
-	      end
-	  end;
-      end;
-  done;
+	match !q with
+	| [] -> q:=[f]
+	| [q1] -> q:=q1::[f]
+	| qh::qt ->
+	   let u = List.hd (List.rev !q) in
+	   let v = f in
+	   let xuv = medpoint u v x d dims in
+	   if xuv < float_of_int nd then
+	     begin
+	       q:=!q@[f];
+	       m:=List.length !q;
+	       while !m>2 do
+		 let qm2 = List.nth !q (!m-3) in
+		 let qm1 = List.nth !q (!m-2) in
+		 let qm = List.nth !q (!m-1) in
+		 if (cHECK qm2 qm1 qm x d dims) then
+		   begin
+		     q := List.filter (fun c -> c<>qm1) !q;
+		     m:=!m-1;
+		   end
+	       done;
+	       if !m=2 then
+		 begin
+		   let q1 = List.nth !q 0 in
+		   let q2 = List.nth !q 1 in
+		   let x12 = medpoint q1 q2 x d dims in
+		   if x12 < 0.0 then
+		     begin
+		       q:=List.tl !q;
+		       m:=1;
+		     end
+		 end
+	     end
+      end
+  ) r;
   !q
   
-let dimUp state p d dims delta slice=
+let dimUp state p d dims delta slice =
   let r = populateR p d dims in
   let qlist = tRIM r d dims state slice in
-  let m = List.length qlist in
-  if m>0 then
-    begin
-      let l = ref 0 in
-      for n=0 to dims.(d)-1 do
-	let x = r.(n) in
-	let ta = Array.make m 0.0 in
-	if m>1 then
-	  begin
-	    List.iteri (fun i q -> ta.(i) <- delta x q) qlist;
-	    while !l<(m-1) && ta.(!l)>=ta.(!l+1) do
-	      l:=!l+1
-	    done;
-	  end;
-	Array2.unsafe_set slice state x (float_of_int (List.nth qlist !l));
-      done;
-    end;
+  let rec writeFx ql x =
+    match ql with
+    | [] -> ()
+    | [fx] -> Array2.unsafe_set slice state x (float_of_int fx);
+    | q::qt ->
+       let d1 = delta x q in
+       let d2 = delta x (List.hd qt) in
+       if d1>=d2 then writeFx qt x
+       else Array2.unsafe_set slice state x (float_of_int q);
+  in
+  if List.length qlist > 0 then
+    Array.iter (fun rx -> writeFx qlist rx) r;
+  
+
