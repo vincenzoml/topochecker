@@ -409,49 +409,48 @@ let cHECK u v w x d dims =
     
 let tRIM r d dims state slice =
   let nd = dims.(d) in
-  let m = ref 0 in
-  let q = ref [] in
+  let q = Stack.create () in
 
   Array.iter (fun x ->
     let f = int_of_float (Array2.unsafe_get slice state x) in
     if f >= 0 then
       begin
-	match !q with
-	| [] -> q:=[f]
-	| [q1] -> q:=q1::[f]
-	| qh::qt ->
-	   let u = List.hd (List.rev !q) in
+	if Stack.is_empty q then
+	  Stack.push f q
+	else
+	   let u = Stack.top q in
 	   let v = f in
 	   let xuv = medpoint u v x d dims in
 	   if xuv < float_of_int nd then
 	     begin
-	       q:=!q@[f];
-	       m:=List.length !q;
-	       while !m>2 do
-		 let qm2 = List.nth !q (!m-3) in
-		 let qm1 = List.nth !q (!m-2) in
-		 let qm = List.nth !q (!m-1) in
-		 if (cHECK qm2 qm1 qm x d dims) then
+	       let chk = ref true in
+	       while Stack.length q > 1 && !chk do
+		 let qm2 = Stack.top q in
+		 let qm1 = Stack.pop q in
+
+		 chk:=cHECK qm2 qm1 f x d dims;
+		 if not !chk then
 		   begin
-		     q := List.filter (fun c -> c<>qm1) !q;
-		     m:=!m-1;
+		     Stack.push qm1 q;
 		   end
 	       done;
-	       if !m=2 then
+	       let q1=Stack.top q in
+	       Stack.push f q;
+	       if Stack.length q == 2 then
 		 begin
-		   let q1 = List.nth !q 0 in
-		   let q2 = List.nth !q 1 in
-		   let x12 = medpoint q1 q2 x d dims in
+		   let x12 = medpoint q1 f x d dims in
 		   if x12 < 0.0 then
 		     begin
-		       q:=List.tl !q;
-		       m:=1;
+		       Stack.clear q;
+		       Stack.push f q;
 		     end
 		 end
 	     end
       end
   ) r;
-  !q
+  let qlist = ref [] in
+  Stack.iter (fun qe -> qlist:=qe::(!qlist)) q;
+  !qlist
   
 let dimUp state p d dims delta slice =
   let r = populateR p d dims in
@@ -468,5 +467,3 @@ let dimUp state p d dims delta slice =
   in
   if List.length qlist > 0 then
     Array.iter (fun rx -> writeFx qlist rx) r;
-  
-
