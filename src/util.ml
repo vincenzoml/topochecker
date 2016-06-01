@@ -425,8 +425,8 @@ let tRIM r d dims state slice =
 	     begin
 	       let chk = ref true in
 	       while Stack.length q > 1 && !chk do
-		 let qm2 = Stack.top q in
 		 let qm1 = Stack.pop q in
+		 let qm2 = Stack.top q in
 
 		 chk:=cHECK qm2 qm1 f x d dims;
 		 if not !chk then
