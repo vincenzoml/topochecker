@@ -166,6 +166,9 @@ class spaceDot spaceg =
 object
   inherit Util.simple_graph
   method num_nodes = Model.Graph.nb_vertex spaceg
+  method dims : int array  = Util.fail "distance not defined for dot models"
+  method pixdims : float array = Util.fail "distance not defined for dot models"
+  method euclidean_distance : int -> int -> float = Util.fail "distance not defined for dot models"
   method iter_pre = (fun v fn -> Model.Graph.iter_pred (fun x -> fn x 1.0) spaceg v)
   method iter_post = (fun v fn -> Model.Graph.iter_succ (fun x -> fn x 1.0) spaceg v)
 end

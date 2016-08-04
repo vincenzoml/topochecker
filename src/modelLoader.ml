@@ -22,8 +22,8 @@ let load_model dir model =
       let bindings = List.map (fun x -> match Str.bounded_split (Str.regexp "=") x 2 with [s] -> ("",s) | [s1;s2] -> (s1,s2)) components in
       let loader = List.assoc protocol uri_model_loaders in
       Model.completeDeadlocks (loader bindings)
-  (* | Syntax.MODEL (kripkef,spacef,evalf) -> (\* deprecated *\) *)
-  (*    Model.completeDeadlocks (DotParser.load_dot_model dir kripkef spacef evalf) *)
+  | Syntax.MODEL (kripkef,spacef,evalf) -> (* deprecated *)
+      Model.completeDeadlocks (DotParser.load_dot_model dir kripkef spacef evalf)
        
 let load_experiment =
   fun path ->

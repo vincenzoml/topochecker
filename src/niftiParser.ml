@@ -104,7 +104,8 @@ let load_nifti s =
 (*dir: directory, s=file name, k,e=""*)
 let load_nifti_model bindings =
   (let prop_img = List.map (fun (name,file) -> ((match name with "" -> "value" | s -> s),load_nifti file)) bindings in
-   let hash = Util.mapO (fun x -> (x,Model.H.create 1)) (Util.fsSha256 (List.map (fun (_,file) -> Util.fSha256 file) bindings)) in
+   
+   let hash = Util.mapO (fun x -> (x,Model.H.create 1)) (Util.sfsSha256 bindings) in
    let (_,origfname) = List.hd bindings in
    let (prop,main) = List.hd prop_img in
    let dims = main.dims in

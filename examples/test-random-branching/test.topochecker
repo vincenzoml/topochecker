@@ -1,5 +1,13 @@
-Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
-Output "output/state" "0","3"; 
-Check "0xFF0000" A F ([a] S [b]);
+Kripke "kripke.dot"
+Space "space.dot"
+Eval "eval.csv";
 
+Let phi = [a] S [b];
 
+Output "output/state" "0","3";
+
+Check "0xFF0000" A F phi;
+
+Output "output2/state" "0";
+
+Check "0x00FF00" E X phi;

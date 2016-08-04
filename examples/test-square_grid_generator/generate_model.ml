@@ -1,7 +1,7 @@
 
 
-let num_time = 1
-let num_space = 5
+let num_time = 10000
+let num_space = 100
 let mkid i j = i + (num_space*j)
 	    
 let out_time fname =

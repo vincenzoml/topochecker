@@ -93,14 +93,14 @@ let int_exp x y = int_of_float ((float_of_int x) ** (float_of_int y))
 
 let iter_nonempty_subsets b k g =
   assert ((b mod 2) = 1);
-  let bs = Array.create b 0 in
+  let bs = Array.make b 0 in
   for n=0 to (b-1) / 2 do
       bs.(n) <- n
   done;
   for n= (b-1) / 2 + 1 to b-1 do
       bs.(n) <- (n-b)
   done;
-  let arg = Array.create k 0 in
+  let arg = Array.make k 0 in
   for i = 1 to (int_exp b k) - 1 do
     let x = ref i in
     for j = 0 to k-1 do
@@ -113,14 +113,14 @@ let iter_nonempty_subsets b k g =
 
 let iter_nonempty_subsetsRot b k r g=
   assert ((b mod 2) = 1);
-  let bs = Array.create b 0 in
+  let bs = Array.make b 0 in
   for n=0 to (b-1) / 2 do
       bs.(n) <- n
   done;
   for n= (b-1) / 2 + 1 to b-1 do
       bs.(n) <- (n-b)
   done;
-  let arg = Array.create k 0 in
+  let arg = Array.make k 0 in
   let l = int_exp b k in
   for i = 1 to l - 1 do
     let ri = ((i-1+r) mod (l-1)) + 1 in
@@ -365,6 +365,11 @@ let fsSha256 flist =
   with
     _ -> None
 
+let sfsSha256 ide_file_list =
+  try
+    Some (sha256 (String.concat "" (List.map (fun (ide,fname) -> ide ^ (fSha256 fname)) ide_file_list)))
+  with _ -> None      
+      
 let mapO f s = match s with None -> None | Some x -> Some (f x)
 
 (* Ciesielski et al. 2011 - utilities *)
