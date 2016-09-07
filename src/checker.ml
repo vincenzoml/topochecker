@@ -33,7 +33,7 @@ let compute model =
     | Threshold (op,thr,f) ->
        let a = cache f in
        Fun (fun state point ->  Util.ofBool (Syntax.opsem op (a state point) thr))
-    | Statcmp (p,f,rad,min,max,nbins) ->
+    | Statcmp (p,f1,f,rad,min,max,nbins) ->
        new_slice
 	 (fun slice ->
 	   (match model.iter_ball with
@@ -44,7 +44,8 @@ let compute model =
 	      let v2 = Array.make nbins 0 in
 	      let a1 = cache (Prop p) in
 	      let a2 = cache f in
-	      let bin bins value =		   
+	      let a3 = cache f1 in
+	      let bin bins value = (*TODO: normalize histogram!*)
 		if (value < min) || (value >= max) then ()
 		else let i = (int_of_float ((value -. min) /. step)) in
 		     bins.(i) <- bins.(i) + 1;
@@ -55,10 +56,15 @@ let compute model =
 		  if Util.isTrue (a2 state point) then bin v2 (a1 state point) else ()
 		done;
 		for point = 0 to num_points - 1 do
-		  Util.reset v1 0;
-		  ib point rad (fun point -> bin v1 (a1 state point));
-		  let res = Util.statcmp v1 v2 in
-		  Array2.unsafe_set slice state point res
+		  if Util.isTrue (a3 state point) then
+		    begin
+		      Util.reset v1 0;
+		      ib point rad (fun point -> bin v1 (a1 state point));
+		      let res = Util.statcmp v1 v2 in
+		      Array2.unsafe_set slice state point res
+		    end
+		  else
+		    Array2.unsafe_set slice state point nan
 		done
 	      done))
     | Eucl f ->

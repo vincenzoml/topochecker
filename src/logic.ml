@@ -6,7 +6,7 @@ type formula =
   | And of formula * formula
   | Near of formula
   | Surrounded of formula * formula
-  | Statcmp of string * formula * float * float * float * int
+  | Statcmp of string * formula * formula * float * float * float * int
   | Eucl of formula
   | EDT of formula
   | ModDijkstraDT of formula
@@ -25,7 +25,7 @@ let rec string_of_formula formula =
     | And (f1,f2) -> Printf.sprintf "%s & %s" (string_of_formula f1) (string_of_formula f2)
     | Near f -> Printf.sprintf "N %s" (string_of_formula f)
     | Surrounded (f1,f2) -> Printf.sprintf "%s S %s" (string_of_formula f1) (string_of_formula f2)
-    | Statcmp (s1,f,k1,k3,k4,i) -> Printf.sprintf "SCMP(%s,%s,%f,%f,%f,%d)" s1 (string_of_formula f) k1 k3 k4 i
+    | Statcmp (s1,f1,f,k1,k3,k4,i) -> Printf.sprintf "SCMP(%s,%s,%s,%f,%f,%f,%d)" s1 (string_of_formula f1) (string_of_formula f) k1 k3 k4 i
     | Eucl f -> Printf.sprintf "Eucl %s" (string_of_formula f)
     | EDT f -> Printf.sprintf "EDT %s" (string_of_formula f)
     | ModDijkstraDT f -> Printf.sprintf "ModDijkstraDT %s" (string_of_formula f)

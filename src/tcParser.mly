@@ -136,7 +136,7 @@ formula:
 | A F formula {Syntax.AF $3}
 | E formula U formula {Syntax.EU ($2,$4)}
 | A formula U formula {Syntax.AU ($2,$4)}
-| STATCMP LPAREN IDE COMMA num COMMA OP num COMMA num COMMA num COMMA INT RPAREN formula {Syntax.STATCMP ($3,$16,$5,$7,$8,$10,$12,$14)}
+| STATCMP LPAREN IDE COMMA formula COMMA num COMMA OP num COMMA num COMMA num COMMA INT RPAREN formula {Syntax.STATCMP ($3,$5,$18,$7,$9,$10,$12,$14,$16)}
 | EUCL LPAREN formula COMMA OP num RPAREN {Syntax.EUCL ($3,$5,$6)}
 | EDT LPAREN formula COMMA OP num RPAREN {Syntax.EDT ($3,$5,$6)}
 | MDDT LPAREN formula COMMA OP num RPAREN {Syntax.MDDT ($3,$5,$6)}
