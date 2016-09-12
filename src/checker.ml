@@ -45,23 +45,70 @@ let compute model =
 	      let a1 = cache (Prop p) in
 	      let a2 = cache f in
 	      let a3 = cache f1 in
-	      let bin bins value = (*TODO: normalize histogram!*)
-		if (value < min) || (value >= max) then ()
-		else let i = (int_of_float ((value -. min) /. step)) in
-		     bins.(i) <- bins.(i) + 1;
-	      in
 	      for state = 0 to num_states - 1 do
 		Util.reset v2 0;
 		for point = 0 to num_points - 1 do
-		  if Util.isTrue (a2 state point) then bin v2 (a1 state point) else ()
+		  if Util.isTrue (a2 state point) then Util.bin v2 (a1 state point) min max step else ()
 		done;
 		for point = 0 to num_points - 1 do
 		  if Util.isTrue (a3 state point) then
 		    begin
 		      Util.reset v1 0;
-		      ib point rad (fun point -> bin v1 (a1 state point));
+		      ib point rad (fun point -> Util.bin v1 (a1 state point) min max step);
 		      let res = Util.statcmp v1 v2 in
 		      Array2.unsafe_set slice state point res
+		    end
+		  else
+		    Array2.unsafe_set slice state point nan
+		done
+	      done))
+    | Scmpima (p1,p2,f,rad,min,max,nbins) ->
+       new_slice
+	 (fun slice ->
+	   (match model.iter_ball with
+	     None -> Util.fail "model does not have distances but SCMPIMA operator used"
+	   | Some ib ->
+	      let step = (max -. min) /. (float_of_int nbins) in
+	      let v1 = Array.make nbins 0 in
+	      let v2 = Array.make nbins 0 in
+	      let a1 = cache (Prop p1) in
+	      let a2 = cache (Prop p2) in
+	      let a3 = cache f in
+	      for state = 0 to num_states - 1 do
+		for point = 0 to num_points - 1 do
+		  if Util.isTrue (a3 state point) then
+		    begin
+		      Util.reset v1 0;
+		      Util.reset v2 0;
+		      
+		      ib point rad
+			(fun point -> Util.bin v1 (a1 state point) min max step;
+		      	  Util.bin v2 (a2 state point) min max step);
+		      let res = Util.statcmp v1 v2 in
+		      Array2.unsafe_set slice state point res
+		    end
+		  else
+		    Array2.unsafe_set slice state point nan
+		done
+	      done))
+    | Asm (p,f,rad) ->
+       new_slice
+	 (fun slice ->
+	   (match model.iter_ball with
+	     None -> Util.fail "model does not have distances but ASM operator used"
+	   | Some ib ->
+	      let a1 = cache (Prop p) in
+	      let a2 = cache f in
+	      for state = 0 to num_states - 1 do
+		for point = 0 to num_points - 1 do
+		  if Util.isTrue (a2 state point) then
+		    begin
+
+		      ????????????????????????
+		      (* ib point rad *)
+		      (* 	(fun point -> ); *)
+		      (* let res = Util.statcmp v in *)
+		      (* Array2.unsafe_set slice state point res *)
 		    end
 		  else
 		    Array2.unsafe_set slice state point nan

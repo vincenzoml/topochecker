@@ -14,6 +14,8 @@
 | "F" {F}
 | "X" {X}
 | "SCMP" {STATCMP}
+| "SCMPIMA" {SCMPIMA}
+| "ASM" {ASM}
 | "EUCL" {EUCL}
 | "EDT" {EDT}
 | "MDDT" {MDDT}

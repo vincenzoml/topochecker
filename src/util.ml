@@ -470,4 +470,11 @@ let dimUp state p d dims pdims delta slice =
        else Array2.unsafe_set slice state x (float_of_int q);
   in
   if List.length qlist > 0 then
-    Array.iter (fun rx -> writeFx qlist rx) r;
+    Array.iter (fun rx -> writeFx qlist rx) r
+
+let bin bins value min max step =
+  (*TODO: normalize histogram!*)
+  if (value < min) || (value >= max) then ()
+  else let i = (int_of_float ((value -. min) /. step)) in
+       bins.(i) <- bins.(i) + 1;
+  
