@@ -33,7 +33,7 @@ let compute model =
     | Threshold (op,thr,f) ->
        let a = cache f in
        Fun (fun state point ->  Util.ofBool (Syntax.opsem op (a state point) thr))
-    | Statcmp (p,f1,f,rad,min,max,nbins) ->
+    | Statcmp (p,f1,p2,f,rad,min,max,nbins) ->
        new_slice
 	 (fun slice ->
 	   (match model.iter_ball with
@@ -45,10 +45,11 @@ let compute model =
 	      let a1 = cache (Prop p) in
 	      let a2 = cache f in
 	      let a3 = cache f1 in
+	      let a4 = cache (Prop p2) in
 	      for state = 0 to num_states - 1 do
 		Util.reset v2 0;
 		for point = 0 to num_points - 1 do
-		  if Util.isTrue (a2 state point) then Util.bin v2 (a1 state point) min max step else ()
+		  if Util.isTrue (a2 state point) then Util.bin v2 (a4 state point) min max step else ()
 		done;
 		for point = 0 to num_points - 1 do
 		  if Util.isTrue (a3 state point) then

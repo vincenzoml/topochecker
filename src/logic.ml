@@ -6,7 +6,7 @@ type formula =
   | And of formula * formula
   | Near of formula
   | Surrounded of formula * formula
-  | Statcmp of string * formula * formula * float * float * float * int
+  | Statcmp of string * formula * string * formula * float * float * float * int
   | Scmpima of string * string * formula * float * float * float * int
   | Asm of string * formula * float
   | Eucl of formula
@@ -27,7 +27,7 @@ let rec string_of_formula formula =
     | And (f1,f2) -> Printf.sprintf "%s & %s" (string_of_formula f1) (string_of_formula f2)
     | Near f -> Printf.sprintf "N %s" (string_of_formula f)
     | Surrounded (f1,f2) -> Printf.sprintf "%s S %s" (string_of_formula f1) (string_of_formula f2)
-    | Statcmp (s1,f1,f,k1,k3,k4,i) -> Printf.sprintf "SCMP(%s,%s,%s,%f,%f,%f,%d)" s1 (string_of_formula f1) (string_of_formula f) k1 k3 k4 i
+    | Statcmp (s1,f1,s2,f,k1,k3,k4,i) -> Printf.sprintf "SCMP(%s,%s,%s,%s,%f,%f,%f,%d)" s1 (string_of_formula f1) s2 (string_of_formula f) k1 k3 k4 i
     | Scmpima (s1,s2,f,k1,k3,k4,i) -> Printf.sprintf "SCMPIMA(%s,%s,%s,%f,%f,%f,%d)" s1 s2 (string_of_formula f) k1 k3 k4 i
     | Asm (s1,f,k) -> Printf.sprintf "ASM(%s,%s,%f)" s1 (string_of_formula f) k
     | Eucl f -> Printf.sprintf "Eucl %s" (string_of_formula f)
