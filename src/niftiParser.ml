@@ -2,14 +2,13 @@ open Bigarray
 
 type endian = Big | Little
 
-type ('a,'b) header =
+type header =
   { dims : int array;
     pixdims : float array;
-    valtype : ('a,'b) kind;
     endian : endian;
     full_header : string list;
-    raw_data : ('a,'b,c_layout) Array1.t }
-
+    dim : int;
+    slice : int -> float }
 
 class spaceNifti numnodes dims pixdims=
 object
@@ -24,7 +23,7 @@ object
     let v2 = Util.coords_of_int p2 dims in
     Util.euclidean_distance v1 v2 pixdims
 end
-  
+
 let load_raw rawfile header =
   let h = Hashtbl.create 100 in
   let read k = Hashtbl.find h k in
@@ -74,15 +73,34 @@ let load_raw rawfile header =
     let tmp2=String.sub tmp 0 (String.index tmp '[' - 1) in
     pixdims.(i) <- float_of_string tmp2;
   done;
-  let valtype = match read "type" with "4" -> int16_unsigned | _ -> Util.fail "Value type not supported in nifti" in
-  let vect = Array1.map_file (Unix.openfile rawfile [Unix.O_RDONLY] 0o644) valtype c_layout false ~-1 in
+  let vect valtype = Array1.map_file (Unix.openfile rawfile [Unix.O_RDONLY] 0o644) valtype c_layout false ~-1 in
+  let datatype = read "type" in
+  let (slice,dim) =
+    match datatype with
+    | "1" (*binary*) -> let v = vect int8_unsigned in ((fun i -> float_of_int (Array1.get v i)),Array1.dim v)
+    | "2" -> let v = vect int8_unsigned in ((fun i -> float_of_int (Array1.get v i)),Array1.dim v)
+    | "4" -> let v = vect int16_signed in ((fun i -> float_of_int (Array1.get v i)),Array1.dim v)
+    | "8" -> let v = vect int32 in ((fun i -> Int32.to_float (Array1.get v i)),Array1.dim v)
+    | "16" -> let v = vect float32 in ((fun i -> Array1.get v i),Array1.dim v)
+    | "32" (* complex32 2 x float 16 *) -> Util.fail "Complex 32 type not supported in nifti"
+    | "64" -> let v = vect float64 in ((fun i -> Array1.get v i),Array1.dim v)
+    | "128" (* rgb 3 x int8 *) ->  Util.fail "RGB type not supported in nifti"
+    | "256" -> let v = vect int8_signed in ((fun i -> float_of_int (Array1.get v i)) ,Array1.dim v)
+    | "512" -> let v = vect int16_unsigned in ((fun i -> float_of_int (Array1.get v i)) ,Array1.dim v)
+    | "768" (* int32 (*unsigned*) *) -> Util.fail "Unsigned integer 32 type not supported in nifti"
+    | "1024" -> let v = vect int64 in ((fun i -> Int64.to_float (Array1.get v i)),Array1.dim v)
+    | "1280" (* int64 (*unsigned*) *) ->  Util.fail "Unsigned integer 64 type not supported in nifti"
+    | "1536" (* float128 *) ->  Util.fail "Float 128 type not supported in nifti"
+    | "1792" (* complex64 2 x float64*) -> Util.fail "Complex 64 type not supported in nifti"
+    | "2048" (* complex256 2 x float128 *) -> Util.fail "Complex 256 type not supported in nifti"
+    | _ -> Util.fail "Unknown value type in nifti"
+  in
   { dims = dims;
     pixdims = pixdims;
-    valtype = valtype;
     endian = (match read "endian" with "1" -> Little | _ -> Util.fail "Big endian not supported in nifti");
     full_header = List.rev !lines;
-    raw_data = vect }
-    
+    dim = dim;
+    slice = slice }
 
 let load_nifti s =
   let file = Filename.temp_file (Filename.basename s) "raw" in
@@ -100,7 +118,7 @@ let load_nifti s =
   match error with
     None ->   load_raw file header;
   | Some s -> Util.fail (Printf.sprintf "Error while loading nifti. Medcon %s" s)
-			
+
 (*dir: directory, s=file name, k,e=""*)
 let load_nifti_model bindings =
   (let prop_img = List.map (fun (name,file) -> ((match name with "" -> "value" | s -> s),load_nifti file)) bindings in
@@ -114,7 +132,8 @@ let load_nifti_model bindings =
    (* TODO: check that all the images have the same dimensions *)
    List.iter (fun (prop,img) -> 
 	      Model.H.add h (Logic.Prop prop)
-			  (fun k s -> float_of_int (Array1.get img.raw_data s))) prop_img;
+		(fun k s -> img.slice s))
+     prop_img;
    { Model.hash_and_cache = hash;
      Model.kripke = Model.default_kripke ();
      (*distance 1 not euclidean*)
@@ -133,7 +152,7 @@ let load_nifti_model bindings =
 	   let v2 = Util.coords_of_int p2 dims in
 	   Util.euclidean_distance v1 v2 pixdims
 	 );
-     Model.space = new spaceNifti (Array1.dim main.raw_data) dims pixdims;
+     Model.space = new spaceNifti main.dim dims pixdims;
      Model.eval = h;
      Model.kripkeid = string_of_int;
      Model.idkripke = int_of_string;
@@ -156,14 +175,14 @@ let load_nifti_model bindings =
        let orig = Unix.openfile origfname [Unix.O_RDONLY] 0o644 in
        let r = Unix.openfile filename
 	 [Unix.O_RDWR;Unix.O_CREAT;Unix.O_TRUNC] 0o644 in
-       let v1 = Array1.create main.valtype c_layout
-	 (Array1.dim main.raw_data)
+       let valtype = int16_signed in
+       let v1 = Array1.create valtype c_layout main.dim
        in
-       let v3 = Array1.map_file orig main.valtype c_layout false ~-1 in
-       let v2 = Array1.map_file r main.valtype c_layout true (Array1.dim v3) in
+       let v3 = Array1.map_file orig valtype c_layout false ~-1 in
+       let v2 = Array1.map_file r valtype c_layout true (Array1.dim v3) in
        
        List.iter (fun (colour,truth) ->
-	 for i = 0 to Array1.dim main.raw_data - 1 do
+	 for i = 0 to main.dim - 1 do
 	   if truth 0 i then Array1.set v1 i (int_of_string colour)
 	 done
        ) coloured_truth_vals;
