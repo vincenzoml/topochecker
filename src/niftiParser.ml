@@ -1,14 +1,17 @@
 open Bigarray
 
 type endian = Big | Little
+type nifti_ver = NIFTI1 | NIFTI2
 
-type header =
-  { dims : int array;
-    pixdims : float array;
-    endian : endian;
-    full_header : string list;
-    dim : int;
-    slice : int -> float }
+type header = {
+  version: nifti_ver;
+  datatype : int;
+  dims : int array;
+  pixdims : float array;
+  endian : endian;
+  full_header : (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t;
+  dim : int;
+  slice : int -> float }
 
 class spaceNifti numnodes dims pixdims=
 object
@@ -24,104 +27,104 @@ object
     Util.euclidean_distance v1 v2 pixdims
 end
 
-let load_raw rawfile header =
-  let h = Hashtbl.create 100 in
-  let read k = Hashtbl.find h k in
-  let f = open_in header in
-  let finished = ref false in
-  let lines = ref [] in
-  while not !finished do
-    try
-      let l = input_line f in
-      lines := l :: !lines;
-      if l = "-------------------------------------------------------------------------------"
-      then finished := true	
-      else
-	try
-	  let i = String.index l ':'  in
-	  let k = String.trim (String.sub l 0 (i-1)) in
-	  let v = String.trim (String.sub l (i+1) (String.length l - i - 1)) in	
-	  let v' =
-	    try
-	      let j = max 0 (String.index v '(' - 1) in
-	      (String.trim (String.sub v 0 j))
-	    with Not_found -> v
-	  in
-	  Hashtbl.add h k v'
-	with Not_found -> ()
-    with End_of_file -> finished := true
-  done;
-  (try
-     while true do
-       lines := (input_line f)::!lines
-     done
-   with End_of_file -> ());
-  close_in f;
-  let dim =
-    try
-      int_of_string (read "dim[0]")
-    with
-      a -> 2 (*TODO:check if always true*)
+let from_bytes_to_int buf endian =
+  let rec build_int id nacc =
+    let pow =
+      match endian with
+      | Little -> float_of_int id
+      | Big -> float_of_int ((Array1.dim buf) - 1 - id)
+    in
+    if id<Array1.dim buf then
+      build_int (id+1) (nacc+.(float_of_int(buf.{id}) *. (2.0 ** (8.0 *. pow))))
+    else
+      int_of_float nacc
+  in build_int 0 0.0
+
+let load_head_ver nii header version =
+  let ndimsbytes =
+    match version with
+    | NIFTI1 -> Array1.sub header 40 2
+    | NIFTI2 -> Array1.sub header 16 8
   in
-  let dims = Array.make dim 0 in
-  for i = 0 to dim - 1 do
-    dims.(i) <- int_of_string (read (Printf.sprintf "dim[%d]" (i+1)))
+  let ndimsMtmp = from_bytes_to_int ndimsbytes Little in
+  let endian = if (ndimsMtmp>=1 && ndimsMtmp<8) then Little else Big in
+  let ndimsM = from_bytes_to_int ndimsbytes endian in
+  let voffs =
+    match version with
+    | NIFTI1 -> Int64.of_float (Int32.float_of_bits (Int32.of_int (from_bytes_to_int (Array1.sub header 108 4) endian)))
+    | NIFTI2 -> Int64.of_int (from_bytes_to_int (Array1.sub header 168 8) endian) (*TODO: on 32 bit platform not recognized (>4GB)*)
+  in
+  let datatype =
+    match version with
+    | NIFTI1 -> from_bytes_to_int (Array1.sub header 70 2) endian
+    | NIFTI2 -> from_bytes_to_int (Array1.sub header 12 2) endian
+  in
+  let dimsM = Array.make ndimsM 0 in
+  for n=0 to (ndimsM-1) do
+    dimsM.(n) <-
+      match version with
+      | NIFTI1 -> from_bytes_to_int (Array1.sub header (42+2*n) 2) endian
+      | NIFTI2 -> from_bytes_to_int (Array1.sub header (24+8*n) 8) endian
   done;
-  let pixdims = Array.make dim 0.0 in
-  for i = 0 to dim - 1 do
-    let tmp=read (Printf.sprintf "pixdim[%d]" (i+1)) in
-    let tmp2=String.sub tmp 0 (String.index tmp '[' - 1) in
-    pixdims.(i) <- float_of_string tmp2;
+  let dims = Array.of_list (List.filter (fun x -> x!=1) (Array.to_list dimsM)) in
+  let ndims = Array.length dims in
+  let pixdims = Array.make ndims 0.0 in
+  for n=0 to (ndims-1) do
+    pixdims.(n) <-
+      match version with
+      | NIFTI1 -> Int32.float_of_bits (Int32.of_int (from_bytes_to_int (Array1.sub header (80+4*n) 4) endian))
+      | NIFTI2 -> Int64.float_of_bits (Int64.of_int (from_bytes_to_int (Array1.sub header (112+8*n) 8) endian))
   done;
-  let vect valtype = Array1.map_file (Unix.openfile rawfile [Unix.O_RDONLY] 0o644) valtype c_layout false ~-1 in
-  let datatype = read "type" in
+  let vect valtype = Array1.map_file nii ?pos:(Some voffs) valtype c_layout false ~-1 in
   let (slice,dim) =
     match datatype with
-    | "1" (*binary*) -> let v = vect int8_unsigned in ((fun i -> float_of_int (Array1.get v i)),Array1.dim v)
-    | "2" -> let v = vect int8_unsigned in ((fun i -> float_of_int (Array1.get v i)),Array1.dim v)
-    | "4" -> let v = vect int16_signed in ((fun i -> float_of_int (Array1.get v i)),Array1.dim v)
-    | "8" -> let v = vect int32 in ((fun i -> Int32.to_float (Array1.get v i)),Array1.dim v)
-    | "16" -> let v = vect float32 in ((fun i -> Array1.get v i),Array1.dim v)
-    | "32" (* complex32 2 x float 16 *) -> Util.fail "Complex 32 type not supported in nifti"
-    | "64" -> let v = vect float64 in ((fun i -> Array1.get v i),Array1.dim v)
-    | "128" (* rgb 3 x int8 *) ->  Util.fail "RGB type not supported in nifti"
-    | "256" -> let v = vect int8_signed in ((fun i -> float_of_int (Array1.get v i)) ,Array1.dim v)
-    | "512" -> let v = vect int16_unsigned in ((fun i -> float_of_int (Array1.get v i)) ,Array1.dim v)
-    | "768" (* int32 (*unsigned*) *) -> Util.fail "Unsigned integer 32 type not supported in nifti"
-    | "1024" -> let v = vect int64 in ((fun i -> Int64.to_float (Array1.get v i)),Array1.dim v)
-    | "1280" (* int64 (*unsigned*) *) ->  Util.fail "Unsigned integer 64 type not supported in nifti"
-    | "1536" (* float128 *) ->  Util.fail "Float 128 type not supported in nifti"
-    | "1792" (* complex64 2 x float64*) -> Util.fail "Complex 64 type not supported in nifti"
-    | "2048" (* complex256 2 x float128 *) -> Util.fail "Complex 256 type not supported in nifti"
-    | _ -> Util.fail "Unknown value type in nifti"
+    | 1 (*binary*) -> Util.fail "Binary type not supported in nifti"
+    | 2 -> let v = vect int8_unsigned in ((fun i -> float_of_int (Array1.get v i)),Array1.dim v)
+    | 4 -> let v = vect int16_signed in ((fun i -> float_of_int (Array1.get v i)),Array1.dim v)
+    | 8 -> let v = vect int32 in ((fun i -> Int32.to_float (Array1.get v i)),Array1.dim v)
+    | 16 -> let v = vect float32 in ((fun i -> Array1.get v i),Array1.dim v)
+    | 32 (* complex32 2 x float 16 *) -> Util.fail "Complex 32 type not supported in nifti"
+    | 64 -> let v = vect float64 in ((fun i -> Array1.get v i),Array1.dim v)
+    | 128 (* rgb 3 x int8 *) ->  Util.fail "RGB type not supported in nifti"
+    | 256 -> let v = vect int8_signed in ((fun i -> float_of_int (Array1.get v i)) ,Array1.dim v)
+    | 512 -> let v = vect int16_unsigned in ((fun i -> float_of_int (Array1.get v i)) ,Array1.dim v)
+    | 768 (* int32 (*unsigned*) *) -> Util.fail "Unsigned integer 32 type not supported in nifti"
+    | 1024 -> let v = vect int64 in ((fun i -> Int64.to_float (Array1.get v i)),Array1.dim v)
+    | 1280 (* int64 (*unsigned*) *) ->  Util.fail "Unsigned integer 64 type not supported in nifti"
+    | 1536 (* float128 *) ->  Util.fail "Float 128 type not supported in nifti"
+    | 1792 (* complex64 2 x float64*) -> Util.fail "Complex 64 type not supported in nifti"
+    | 2048 (* complex256 2 x float128 *) -> Util.fail "Complex 256 type not supported in nifti"
+    | _ -> Util.fail "Unknown value type in nifti"   
   in
-  { dims = dims;
+  {
+    version=version;
+    datatype = datatype;
+    dims = dims;
     pixdims = pixdims;
-    endian = (match read "endian" with "1" -> Little | _ -> Util.fail "Big endian not supported in nifti");
-    full_header = List.rev !lines;
-    dim = dim;
-    slice = slice }
+    endian = endian;
+    full_header=header;
+    dim=dim;
+    slice=slice;
+  }
 
-let load_nifti s =
-  let file = Filename.temp_file (Filename.basename s) "raw" in
-  let header = Filename.temp_file (Filename.basename s) "header" in
-  let call =  (Printf.sprintf "medcon -f \"%s\" -c - bin 1> \"%s\" 2> \"%s\"" s file header) in
-  let unixres = Unix.system call in
-  let error =
-    match unixres with
-      Unix.WEXITED 0 ->
-      None
-    | Unix.WEXITED i -> Some (Printf.sprintf "terminated with code %d" i)
-    | Unix.WSIGNALED i -> Some (Printf.sprintf "killed with signal %d" i)
-    | Unix.WSTOPPED i -> Some (Printf.sprintf "stopped with signal %d" i)
-  in
-  match error with
-    None ->   load_raw file header;
-  | Some s -> Util.fail (Printf.sprintf "Error while loading nifti. Medcon %s" s)
+let load_nifti2 s =
+  let f = Unix.openfile s [Unix.O_RDONLY] 0o644 in
+  let hbytes = Array1.map_file f int8_unsigned c_layout false 540 in
+  let hsizeL = from_bytes_to_int (Array1.sub hbytes 0 4) Little in
+  let hsizeB = from_bytes_to_int (Array1.sub hbytes 0 4) Big in
+  let (hsize,versionOpt) =
+    if hsizeL == 348 || hsizeB == 348 then (348,Some (NIFTI1))
+    else if hsizeL == 540 || hsizeB == 540 then (540,Some (NIFTI2))
+    else (-1,None)
+  in match versionOpt with
+  | None -> Util.fail "File format unknown";
+  | Some version ->
+     let full_header = Array1.sub hbytes 0 hsize in
+     load_head_ver f full_header version
 
 (*dir: directory, s=file name, k,e=""*)
 let load_nifti_model bindings =
-  (let prop_img = List.map (fun (name,file) -> ((match name with "" -> "value" | s -> s),load_nifti file)) bindings in
+  (let prop_img = List.map (fun (name,file) -> ((match name with "" -> "value" | s -> s),load_nifti2 file)) bindings in
    
    let hash = Util.mapO (fun x -> (x,Model.H.create 1)) (Util.sfsSha256 bindings) in
    let (_,origfname) = List.hd bindings in
@@ -172,24 +175,77 @@ let load_nifti_model bindings =
 						   (Util.coords_of_int i main.dims)))));
      Model.deadlocks = None;
      Model.write_output = (fun filename _ coloured_truth_vals ->       
-       let orig = Unix.openfile origfname [Unix.O_RDONLY] 0o644 in
-       let r = Unix.openfile filename
-	 [Unix.O_RDWR;Unix.O_CREAT;Unix.O_TRUNC] 0o644 in
-       let valtype = int16_signed in
-       let v1 = Array1.create valtype c_layout main.dim
+       let valtype = int16_unsigned in
+       let hsize=Array1.dim main.full_header in
+       let offs =
+	 match main.version with
+	 | NIFTI1 -> 4
+	 | NIFTI2 -> 0
        in
-       let v3 = Array1.map_file orig valtype c_layout false ~-1 in
-       let v2 = Array1.map_file r valtype c_layout true (Array1.dim v3) in
+       let dataoffs = (hsize+offs)/2 in
+       let headerOut = Array1.create int8_unsigned c_layout (Array1.dim main.full_header) in
+       Array1.blit main.full_header headerOut;
+       let datatypeOut=4 in
+       let bitpixOut=16 in
+       (match main.version with
+       | NIFTI1 ->
+	 (match main.endian with
+	 | Little ->
+	   headerOut.{70} <- datatypeOut;
+	   headerOut.{71} <- 0;
+	   headerOut.{72} <- bitpixOut;
+	   headerOut.{73} <- 0;
+	   (*vox offset*)
+	   headerOut.{108} <- 0;
+	   headerOut.{109} <- 0;
+	   headerOut.{110} <- 176;
+	   headerOut.{111} <- 67;
+	 | Big ->
+	   headerOut.{71} <- datatypeOut;
+	   headerOut.{70} <- 0;
+	   headerOut.{73} <- bitpixOut;
+	   headerOut.{72} <- 0;
+	   (*vox offset*)
+	   headerOut.{111} <- 0;
+	   headerOut.{110} <- 0;
+	   headerOut.{109} <- 176;
+	   headerOut.{108} <- 67;
+	 )
+       | NIFTI2 ->
+	 (*vox offset*)
+	 headerOut.{168} <- 0;
+	 headerOut.{169} <- 0;
+	 headerOut.{170} <- 0;
+	 headerOut.{171} <- 0;
+	 headerOut.{172} <- 0;
+	 headerOut.{173} <- 0;
+	 headerOut.{174} <- 0;
+	 headerOut.{175} <- 0;
+	 (match main.endian with
+	 | Little ->
+	   headerOut.{12} <- datatypeOut;
+	   headerOut.{13} <- 0;
+	   headerOut.{14} <- bitpixOut;
+	   headerOut.{15} <- 0;
+	 | Big ->
+	   headerOut.{13} <- datatypeOut;
+	   headerOut.{12} <- 0;
+	   headerOut.{15} <- bitpixOut;
+	   headerOut.{14} <- 0;););
        
-       List.iter (fun (colour,truth) ->
-	 for i = 0 to main.dim - 1 do
-	   if truth 0 i then Array1.set v1 i (int_of_string colour)
-	 done
-       ) coloured_truth_vals;
-       let delta = (Array1.dim v2) - (Array1.dim v1) in
-			     Array1.blit (Array1.sub v3 0 delta) (Array1.sub v2 0 delta);
-       Array1.blit v1 (Array1.sub v2 delta (Array1.dim v1));
+       let v1 = Array1.create valtype c_layout main.dim in
+       let r = Unix.openfile filename [Unix.O_RDWR;Unix.O_CREAT;Unix.O_TRUNC] 0o644 in
+       let v2 = Array1.map_file r int8_unsigned c_layout true ((Array1.dim v1)*(bitpixOut/8)+hsize+offs) in
+       Array1.blit headerOut (Array1.sub v2 0 hsize);
        Unix.close r;
-       Unix.close orig)})
+       List.iter (fun (colour,truth) ->
+       	 for i = 0 to main.dim - 1 do
+       	   if truth 0 i then Array1.set v1 i (int_of_string colour)
+       	 done
+       ) coloured_truth_vals;
+       let r = Unix.openfile filename [Unix.O_RDWR] 0o644 in
+       let v2 = Array1.map_file r  valtype c_layout true ~-1 in
+       Array1.blit v1 (Array1.sub v2 dataoffs (Array1.dim v1));
+       Unix.close r)})
     
     
