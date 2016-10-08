@@ -175,7 +175,7 @@ let load_nifti_model bindings =
 						   (Util.coords_of_int i main.dims)))));
      Model.deadlocks = None;
      Model.write_output = (fun filename _ coloured_truth_vals ->       
-       let valtype = int16_unsigned in
+       let valtype = int16_signed in
        let hsize=Array1.dim main.full_header in
        let offs =
 	 match main.version with
