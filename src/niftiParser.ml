@@ -182,11 +182,11 @@ let load_nifti_model bindings =
 	 | NIFTI1 -> 4
 	 | NIFTI2 -> 0
        in
-       let dataoffs = (hsize+offs)/2 in
        let headerOut = Array1.create int8_unsigned c_layout (Array1.dim main.full_header) in
        Array1.blit main.full_header headerOut;
        let datatypeOut=4 in
        let bitpixOut=16 in
+       let dataoffs = (hsize+offs)/(bitpixOut/8) in
        (match main.version with
        | NIFTI1 ->
 	 (match main.endian with
@@ -247,5 +247,4 @@ let load_nifti_model bindings =
        let v2 = Array1.map_file r  valtype c_layout true ~-1 in
        Array1.blit v1 (Array1.sub v2 dataoffs (Array1.dim v1));
        Unix.close r)})
-    
-    
+ 
