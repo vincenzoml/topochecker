@@ -331,7 +331,7 @@ let load_nifti_model bindings =
        	 done
        ) coloured_truth_vals;
        let r = Unix.openfile filename [Unix.O_RDWR] 0o644 in
-       let v2 = Array1.map_file r  valtype c_layout true ~-1 in
+       let v2 = Array1.map_file r valtype c_layout true ~-1 in
        Array1.blit v1 (Array1.sub v2 dataoffs (Array1.dim v1));
        Unix.close r)})
  
