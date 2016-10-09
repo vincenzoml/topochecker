@@ -334,5 +334,3 @@ let load_nifti_model bindings =
        let v2 = Array1.map_file r valtype c_layout true ~-1 in
        Array1.blit v1 (Array1.sub v2 dataoffs (Array1.dim v1));
        Unix.close r)})
- 
- 

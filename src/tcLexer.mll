@@ -33,8 +33,8 @@
 | ['"'] {QUOTE}
 | "TT" {TRUE}
 | "FF" {FALSE}
-| ['0'-'9']+'.'['0'-'9']* as lxm {FLOAT (float_of_string lxm)}
-| ['0'-'9']+ as lxm {INT (int_of_string lxm)}
+| ('-')?['0'-'9']+'.'['0'-'9']* as lxm {FLOAT (float_of_string lxm)}
+| ('-')?['0'-'9']+ as lxm {INT (int_of_string lxm)}
 | "&" {AND}
 | "|" {OR}
 | "!" {NOT}
