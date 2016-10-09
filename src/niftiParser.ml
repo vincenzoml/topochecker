@@ -11,7 +11,7 @@ type header = {
   endian : endian;
   full_header : (int, Bigarray.int8_unsigned_elt, Bigarray.c_layout) Bigarray.Array1.t;
   dim : int;
-  slice : int -> float }
+  data : (float, Bigarray.float64_elt, Bigarray.c_layout) Bigarray.Array1.t}
 
 class spaceNifti numnodes dims pixdims=
 object
@@ -68,6 +68,13 @@ let load_head_ver nii header version =
   done;
   let dims = Array.of_list (List.filter (fun x -> x!=1) (Array.to_list dimsM)) in
   let ndims = Array.length dims in
+  let dim =
+    let rec prod acc id =
+      match id with
+      | 0 -> acc*dims.(0)
+      | _ -> prod (acc*dims.(id)) (id-1)
+    in
+    prod 1 (ndims-1) in
   let pixdims = Array.make ndims 0.0 in
   for n=0 to (ndims-1) do
     pixdims.(n) <-
@@ -75,27 +82,70 @@ let load_head_ver nii header version =
       | NIFTI1 -> Int32.float_of_bits (Int32.of_int (from_bytes_to_int (Array1.sub header (80+4*n) 4) endian))
       | NIFTI2 -> Int64.float_of_bits (Int64.of_int (from_bytes_to_int (Array1.sub header (112+8*n) 8) endian))
   done;
-  let vect valtype = Array1.map_file nii ?pos:(Some voffs) valtype c_layout false ~-1 in
-  let (slice,dim) =
-    match datatype with
-    | 1 (*binary*) -> Util.fail "Binary type not supported in nifti"
-    | 2 -> let v = vect int8_unsigned in ((fun i -> float_of_int (Array1.get v i)),Array1.dim v)
-    | 4 -> let v = vect int16_signed in ((fun i -> float_of_int (Array1.get v i)),Array1.dim v)
-    | 8 -> let v = vect int32 in ((fun i -> Int32.to_float (Array1.get v i)),Array1.dim v)
-    | 16 -> let v = vect float32 in ((fun i -> Array1.get v i),Array1.dim v)
-    | 32 (* complex32 2 x float 16 *) -> Util.fail "Complex 32 type not supported in nifti"
-    | 64 -> let v = vect float64 in ((fun i -> Array1.get v i),Array1.dim v)
-    | 128 (* rgb 3 x int8 *) ->  Util.fail "RGB type not supported in nifti"
-    | 256 -> let v = vect int8_signed in ((fun i -> float_of_int (Array1.get v i)) ,Array1.dim v)
-    | 512 -> let v = vect int16_unsigned in ((fun i -> float_of_int (Array1.get v i)) ,Array1.dim v)
-    | 768 (* int32 (*unsigned*) *) -> Util.fail "Unsigned integer 32 type not supported in nifti"
-    | 1024 -> let v = vect int64 in ((fun i -> Int64.to_float (Array1.get v i)),Array1.dim v)
-    | 1280 (* int64 (*unsigned*) *) ->  Util.fail "Unsigned integer 64 type not supported in nifti"
-    | 1536 (* float128 *) ->  Util.fail "Float 128 type not supported in nifti"
-    | 1792 (* complex64 2 x float64*) -> Util.fail "Complex 64 type not supported in nifti"
-    | 2048 (* complex256 2 x float128 *) -> Util.fail "Complex 256 type not supported in nifti"
-    | _ -> Util.fail "Unknown value type in nifti"   
+  let (scl_slope,scl_off) =
+    match version with
+    | NIFTI1 ->
+       let slope=Int32.float_of_bits (Int32.of_int (from_bytes_to_int (Array1.sub header 112 4) endian)) in
+       let scaldata = Int32.float_of_bits (Int32.of_int (from_bytes_to_int (Array1.sub header 116 4) endian)) in
+       (slope,scaldata)
+    | NIFTI2 ->
+       let slope=Int64.float_of_bits (Int64.of_int (from_bytes_to_int (Array1.sub header 176 8) endian)) in
+       let scaldata = Int64.float_of_bits (Int64.of_int (from_bytes_to_int (Array1.sub header 184 8) endian)) in
+       (slope,scaldata)
   in
+  let scaleData level = scl_off +. (level *. scl_slope) in
+  let vect valtype = Array1.map_file nii ?pos:(Some voffs) valtype c_layout false ~-1 in
+  let data = Array1.create float64 c_layout dim in
+  (match datatype with
+  | 1 (*binary*) -> Util.fail "Binary type not supported in nifti"
+  | 2 -> let v = vect int8_unsigned in
+	 for n=0 to (dim-1) do
+	   let vox_lev=float_of_int v.{n} in
+	   data.{n}<-scaleData vox_lev;
+	 done
+  | 4 -> let v = vect int16_signed in
+	 for n=0 to (dim-1) do
+	   let vox_lev=float_of_int v.{n} in
+	   data.{n}<-scaleData vox_lev;
+	 done
+  | 8 -> let v = vect int32 in
+	 for n=0 to (dim-1) do
+	   let vox_lev=Int32.to_float v.{n} in
+	   data.{n}<-scaleData vox_lev;
+	 done
+  | 16 -> let v = vect float32 in
+	  for n=0 to (dim-1) do
+	    let vox_lev=v.{n} in
+	    data.{n}<-scaleData vox_lev;
+	  done
+  | 32 (* complex32 2 x float 16 *) -> Util.fail "Complex 32 type not supported in nifti"
+  | 64 -> let v = vect float64 in
+	  for n=0 to (dim-1) do
+	    let vox_lev=v.{n} in
+	    data.{n}<-scaleData vox_lev;
+	  done
+  | 128 (* rgb 3 x int8 *) ->  Util.fail "RGB type not supported in nifti"
+  | 256 -> let v = vect int8_signed in
+	   for n=0 to (dim-1) do
+	     let vox_lev=float_of_int v.{n} in
+	     data.{n}<-scaleData vox_lev;
+	   done
+  | 512 -> let v = vect int16_unsigned in
+	   for n=0 to (dim-1) do
+	     let vox_lev=float_of_int v.{n} in
+	     data.{n}<-scaleData vox_lev;
+	   done
+  | 768 (* int32 (*unsigned*) *) -> Util.fail "Unsigned integer 32 type not supported in nifti"
+  | 1024 -> let v = vect int64 in
+	    for n=0 to (dim-1) do
+	      let vox_lev=Int64.to_float v.{n} in
+	      data.{n}<-scaleData vox_lev;
+	    done
+  | 1280 (* int64 (*unsigned*) *) ->  Util.fail "Unsigned integer 64 type not supported in nifti"
+  | 1536 (* float128 *) ->  Util.fail "Float 128 type not supported in nifti"
+  | 1792 (* complex64 2 x float64*) -> Util.fail "Complex 64 type not supported in nifti"
+  | 2048 (* complex256 2 x float128 *) -> Util.fail "Complex 256 type not supported in nifti"
+  | _ -> Util.fail "Unknown value type in nifti");
   {
     version=version;
     datatype = datatype;
@@ -104,7 +154,7 @@ let load_head_ver nii header version =
     endian = endian;
     full_header=header;
     dim=dim;
-    slice=slice;
+    data=data;
   }
 
 let load_nifti2 s =
@@ -135,7 +185,7 @@ let load_nifti_model bindings =
    (* TODO: check that all the images have the same dimensions *)
    List.iter (fun (prop,img) -> 
 	      Model.H.add h (Logic.Prop prop)
-		(fun k s -> img.slice s))
+		(fun k s -> img.data.{s}))
      prop_img;
    { Model.hash_and_cache = hash;
      Model.kripke = Model.default_kripke ();
@@ -200,6 +250,15 @@ let load_nifti_model bindings =
 	   headerOut.{109} <- 0;
 	   headerOut.{110} <- 176;
 	   headerOut.{111} <- 67;
+	   (*data scaling*)
+	   headerOut.{112} <- 0;
+	   headerOut.{113} <- 0;
+	   headerOut.{114} <- 128;
+	   headerOut.{115} <- 63;
+	   headerOut.{116} <- 0;
+	   headerOut.{117} <- 0;
+	   headerOut.{118} <- 0;
+	   headerOut.{119} <- 0;
 	 | Big ->
 	   headerOut.{71} <- datatypeOut;
 	   headerOut.{70} <- 0;
@@ -210,8 +269,18 @@ let load_nifti_model bindings =
 	   headerOut.{110} <- 0;
 	   headerOut.{109} <- 176;
 	   headerOut.{108} <- 67;
+	   (*data scaling*)
+	   headerOut.{115} <- 0;
+	   headerOut.{114} <- 0;
+	   headerOut.{113} <- 128;
+	   headerOut.{112} <- 63;
+	   headerOut.{119} <- 0;
+	   headerOut.{118} <- 0;
+	   headerOut.{117} <- 0;
+	   headerOut.{116} <- 0;
 	 )
        | NIFTI2 ->
+	 (*TODO: data scaling*)
 	 (*vox offset*)
 	 headerOut.{168} <- 0;
 	 headerOut.{169} <- 0;
@@ -247,4 +316,5 @@ let load_nifti_model bindings =
        let v2 = Array1.map_file r  valtype c_layout true ~-1 in
        Array1.blit v1 (Array1.sub v2 dataoffs (Array1.dim v1));
        Unix.close r)})
+ 
  
