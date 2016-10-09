@@ -236,6 +236,7 @@ let load_nifti_model bindings =
        Array1.blit main.full_header headerOut;
        let datatypeOut=4 in
        let bitpixOut=16 in
+       let intentOut=[|234;3|] in
        let dataoffs = (hsize+offs)/(bitpixOut/8) in
        (match main.version with
        | NIFTI1 ->
@@ -259,6 +260,9 @@ let load_nifti_model bindings =
 	   headerOut.{117} <- 0;
 	   headerOut.{118} <- 0;
 	   headerOut.{119} <- 0;
+	   (*intent Label*)
+	   headerOut.{68}<-intentOut.(0);
+	   headerOut.{69}<-intentOut.(1);
 	 | Big ->
 	   headerOut.{71} <- datatypeOut;
 	   headerOut.{70} <- 0;
@@ -278,6 +282,9 @@ let load_nifti_model bindings =
 	   headerOut.{118} <- 0;
 	   headerOut.{117} <- 0;
 	   headerOut.{116} <- 0;
+	   (*intent Label*)
+	   headerOut.{69}<-intentOut.(0);
+	   headerOut.{68}<-intentOut.(1);
 	 )
        | NIFTI2 ->
 	 (*TODO: data scaling*)
@@ -296,12 +303,23 @@ let load_nifti_model bindings =
 	   headerOut.{13} <- 0;
 	   headerOut.{14} <- bitpixOut;
 	   headerOut.{15} <- 0;
+	   (*intent Label*)
+	   headerOut.{504}<-intentOut.(0);
+	   headerOut.{505}<-intentOut.(1);
+	   headerOut.{506}<-0;
+	   headerOut.{507}<-0;
 	 | Big ->
 	   headerOut.{13} <- datatypeOut;
 	   headerOut.{12} <- 0;
 	   headerOut.{15} <- bitpixOut;
-	   headerOut.{14} <- 0;););
-       
+	   headerOut.{14} <- 0;
+	   (*intent Label*)
+	   headerOut.{507}<-intentOut.(0);
+	   headerOut.{506}<-intentOut.(1);
+	   headerOut.{505}<-0;
+	   headerOut.{504}<-0;
+	 ););
+
        let v1 = Array1.create valtype c_layout main.dim in
        let r = Unix.openfile filename [Unix.O_RDWR;Unix.O_CREAT;Unix.O_TRUNC] 0o644 in
        let v2 = Array1.map_file r int8_unsigned c_layout true ((Array1.dim v1)*(bitpixOut/8)+hsize+offs) in
