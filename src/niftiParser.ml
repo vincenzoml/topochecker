@@ -321,6 +321,7 @@ let load_nifti_model bindings =
 	 ););
 
        let v1 = Array1.create valtype c_layout main.dim in
+       Array1.fill v1 0;
        let r = Unix.openfile filename [Unix.O_RDWR;Unix.O_CREAT;Unix.O_TRUNC] 0o644 in
        let v2 = Array1.map_file r int8_unsigned c_layout true ((Array1.dim v1)*(bitpixOut/8)+hsize+offs) in
        Array1.blit headerOut (Array1.sub v2 0 hsize);
