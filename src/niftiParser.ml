@@ -93,7 +93,12 @@ let load_head_ver nii header version =
        let scaldata = Int64.float_of_bits (Int64.of_int (from_bytes_to_int (Array1.sub header 184 8) endian)) in
        (slope,scaldata)
   in
-  let scaleData level = scl_off +. (level *. scl_slope) in
+  let scaleData level =
+    if scl_slope != 0.0 then
+      scl_off +. (level *. scl_slope)
+    else
+      level
+  in
   let vect valtype = Array1.map_file nii ?pos:(Some voffs) valtype c_layout false ~-1 in
   let data = Array1.create float64 c_layout dim in
   (match datatype with
@@ -334,4 +339,5 @@ let load_nifti_model bindings =
        let r = Unix.openfile filename [Unix.O_RDWR] 0o644 in
        let v2 = Array1.map_file r valtype c_layout true ~-1 in
        Array1.blit v1 (Array1.sub v2 dataoffs (Array1.dim v1));
-       Unix.close r)})
+       Unix.close r;
+     )})
