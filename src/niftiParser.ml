@@ -94,7 +94,7 @@ let load_head_ver nii header version =
        (slope,scaldata)
   in
   let scaleData level =
-    if scl_slope != 0.0 then
+    if scl_slope <> 0.0 then
       scl_off +. (level *. scl_slope)
     else
       level
