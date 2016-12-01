@@ -18,6 +18,7 @@
 | "ASM" {ASM}
 | "EUCL" {EUCL}
 | "EDT" {EDT}
+| "EDTM" {EDTM}
 | "MDDT" {MDDT}
 | "Gr" {GROUP}
 | "-<" {SHARE}

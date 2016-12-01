@@ -11,6 +11,7 @@ type formula =
   | Asm of string * formula * float
   | Eucl of formula
   | EDT of formula
+  | EDTM of formula
   | ModDijkstraDT of formula
   | Threshold of string * float * formula
   | Ex of formula
@@ -32,6 +33,7 @@ let rec string_of_formula formula =
     | Asm (s1,f,k) -> Printf.sprintf "ASM(%s,%s,%f)" s1 (string_of_formula f) k
     | Eucl f -> Printf.sprintf "Eucl %s" (string_of_formula f)
     | EDT f -> Printf.sprintf "EDT %s" (string_of_formula f)
+    | EDTM f -> Printf.sprintf "EDTM %s" (string_of_formula f)
     | ModDijkstraDT f -> Printf.sprintf "ModDijkstraDT %s" (string_of_formula f)
     | Threshold (s,k,f) -> Printf.sprintf "Thr(%s,%f) %s" s k (string_of_formula f)
     | Ex f -> Printf.sprintf "EX %s" (string_of_formula f)

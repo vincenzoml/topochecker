@@ -188,6 +188,58 @@ let compute model =
 	       done
 	     done
 	   with _ -> Util.fail "model is not a euclidean grid"))
+    | EDTM f -> (*Ciesielski et al. 2010*)
+       new_slice
+    	 (fun slice -> (
+	   try
+    	     let a1 = cache f in
+    	     for state = 0 to num_states - 1 do
+    	       (* F_0 *)
+	       let edgeS = Util.edge (a1 state) model.space in
+    	       for point = 0 to num_points - 1 do
+    		 (* let dt = if isTrue (a1 state point) then (float_of_int point) else -1.0 in *)
+		 let dt = if PointsSet.mem point edgeS then (float_of_int point) else -1.0 in
+    		 Array2.unsafe_set slice state point dt;
+    	       done;
+
+	       (* FT *)
+	       let ndim = Array.length model.space#dims in
+    	       for d=0 to ndim-1 do
+		 let cdn = model.space#num_nodes / model.space#dims.(d) in
+		 let p = Array.make ndim 0 in
+		 let cddims = Array.make (ndim-1) 0 in
+		 Array.blit model.space#dims 0 cddims 0 d;
+		 if d<=ndim-2 then
+		   Array.blit model.space#dims (d+1) cddims d (ndim-1-d);
+
+		 for np = 0 to cdn - 1 do
+		   let npc = coords_of_int np cddims in
+		   p.(d)<-0;
+		   Array.blit npc 0 p 0 d;
+		   if d<=ndim-2 then
+		     Array.blit npc d p (d+1) (ndim-1-d);
+		   
+		   let pp = int_of_coords p model.space#dims in
+		   Util.dimUpM state pp d (model.space#dims) (model.space#pixdims) (model.space#euclidean_distance) slice;
+		 done;
+	       done;
+
+	       (* DT *)
+	       for point = 0 to num_points - 1 do
+		 let s = if isTrue (a1 state point) then
+		     -1.0
+		   else
+		     1.0 in
+		 let cft = int_of_float (Array2.unsafe_get slice state point) in
+		 let edt = if cft >= 0 then
+		     s*.(model.space#euclidean_distance point cft)
+		   else
+		     infinity
+		 in
+		 Array2.unsafe_set slice state point edt
+	       done
+	     done
+	   with _ -> Util.fail "model is not a euclidean grid"))
     | ModDijkstraDT f ->
        new_slice
 	 (fun slice ->

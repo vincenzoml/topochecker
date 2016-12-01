@@ -21,6 +21,7 @@
 %token ASM
 %token EUCL
 %token EDT
+%token EDTM
 %token MDDT
 %token OR
 %token NOT
@@ -143,6 +144,7 @@ formula:
 | ASM LPAREN IDE COMMA formula COMMA num COMMA OP num RPAREN {Syntax.ASM ($3,$5,$7,$9,$10)}
 | EUCL LPAREN formula COMMA OP num RPAREN {Syntax.EUCL ($3,$5,$6)}
 | EDT LPAREN formula COMMA OP num RPAREN {Syntax.EDT ($3,$5,$6)}
+| EDTM LPAREN formula COMMA OP num RPAREN {Syntax.EDTM ($3,$5,$6)}
 | MDDT LPAREN formula COMMA OP num RPAREN {Syntax.MDDT ($3,$5,$6)}
 ;
 formalarglist:

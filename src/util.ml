@@ -472,6 +472,22 @@ let dimUp state p d dims pdims delta slice =
   if List.length qlist > 0 then
     Array.iter (fun rx -> writeFx qlist rx) r
 
+let dimUpM state p d dims pdims delta slice =
+  let r = populateR p d dims in
+  let qlist = tRIM r d dims pdims state slice in
+  let rec writeFx ql x =
+    match ql with
+    | [] -> ()
+    | [fx] -> Array2.unsafe_set slice state x (float_of_int fx);
+    | q::qt ->
+       let d1 = delta x q in
+       let d2 = delta x (List.hd qt) in
+       if d2>=d1 then writeFx qt x
+       else Array2.unsafe_set slice state x (float_of_int q);
+  in
+  if List.length qlist > 0 then
+    Array.iter (fun rx -> writeFx qlist rx) r
+
 let bin bins value min max step =
   (*TODO: normalize histogram!*)
   if (value < min) || (value >= max) then ()

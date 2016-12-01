@@ -29,6 +29,8 @@ type fsyn =
   (* fmla operator threshold *)
   | EDT of (fsyn * string * float)
   (* fmla operator threshold *)
+  | EDTM of (fsyn * string * float)
+  (* fmla operator threshold *)
   | MDDT of (fsyn * string * float)
   (* fmla operator threshold *)
   | EX of fsyn	    
@@ -102,6 +104,7 @@ let rec formula_of_fsyn env f =
   | ASM (p,f,rad,op,thr) -> Threshold (op,thr,Asm (p,formula_of_fsyn env f,rad))
   | EUCL (f,op,thr) -> Threshold (op,thr,Eucl (formula_of_fsyn env f))
   | EDT (f,op,thr) -> Threshold (op,thr,EDT (formula_of_fsyn env f))
+  | EDTM (f,op,thr) -> Threshold (op,thr,EDTM (formula_of_fsyn env f))
   | MDDT (f,op,thr) -> Threshold (op,thr,ModDijkstraDT (formula_of_fsyn env f))
   | EX f1 -> Ex (formula_of_fsyn env f1)
   | AX f1 -> Not (Ex (Not (formula_of_fsyn env f1)))

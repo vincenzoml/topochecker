@@ -19,6 +19,8 @@ object
   method num_nodes = numnodes
   method iter_pre = Util.iter_neighbour Util.Euclidean dims pixdims
   method iter_post =Util.iter_neighbour Util.Euclidean dims pixdims
+  (* method iter_pre = Util.iter_neighbour Util.SubDim dims pixdims *)
+  (* method iter_post =Util.iter_neighbour Util.SubDim dims pixdims *)
   method dims = dims
   method pixdims = pixdims
   method euclidean_distance = fun p1 p2 ->
