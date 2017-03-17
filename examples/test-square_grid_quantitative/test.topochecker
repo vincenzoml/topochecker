@@ -1,4 +1,6 @@
 Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
-Output "output/out";
-Check "0xFF0000" TT S [a>63.0];
 
+Let f = MDDT ([a<3.0],<6.0);
+
+Output "output/out";
+Check "0xFF0000" f;
