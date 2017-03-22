@@ -12,7 +12,7 @@ let load_ask_query env string =
 
 let uri_model_loaders = (* todo add uri parser for dot models! *)
   [("med",NiftiParser.load_nifti_model);
-   ("bmp-dot",BmpDotParser.load_bmpdot_model);
+   ("bmpdot",BmpDotParser.load_bmpdot_model);
    (*("img",ImgParser.load_img_model)*)]
     
 let load_model dir model =
@@ -29,7 +29,7 @@ let load_model dir model =
 let load_experiment =
   fun path ->
   let (dir,file) = (Filename.dirname path,Filename.basename path) in
-  let desc = open_in (Util.mkfname dir file) in
+  let desc = open_in (TcUtil.mkfname dir file) in
   let lexbuf = Lexing.from_channel desc in
   try
     let (msyn,dseq,commands) = TcParser.main TcLexer.token lexbuf in
@@ -49,5 +49,5 @@ let load_experiment =
     let line = curr.Lexing.pos_lnum in
     let cnum = curr.Lexing.pos_cnum - curr.Lexing.pos_bol in
     let tok = Lexing.lexeme lexbuf in
-    Util.fail (Printf.sprintf "%s:%d:%d: token %s: %s\n%!" file line cnum tok msg)
+    TcUtil.fail (Printf.sprintf "%s:%d:%d: token %s: %s\n%!" file line cnum tok msg)
       

@@ -15,18 +15,18 @@ type header = {
 
 class spaceNifti numnodes dims pixdims=
 object
-  inherit Util.euclidean_grid
+  inherit TcUtil.euclidean_grid
   method num_nodes = numnodes (* TODO: why numnodes is not the product of dims? *)
-  method iter_pre = Util.iter_neighbour Util.Euclidean dims pixdims
-  method iter_post = Util.iter_neighbour Util.Euclidean dims pixdims
-  (* method iter_pre = Util.iter_neighbour Util.SubDim dims pixdims *)
-  (* method iter_post =Util.iter_neighbour Util.SubDim dims pixdims *)
+  method iter_pre = TcUtil.iter_neighbour TcUtil.Euclidean dims pixdims
+  method iter_post = TcUtil.iter_neighbour TcUtil.Euclidean dims pixdims
+  (* method iter_pre = TcUtil.iter_neighbour TcUtil.SubDim dims pixdims *)
+  (* method iter_post =TcUtil.iter_neighbour TcUtil.SubDim dims pixdims *)
   method dims = dims
   method pixdims = pixdims
   method euclidean_distance = fun p1 p2 ->
-    let v1 = Util.coords_of_int p1 dims in
-    let v2 = Util.coords_of_int p2 dims in
-    Util.euclidean_distance v1 v2 pixdims
+    let v1 = TcUtil.coords_of_int p1 dims in
+    let v2 = TcUtil.coords_of_int p2 dims in
+    TcUtil.euclidean_distance v1 v2 pixdims
 end
 
 let from_bytes_to_int buf endian =
@@ -104,7 +104,7 @@ let load_head_ver nii header version =
   let vect valtype = Array1.map_file nii ?pos:(Some voffs) valtype c_layout false ~-1 in
   let data = Array1.create float64 c_layout dim in
   (match datatype with
-  | 1 (*binary*) -> Util.fail "Binary type not supported in nifti"
+  | 1 (*binary*) -> TcUtil.fail "Binary type not supported in nifti"
   | 2 -> let v = vect int8_unsigned in
 	 for n=0 to (dim-1) do
 	   let vox_lev=float_of_int v.{n} in
@@ -125,13 +125,13 @@ let load_head_ver nii header version =
 	    let vox_lev=v.{n} in
 	    data.{n}<-scaleData vox_lev;
 	  done
-  | 32 (* complex32 2 x float 16 *) -> Util.fail "Complex 32 type not supported in nifti"
+  | 32 (* complex32 2 x float 16 *) -> TcUtil.fail "Complex 32 type not supported in nifti"
   | 64 -> let v = vect float64 in
 	  for n=0 to (dim-1) do
 	    let vox_lev=v.{n} in
 	    data.{n}<-scaleData vox_lev;
 	  done
-  | 128 (* rgb 3 x int8 *) ->  Util.fail "RGB type not supported in nifti"
+  | 128 (* rgb 3 x int8 *) ->  TcUtil.fail "RGB type not supported in nifti"
   | 256 -> let v = vect int8_signed in
 	   for n=0 to (dim-1) do
 	     let vox_lev=float_of_int v.{n} in
@@ -142,17 +142,17 @@ let load_head_ver nii header version =
 	     let vox_lev=float_of_int v.{n} in
 	     data.{n}<-scaleData vox_lev;
 	   done
-  | 768 (* int32 (*unsigned*) *) -> Util.fail "Unsigned integer 32 type not supported in nifti"
+  | 768 (* int32 (*unsigned*) *) -> TcUtil.fail "Unsigned integer 32 type not supported in nifti"
   | 1024 -> let v = vect int64 in
 	    for n=0 to (dim-1) do
 	      let vox_lev=Int64.to_float v.{n} in
 	      data.{n}<-scaleData vox_lev;
 	    done
-  | 1280 (* int64 (*unsigned*) *) ->  Util.fail "Unsigned integer 64 type not supported in nifti"
-  | 1536 (* float128 *) ->  Util.fail "Float 128 type not supported in nifti"
-  | 1792 (* complex64 2 x float64*) -> Util.fail "Complex 64 type not supported in nifti"
-  | 2048 (* complex256 2 x float128 *) -> Util.fail "Complex 256 type not supported in nifti"
-  | _ -> Util.fail "Unknown value type in nifti");
+  | 1280 (* int64 (*unsigned*) *) ->  TcUtil.fail "Unsigned integer 64 type not supported in nifti"
+  | 1536 (* float128 *) ->  TcUtil.fail "Float 128 type not supported in nifti"
+  | 1792 (* complex64 2 x float64*) -> TcUtil.fail "Complex 64 type not supported in nifti"
+  | 2048 (* complex256 2 x float128 *) -> TcUtil.fail "Complex 256 type not supported in nifti"
+  | _ -> TcUtil.fail "Unknown value type in nifti");
   {
     version=version;
     datatype = datatype;
@@ -174,7 +174,7 @@ let load_nifti2 s =
     else if hsizeL == 540 || hsizeB == 540 then (540,Some (NIFTI2))
     else (-1,None)
   in match versionOpt with
-  | None -> Util.fail "File format unknown";
+  | None -> TcUtil.fail "File format unknown";
   | Some version ->
      let full_header = Array1.sub hbytes 0 hsize in
      load_head_ver f full_header version
@@ -183,7 +183,7 @@ let load_nifti2 s =
 let load_nifti_model bindings =
   (let prop_img = List.map (fun (name,file) -> ((match name with "" -> "value" | s -> s),load_nifti2 file)) bindings in
    
-   let hash = Util.mapO (fun x -> (x,Model.H.create 1)) (Util.sfsSha256 bindings) in
+   let hash = TcUtil.mapO (fun x -> (x,Model.H.create 1)) (TcUtil.sfsSha256 bindings) in
    let (_,origfname) = List.hd bindings in
    let (prop,main) = List.hd prop_img in
    let dims = main.dims in
@@ -200,17 +200,17 @@ let load_nifti_model bindings =
      Model.iter_ball =
        Some
 	 (fun center radius fn ->
-	  let coords = Util.coords_of_int center dims in
-	  Util.iter_hypercube_w dims pixdims coords radius
+	  let coords = TcUtil.coords_of_int center dims in
+	  TcUtil.iter_hypercube_w dims pixdims coords radius
 	    (fun point ->
-	      if Util.in_range point dims
-	      then fn (Util.int_of_coords point dims)));
+	      if TcUtil.in_range point dims
+	      then fn (TcUtil.int_of_coords point dims)));
      Model.euclidean_distance =
        Some
 	 (fun p1 p2 ->
-	   let v1 = Util.coords_of_int p1 dims in
-	   let v2 = Util.coords_of_int p2 dims in
-	   Util.euclidean_distance v1 v2 pixdims
+	   let v1 = TcUtil.coords_of_int p1 dims in
+	   let v2 = TcUtil.coords_of_int p2 dims in
+	   TcUtil.euclidean_distance v1 v2 pixdims
 	 );
      Model.space = new spaceNifti main.dim dims pixdims;
      Model.eval = h;
@@ -218,7 +218,7 @@ let load_nifti_model bindings =
      Model.idkripke = int_of_string;
      Model.idspace =
        (fun id ->
-	Util.int_of_coords (Array.of_list
+	TcUtil.int_of_coords (Array.of_list
 			      (List.map int_of_string
 					(TcParser.stringlist
 					   TcLexer.token (Lexing.from_string id))))
@@ -229,7 +229,7 @@ let load_nifti_model bindings =
 		       (String.concat ","
 				      (List.map string_of_int
 						(Array.to_list
-						   (Util.coords_of_int i main.dims)))));
+						   (TcUtil.coords_of_int i main.dims)))));
      Model.deadlocks = None;
      Model.write_output = (fun filename _ coloured_truth_vals ->       
        let valtype = int16_signed in

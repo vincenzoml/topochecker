@@ -1,7 +1,7 @@
 open Logic
 open Model
 open Bigarray
-open Util
+open TcUtil
 
 module IntOrdDst : sig type t=(float*int) val compare: (float*int) -> (float*int) -> int end = struct
   type t = (float*int)
@@ -24,7 +24,7 @@ let compute model =
     match formula with
       T -> Fun (fun state point -> valTrue)
     | Prop p -> let a1 = cache (Prop p) in Fun a1
-    | VProp (p,op,n) -> let a1 = cache (Prop p) in Fun (fun state point -> Util.ofBool (Syntax.opsem op (a1 state point) n))
+    | VProp (p,op,n) -> let a1 = cache (Prop p) in Fun (fun state point -> TcUtil.ofBool (Syntax.opsem op (a1 state point) n))
     | Not f1 -> let a1 = cache f1 in Fun (fun state point -> valNot (a1 state point))
     | And (f1,f2) ->
        let a1 = cache f1 in
@@ -32,12 +32,12 @@ let compute model =
        Fun (fun state point -> valAnd (a1 state point) (a2 state point))
     | Threshold (op,thr,f) ->
        let a = cache f in
-       Fun (fun state point ->  Util.ofBool (Syntax.opsem op (a state point) thr))
+       Fun (fun state point ->  TcUtil.ofBool (Syntax.opsem op (a state point) thr))
     | Statcmp (p,f1,p2,f,rad,min,max,nbins) ->
        new_slice
 	 (fun slice ->
 	   (match model.iter_ball with
-	     None -> Util.fail "model does not have distances but SCMP operator used"
+	     None -> TcUtil.fail "model does not have distances but SCMP operator used"
 	   | Some ib ->
 	      let step = (max -. min) /. (float_of_int nbins) in
 	      let v1 = Array.make nbins 0 in
@@ -47,16 +47,16 @@ let compute model =
 	      let a3 = cache f1 in
 	      let a4 = cache (Prop p2) in
 	      for state = 0 to num_states - 1 do
-		Util.reset v2 0;
+		TcUtil.reset v2 0;
 		for point = 0 to num_points - 1 do
-		  if Util.isTrue (a2 state point) then Util.bin v2 (a4 state point) min max step else ()
+		  if TcUtil.isTrue (a2 state point) then TcUtil.bin v2 (a4 state point) min max step else ()
 		done;
 		for point = 0 to num_points - 1 do
-		  if Util.isTrue (a3 state point) then
+		  if TcUtil.isTrue (a3 state point) then
 		    begin
-		      Util.reset v1 0;
-		      ib point rad (fun point -> Util.bin v1 (a1 state point) min max step);
-		      let res = Util.statcmp v1 v2 in
+		      TcUtil.reset v1 0;
+		      ib point rad (fun point -> TcUtil.bin v1 (a1 state point) min max step);
+		      let res = TcUtil.statcmp v1 v2 in
 		      Array2.unsafe_set slice state point res
 		    end
 		  else
@@ -67,7 +67,7 @@ let compute model =
        new_slice
 	 (fun slice ->
 	   (match model.iter_ball with
-	     None -> Util.fail "model does not have distances but SCMPIMA operator used"
+	     None -> TcUtil.fail "model does not have distances but SCMPIMA operator used"
 	   | Some ib ->
 	      let step = (max -. min) /. (float_of_int nbins) in
 	      let v1 = Array.make nbins 0 in
@@ -77,15 +77,15 @@ let compute model =
 	      let a3 = cache f in
 	      for state = 0 to num_states - 1 do
 		for point = 0 to num_points - 1 do
-		  if Util.isTrue (a3 state point) then
+		  if TcUtil.isTrue (a3 state point) then
 		    begin
-		      Util.reset v1 0;
-		      Util.reset v2 0;
+		      TcUtil.reset v1 0;
+		      TcUtil.reset v2 0;
 		      
 		      ib point rad
-			(fun point -> Util.bin v1 (a1 state point) min max step;
-		      	  Util.bin v2 (a2 state point) min max step);
-		      let res = Util.statcmp v1 v2 in
+			(fun point -> TcUtil.bin v1 (a1 state point) min max step;
+		      	  TcUtil.bin v2 (a2 state point) min max step);
+		      let res = TcUtil.statcmp v1 v2 in
 		      Array2.unsafe_set slice state point res
 		    end
 		  else
@@ -96,19 +96,19 @@ let compute model =
        new_slice
 	 (fun slice ->
 	   (match model.iter_ball with
-	     None -> Util.fail "model does not have distances but ASM operator used"
+	     None -> TcUtil.fail "model does not have distances but ASM operator used"
 	   | Some ib ->
 	      let a1 = cache (Prop p) in (* TODO: unused variable a1... *)
 	      let a2 = cache f in
 	      for state = 0 to num_states - 1 do
 		for point = 0 to num_points - 1 do
-		  if Util.isTrue (a2 state point) then
+		  if TcUtil.isTrue (a2 state point) then
 		    begin
 
 		      (* ???????????????????????? *)
 		      (* ib point rad *)
 		      (* 	(fun point -> ); *)
-		      (* let res = Util.statcmp v in *)
+		      (* let res = TcUtil.statcmp v in *)
 		      (* Array2.unsafe_set slice state point res *)
 		    end
 		  else
@@ -121,13 +121,13 @@ let compute model =
 	   try
 	     let a1 = cache f in
 	     for state = 0 to num_states - 1 do
-	       let edgeS = Util.edge (a1 state) model.space in
+	       let edgeS = TcUtil.edge (a1 state) model.space in
 	       for point = 0 to num_points - 1 do
 		 let dst = ref infinity in
 		 if PointsSet.mem point edgeS then
 		   dst := 0.0
 		 else
-		   Util.PointsSet.iter
+		   TcUtil.PointsSet.iter
 		     (fun e ->
 		       let s = if isTrue (a1 state point) then -1.0 else 1.0 in
 		       let d = model.space#euclidean_distance point e in
@@ -135,7 +135,7 @@ let compute model =
 		 Array2.unsafe_set slice state point !dst
 	       done
 	     done
-	   with _ -> Util.fail "model does not have distances but EUCL operator used"))
+	   with _ -> TcUtil.fail "model does not have distances but EUCL operator used"))
     | EDT f -> (*Ciesielski et al. 2010*)
        new_slice
     	 (fun slice -> (
@@ -143,7 +143,7 @@ let compute model =
     	     let a1 = cache f in
     	     for state = 0 to num_states - 1 do
     	       (* F_0 *)
-	       let edgeS = Util.edge (a1 state) model.space in
+	       let edgeS = TcUtil.edge (a1 state) model.space in
     	       for point = 0 to num_points - 1 do
     		 (* let dt = if isTrue (a1 state point) then (float_of_int point) else -1.0 in *)
 		 let dt = if PointsSet.mem point edgeS then (float_of_int point) else -1.0 in
@@ -168,7 +168,7 @@ let compute model =
 		     Array.blit npc d p (d+1) (ndim-1-d);
 		   
 		   let pp = int_of_coords p model.space#dims in
-		   Util.dimUp state pp d (model.space#dims) (model.space#pixdims) (model.space#euclidean_distance) slice;
+		   TcUtil.dimUp state pp d (model.space#dims) (model.space#pixdims) (model.space#euclidean_distance) slice;
 		 done;
 	       done;
 
@@ -187,7 +187,7 @@ let compute model =
 		 Array2.unsafe_set slice state point edt
 	       done
 	     done
-	   with _ -> Util.fail "model is not a euclidean grid"))
+	   with _ -> TcUtil.fail "model is not a euclidean grid"))
     | EDTM f -> (*Ciesielski et al. 2010*)
        new_slice
     	 (fun slice -> (
@@ -195,7 +195,7 @@ let compute model =
     	     let a1 = cache f in
     	     for state = 0 to num_states - 1 do
     	       (* F_0 *)
-	       let edgeS = Util.edge (a1 state) model.space in
+	       let edgeS = TcUtil.edge (a1 state) model.space in
     	       for point = 0 to num_points - 1 do
     		 (* let dt = if isTrue (a1 state point) then (float_of_int point) else -1.0 in *)
 		 let dt = if PointsSet.mem point edgeS then (float_of_int point) else -1.0 in
@@ -220,7 +220,7 @@ let compute model =
 		     Array.blit npc d p (d+1) (ndim-1-d);
 		   
 		   let pp = int_of_coords p model.space#dims in
-		   Util.dimUpM state pp d (model.space#dims) (model.space#pixdims) (model.space#euclidean_distance) slice;
+		   TcUtil.dimUpM state pp d (model.space#dims) (model.space#pixdims) (model.space#euclidean_distance) slice;
 		 done;
 	       done;
 
@@ -239,16 +239,16 @@ let compute model =
 		 Array2.unsafe_set slice state point edt
 	       done
 	     done
-	   with _ -> Util.fail "model is not a euclidean grid"))
+	   with _ -> TcUtil.fail "model is not a euclidean grid"))
     | ModDijkstraDT f ->
        new_slice
 	 (fun slice ->
 	   let a1 = cache f in
 	   Array2.fill slice infinity;
 	   for state = 0 to num_states - 1 do
-	     let edgeS = Util.edge (a1 state) model.space in
+	     let edgeS = TcUtil.edge (a1 state) model.space in
 	     let lSet = ref DDTSet.empty in
-	     Util.PointsSet.iter (fun e -> lSet:=DDTSet.add (0.0,e) !lSet;Array2.unsafe_set slice state e 0.0) edgeS;
+	     TcUtil.PointsSet.iter (fun e -> lSet:=DDTSet.add (0.0,e) !lSet;Array2.unsafe_set slice state e 0.0) edgeS;
 	     while (not (DDTSet.is_empty !lSet)) do
 	       let e = DDTSet.min_elt !lSet in
 	       lSet:=DDTSet.remove e !lSet;
@@ -326,7 +326,7 @@ let compute model =
 	   for point = 0 to num_points - 1 do
 	     let accum = Stack.create () in		  	    
 	     for state = 0 to num_states - 1 do
-	       if Util.isTrue (a1 state point)
+	       if TcUtil.isTrue (a1 state point)
 	       then (Array1.unsafe_set count state 0; Array2.unsafe_set slice state point valTrue; Stack.push state accum)
 	       else Array1.unsafe_set count state (Model.Graph.out_degree model.kripke state)
 	     done;

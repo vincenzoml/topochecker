@@ -80,7 +80,7 @@ let opsem op =
   | ("!="|"<>") -> (!=)
   | ">" -> (>)
   | ">=" -> (>=)
-  | x -> Util.fail (Printf.sprintf "unknown operator %s" x)
+  | x -> TcUtil.fail (Printf.sprintf "unknown operator %s" x)
      
 let env_of_dseq ds = List.fold_left (fun env (LET (name,args,body)) ->
   bind env name (args,body)) empty ds

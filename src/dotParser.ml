@@ -58,27 +58,27 @@ let parse_eval filename states points stateid pointid =
 	    (fun datum ->
 	     let (prop,value) =
 	       match Str.split (Str.regexp "=") datum with
-		 [prop] -> (prop,Util.valTrue)
+		 [prop] -> (prop,TcUtil.valTrue)
 	       | [prop;v] -> (prop,float_of_string v)
-	       | _ -> Util.fail
+	       | _ -> TcUtil.fail
 		  "Atomic propositions in csv file must be of the form 'prop' or 'prop=value' where prop is a string and value is a floating point number"
 	     in
 	     let a = try Model.H.find prop_tbl (Logic.Prop prop)
 	       with Not_found ->
 		 let a = Array2.create float64 c_layout states points in
-		 Array2.fill a Util.valFalse;
+		 Array2.fill a TcUtil.valFalse;
 		 Model.H.add prop_tbl (Logic.Prop prop) a;
 		 a
 	     in
 	     Array2.set a state point value
 	    ) props;
-	| _ -> Util.fail "each line in the csv file of the evaluation function must have at least two columns"
+	| _ -> TcUtil.fail "each line in the csv file of the evaluation function must have at least two columns"
       done
     with
       End_of_file -> ()
-    | Csv.Failure (_,_,_) (* TODO: use error info *) -> Util.fail "wrong csv format of the evaluation function"
+    | Csv.Failure (_,_,_) (* TODO: use error info *) -> TcUtil.fail "wrong csv format of the evaluation function"
     | Failure "int_of_string" ->
-       Util.fail "states and points must be integers in the evaluation function"
+       TcUtil.fail "states and points must be integers in the evaluation function"
   );
   Csv.close_in csv_chan;
   let res = Model.H.create (Model.H.length prop_tbl) in
@@ -89,8 +89,8 @@ module PrinterGraph =
   struct
     include Model.Graph
 
-    let vertex_attributes_fn = ref (fun v -> Util.fail "Printer not initialized")
-    let vertex_name_fn = ref (fun v -> Util.fail "Printer not initialized")
+    let vertex_attributes_fn = ref (fun v -> TcUtil.fail "Printer not initialized")
+    let vertex_name_fn = ref (fun v -> TcUtil.fail "Printer not initialized")
 
     let edge_attributes e = []
     let default_edge_attributes g = [`Dir `Forward]
@@ -164,17 +164,17 @@ let write_dot_model spacefname kripkegraph spacegraph kripkeid spaceid fname sta
 
 class spaceDot spaceg =
 object
-  inherit Util.simple_graph
+  inherit TcUtil.simple_graph
   method num_nodes = Model.Graph.nb_vertex spaceg
-  method dims : int array  = Util.fail "distance not defined for dot models"
-  method pixdims : float array = Util.fail "distance not defined for dot models"
-  method euclidean_distance : int -> int -> float = Util.fail "distance not defined for dot models"
+  method dims : int array  = TcUtil.fail "distance not defined for dot models"
+  method pixdims : float array = TcUtil.fail "distance not defined for dot models"
+  method euclidean_distance : int -> int -> float = TcUtil.fail "distance not defined for dot models"
   method iter_pre = (fun v fn -> Model.Graph.iter_pred (fun x -> fn x 1.0) spaceg v)
   method iter_post = (fun v fn -> Model.Graph.iter_succ (fun x -> fn x 1.0) spaceg v)
 end
      
 let load_dot_model dir k s e =
-  let (kripkef,spacef,evalf) =  (Util.mkfname dir k,Util.mkfname dir s,Util.mkfname dir e) in
+  let (kripkef,spacef,evalf) =  (TcUtil.mkfname dir k,TcUtil.mkfname dir s,TcUtil.mkfname dir e) in
   let (kripke,(k_id_of_int,k_int_of_id)) =
     if k = ""
     then (Model.default_kripke (),(string_of_int,int_of_string))
@@ -184,11 +184,11 @@ let load_dot_model dir k s e =
   let spaceg = Parser.parse spacef in
   let space = new spaceDot spaceg in
   let (s_id_of_int,s_int_of_id)  = ParserSig.read () in
-  let hash = Util.fsSha256 [kripkef;spacef;evalf] in
+  let hash = TcUtil.fsSha256 [kripkef;spacef;evalf] in
   ParserSig.reset ();
   let propTbl = parse_eval evalf (Model.Graph.nb_vertex kripke) (Model.Graph.nb_vertex spaceg) k_int_of_id s_int_of_id in
   { Model.kripke = kripke;
-    Model.hash_and_cache = Util.mapO (fun x -> (x,Model.H.create 1)) hash;
+    Model.hash_and_cache = TcUtil.mapO (fun x -> (x,Model.H.create 1)) hash;
     Model.space = space;
     Model.deadlocks = None;
     Model.iter_ball = None;

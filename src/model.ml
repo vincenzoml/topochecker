@@ -31,7 +31,7 @@ module Graph = Graph.Imperative.Digraph.ConcreteBidirectionalLabeled
 type 'a model =
   { hash_and_cache : (string * slice H.t) option; (* enables caching *)
     kripke : Graph.t;
-    space : #Util.simple_graph as 'a;
+    space : #TcUtil.simple_graph as 'a;
     deadlocks : (int -> float) option;
     kripkeid : int -> string;
     idkripke : string -> int;
@@ -50,7 +50,7 @@ let save_cache model =
      H.iter
        (fun formula slice ->
 	 let formula_repr = Marshal.to_string formula [] in
-	 let formula_hash = Util.sha256 formula_repr in
+	 let formula_hash = TcUtil.sha256 formula_repr in
  (*	 let formula_fname = Printf.sprintf "%s_%s_%s.fmla" model_hash formula_hash (Logic.string_of_formula formula) *)
 	 let formula_fname = Printf.sprintf "%s_%s.fmla" model_hash formula_hash in 
 	 if not (Sys.file_exists formula_fname) then
@@ -102,13 +102,13 @@ let completeDeadlocks model =
 	      let a = Array1.create float64 c_layout
 		(Graph.nb_vertex model.kripke)
 	      in
-	      Array1.fill a Util.valFalse;
+	      Array1.fill a TcUtil.valFalse;
 	      found := Some a;
 	      a
 	  | Some a -> a
 	in
 	Graph.add_edge model.kripke v v;
-	Array1.set vect v Util.valTrue
+	Array1.set vect v TcUtil.valTrue
       end)
     model.kripke;
   match !found with
