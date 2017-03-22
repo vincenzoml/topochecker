@@ -12,6 +12,7 @@ let load_ask_query env string =
 
 let uri_model_loaders = (* todo add uri parser for dot models! *)
   [("med",NiftiParser.load_nifti_model);
+   ("bmp-dot",BmpDotParser.load_bmpdot_model);
    (*("img",ImgParser.load_img_model)*)]
     
 let load_model dir model =

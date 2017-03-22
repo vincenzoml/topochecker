@@ -16,9 +16,9 @@ type header = {
 class spaceNifti numnodes dims pixdims=
 object
   inherit Util.euclidean_grid
-  method num_nodes = numnodes
+  method num_nodes = numnodes (* TODO: why numnodes is not the product of dims? *)
   method iter_pre = Util.iter_neighbour Util.Euclidean dims pixdims
-  method iter_post =Util.iter_neighbour Util.Euclidean dims pixdims
+  method iter_post = Util.iter_neighbour Util.Euclidean dims pixdims
   (* method iter_pre = Util.iter_neighbour Util.SubDim dims pixdims *)
   (* method iter_post =Util.iter_neighbour Util.SubDim dims pixdims *)
   method dims = dims

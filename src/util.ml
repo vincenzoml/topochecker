@@ -61,7 +61,7 @@ let int_of_coords coords dims =
   let (r,_,_) = Array.fold_left (fun (acc,fac,dim) coord -> (coord * fac + acc,dims.(dim)*fac,dim+1)) (0,1,0) coords in
   r
 
-let coords_of_int i dims =
+let coords_of_int (i : int) dims =
   let products = Array.make ((Array.length dims) - 1) dims.(0) in
   for i = 1 to Array.length products - 1 do
     products.(i) <- dims.(i) * products.(i-1)

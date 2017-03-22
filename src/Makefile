@@ -38,7 +38,7 @@ OCAMLBUILD_EXE=$(shell which ocamlbuild)
 ifneq ($(OCAMLBUILD_EXE),)
 	ifeq ($(WINDOWS),false)
 		TARGET=fast
-		OCAMLBUILD=ocamlbuild -package camlimages -package bytes -package bigarray -package str -package unix -package ocamlgraph -package csv
+		OCAMLBUILD=ocamlbuild -use-ocamlfind -pkg camlimages,camlimages.all_formats -pkg bytes -pkg bigarray -pkg str -pkg unix -pkg ocamlgraph -pkg csv
 	endif
 endif
 

@@ -98,7 +98,7 @@ let compute model =
 	   (match model.iter_ball with
 	     None -> Util.fail "model does not have distances but ASM operator used"
 	   | Some ib ->
-	      let a1 = cache (Prop p) in
+	      let a1 = cache (Prop p) in (* TODO: unused variable a1... *)
 	      let a2 = cache f in
 	      for state = 0 to num_states - 1 do
 		for point = 0 to num_points - 1 do
