@@ -1,0 +1,83 @@
+Model "bmpdot:KRIPKE=kripke.dot,SPACE=edinburgh";
+
+Let reach(a,b) = !( (!b) S (!a) );
+
+Let close(a,b) = a & (N^30(b));
+
+Let bus = [blue == 255];
+Let stop = [red >= 245] & [red <= 265] & [green >= 105] & [green <= 125] & [blue <= 10];
+
+Let mainStreet = N([red >= 225] & [red <= 245] & [green >= 142] & [green <= 162] & [blue >= 144] & [blue <= 164]);
+Let smallStreet = N([red >= 244] & [green >= 244] & [blue >= 244]); 
+Let street = smallStreet | mainStreet;
+
+Let busCloseToStop = close(bus,stop);
+Let busOutOfStreet = bus & (! (bus S street));
+Let divertedBus = bus S smallStreet;
+
+Let pos1 = [red == 0] & [gren == 255] & [blue == 255];
+Let pos2 = [red == 0] & [gren == 245] & [blue == 255];
+Let pos3 = [red == 0] & [gren == 235] & [blue == 255];
+Let pos4 = [red == 0] & [gren == 225] & [blue == 255];
+Let pos5 = [red == 0] & [gren == 215] & [blue == 255];
+Let pos6 = [red == 0] & [gren == 205] & [blue == 255];
+Let pos7 = [red == 0] & [gren == 195] & [blue == 255];
+Let pos8 = [red == 0] & [gren == 185] & [blue == 255];
+Let pos9 = [red == 0] & [gren == 175] & [blue == 255];
+Let pos10 = [red == 0] & [gren == 165] & [blue == 255];
+Let pos11 = [red == 0] & [gren == 155] & [blue == 255];
+Let pos12 = [red == 0] & [gren == 145] & [blue == 255];
+Let pos13 = [red == 0] & [gren == 135] & [blue == 255];
+Let pos14 = [red == 0] & [gren == 125] & [blue == 255];
+
+Let ltPos2 = [red == 0] & [green > 245] & [blue == 255];
+Let ltPos3 = [red == 0] & [green > 235] & [blue == 255];
+Let ltPos4 = [red == 0] & [green > 225] & [blue == 255];
+Let ltPos5 = [red == 0] & [green > 215] & [blue == 255];
+Let ltPos6 = [red == 0] & [green > 205] & [blue == 255];
+Let ltPos7 = [red == 0] & [green > 195] & [blue == 255];
+Let ltPos8 = [red == 0] & [green > 185] & [blue == 255];
+Let ltPos9 = [red == 0] & [green > 175] & [blue == 255];
+Let ltPos10 = [red == 0] & [green > 165] & [blue == 255];
+Let ltPos11 = [red == 0] & [green > 155] & [blue == 255];
+Let ltPos12 = [red == 0] & [green > 145] & [blue == 255];
+Let ltPos13 = [red == 0] & [green > 135] & [blue == 255];
+Let ltPos14 = [red == 0] & [green > 125] & [blue == 255];
+
+Let gtPos1 = [red == 0] & [green < 255] & [blue == 255];
+Let gtPos2 = [red == 0] & [green < 245] & [blue == 255];
+Let gtPos3 = [red == 0] & [green < 235] & [blue == 255];
+Let gtPos4 = [red == 0] & [green < 225] & [blue == 255];
+Let gtPos5 = [red == 0] & [green < 215] & [blue == 255];
+Let gtPos6 = [red == 0] & [green < 205] & [blue == 255];
+Let gtPos7 = [red == 0] & [green < 195] & [blue == 255];
+Let gtPos8 = [red == 0] & [green < 185] & [blue == 255];
+Let gtPos9 = [red == 0] & [green < 175] & [blue == 255];
+Let gtPos10 = [red == 0] & [green < 165] & [blue == 255];
+Let gtPos11 = [red == 0] & [green < 155] & [blue == 255];
+Let gtPos12 = [red == 0] & [green < 145] & [blue == 255];
+Let gtPos13 = [red == 0] & [green < 135] & [blue == 255];
+
+Let streetPortion(b) = mainStreet & (N^3 b) & ( ! (N^5 (bus & (!b))));
+
+Let closeStreetPortion(b) = streetPortion(close(street,b));
+
+Let border = [red == 0] & [green == 0] & [blue == 0];
+
+Let mainStreetBetween(a,b) =
+    (mainStreet & (!border)) S (a | b);
+
+Let consecutivePos(p1,p2) = 
+    p1 S 
+    reach(
+	(streetPortion(p1) | mainStreet | streetPortion(p2)) & 
+	(!(streetPortion(bus & (!(p1 | p2)))))
+    ,streetPortion(p2));
+
+Let wrongOrderPos(p1,p2,p3) =
+    (p2 S mainStreet) & (!(consecutivePos(p2,p1) & consecutivePos(p2,p3)));
+
+Output "output/closeToAStop-streetPortion";
+
+Check "yellow" streetPortion(bus);
+Check "red" busCloseToStop;
