@@ -5,7 +5,7 @@ type propsyn = string
 type model =
     MODEL of (string*string*string) (* Kripke, Space, Eval *)
   | URI of string
-			
+      
 type fsyn =
     TRUE
   | FALSE
@@ -41,12 +41,22 @@ type fsyn =
   | AF of fsyn
   | EU of fsyn * fsyn
   | AU of fsyn * fsyn
+  | IFTHENELSE of cfsyn * fsyn * fsyn
+and
+  cfsyn =
+  | CTRUE
+  | CFALSE
+  | CAND of (cfsyn * cfsyn)
+  | COR of (cfsyn * cfsyn)
+  | CNOT of cfsyn
+  | CSHARE of (fsyn * cfsyn)
+  | CGROUP of fsyn
       
 type qfsyn =
   | QFLOAT of float
   | QOP of string * qfsyn * qfsyn
   | QCOUNT of fsyn
-				
+      
 type decl = LET of ide * ide list * fsyn
 type dseq = decl list
 
@@ -118,7 +128,20 @@ let rec formula_of_fsyn env f =
      And(Not (Eu (Not ff2,And(Not ff1,Not ff2))),Af ff2)
   | CALL (ide,actuals) ->
      let (formals,body) = apply env ide in
-     formula_of_fsyn (zipenv env formals (List.map (fun x -> ([],x)) actuals)) body    
+     formula_of_fsyn (zipenv env formals (List.map (fun x -> ([],x)) actuals)) body
+  | IFTHENELSE (cf,f1,f2) ->
+     Ifthenelse (cformula_of_cfsyn env cf,formula_of_fsyn env f1,formula_of_fsyn env f2)
+and
+    cformula_of_cfsyn env cf =
+  match cf with
+    CTRUE -> Ctrue
+  | CFALSE -> Cnot Ctrue     
+  | CAND (cf1,cf2) -> Cand (cformula_of_cfsyn env cf1,cformula_of_cfsyn env cf2)
+  | COR (cf1,cf2) -> Cnot (Cand (Cnot (cformula_of_cfsyn env cf1),Cnot (cformula_of_cfsyn env cf2)))
+  | CNOT cfsyn -> Cnot (cformula_of_cfsyn env cfsyn)
+  | CSHARE (f,cf) -> Cshare (formula_of_fsyn env f,cformula_of_cfsyn env cf)
+  | CGROUP f -> Cgroup (formula_of_fsyn env f) 
+    
        
 let rec qformula_of_qfsyn env qf =
   match qf with

@@ -57,6 +57,10 @@ fast:
 	make slowclean
 	$(OCAMLBUILD) main.native && cp -L main.native $(EXE) && rm main.native
 
+debug:
+	make slowclean
+	$(OCAMLBUILD) main.d.byte && cp -L main.d.byte $(EXE) && rm main.d.byte
+
 fastprof:
 	make slowclean
 	$(OCAMLBUILD) main.p.native

@@ -2,8 +2,8 @@ open Bigarray
 
 let isTrue x = x = 1.0
 let isFalse x = x = 0.0
-let valTrue = 1.0
-let valFalse = 0.0
+let valTrue = 1.0 
+let valFalse = 0.0 (* NB: Tarjan's algorithm depends on this being 0.0 and valTrue being 1.0 *)
 let valUtil = 2.0
 let valAnd x y = if x = 1.0 && y = 1.0 then 1.0 else 0.0
 let valNot x = if x = 0.0 then 1.0 else 0.0
@@ -57,10 +57,13 @@ let assert_samelen a b = assert (Array.length a = Array.length b)
 
 let sqr x = x *. x
 
+let coords_of_int_2d i w = (i mod w,i / w)
+let int_of_coords_2d (x,y) w = y * w + x
+
 let int_of_coords coords dims =
   let (r,_,_) = Array.fold_left (fun (acc,fac,dim) coord -> (coord * fac + acc,dims.(dim)*fac,dim+1)) (0,1,0) coords in
   r
-
+    
 let coords_of_int (i : int) dims =
   let products = Array.make ((Array.length dims) - 1) dims.(0) in
   for i = 1 to Array.length products - 1 do
@@ -80,7 +83,7 @@ let coords_of_int (i : int) dims =
   done;
   res.(0) <- !r;
   res
-
+    
 let euclidean_distance v1 v2 pixdims =
   assert_samelen v1 v2;
   let res = ref 0.0 in
@@ -492,5 +495,83 @@ let bin bins value min max step =
   (*TODO: normalize histogram!*)
   if (value < min) || (value >= max) then ()
   else let i = (int_of_float ((value -. min) /. step)) in
-       bins.(i) <- bins.(i) + 1;
+       bins.(i) <- bins.(i) + 1
+
+
+
+(*
+let labelConnectedComponents a pcount num_states num_points iter_pre_post =
+  for state = 0 to num_states - 1 do
+    Array1.fill pcount ~-1;
+    for point = num_points - 1 to 0 do
+      if a state point && Array1.get pcount point = ~-1 then
+        Array1.set pcount point point;
+      let q = ref [point] in
+      match !q with
+        [] -> ()
+      | src::tail ->
+         begin
+           q := tail;
+           iter_pre_post src (fun dst ->
+             if a state dst & Array1.get pcount dst  = ~-1 then
+               begin
+                 Array1.set pcount dst point;
+                 q := dst::!q
+               end)
+         end
+    done
+  done
+*)
+
+let rec repeat action until =
+  let x = action () in
+  if not (until x) then repeat action until
+    
+let tarjan subgraph num_points iter_post stack index onstack lowlink =
+  (* N.B.: lowlink IS the result of the algorithm; value 0.0 denotes points where subgraph is false; 
+           values greater than 0.0 denote connected component indexes *)
+  let idx = ref 1.0 in
+  let (push,popuntil) =
+    let hd = ref 0 in
+    ((fun x -> Array1.set stack !hd x; Array1.set onstack x !hd; hd := !hd + 1),
+     (fun v -> let scc = Array1.get index v in repeat (fun () -> (hd := !hd - 1; let x = Array1.get stack !hd in (Array1.set index x scc;Array1.set onstack x ~-1; x))) (fun x -> x = v)))
+  in
+  let callStack = Stack.create () in
+  let strongconnect () =
+    while not (Stack.is_empty callStack) do
+      let x = Stack.pop callStack in
+      match x with
+      | `Enter v ->         
+         begin
+           Array1.set index v !idx;
+           Array1.set lowlink v !idx;
+           idx := 1.0 +. !idx;
+           push v;
+	   Stack.push (`Finalize v) callStack;
+           iter_post v (fun w _ ->
+                       if isTrue (subgraph w) then
+	                 if 0.0 = Array1.get index w                                               
+                         then
+                           begin
+                             Stack.push (`Exit (v,w)) callStack;
+                             Stack.push (`Enter w) callStack
+                           end
+	                 else
+	                   if Array1.get onstack w >= 0
+	                   then Array1.set lowlink v (min (Array1.get lowlink v) (Array1.get index w)));
+         end
+      | `Exit (v,w) -> Array1.set lowlink v (min (Array1.get lowlink v) (Array1.get lowlink w));
+      | `Finalize v -> if (Array1.get lowlink v) = (Array1.get index v) then (debug (Printf.sprintf "component: %f" (Array1.get index v)); popuntil v)
+    done;
+  in
   
+  Array1.fill index 0.0;
+  Array1.fill onstack ~-1;
+  Array1.fill lowlink 0.0;
+  for v = 0 to num_points - 1 do
+    if (isTrue (subgraph v)) && ((Array1.get index v) = 0.0)
+    then (Stack.push (`Enter v) callStack; strongconnect ())
+  done
+  
+    
+    

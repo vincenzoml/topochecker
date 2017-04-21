@@ -17,6 +17,15 @@ type formula =
   | Ex of formula
   | Af of formula
   | Eu of formula * formula
+  | Ifthenelse of cformula * formula * formula
+  | CC of formula
+and
+  cformula =
+    Ctrue
+  | Cand of cformula * cformula
+  | Cnot of cformula
+  | Cshare of formula * cformula
+  | Cgroup of formula
 
 let rec string_of_formula formula =
   Printf.sprintf "(%s)" (
@@ -38,8 +47,21 @@ let rec string_of_formula formula =
     | Threshold (s,k,f) -> Printf.sprintf "Thr(%s,%f) %s" s k (string_of_formula f)
     | Ex f -> Printf.sprintf "EX %s" (string_of_formula f)
     | Af f -> Printf.sprintf "AF %s" (string_of_formula f)
-    | Eu (f1,f2) -> Printf.sprintf "%s EU %s" (string_of_formula f1) (string_of_formula f2))     
-      
+    | Eu (f1,f2) ->
+       Printf.sprintf "%s EU %s" (string_of_formula f1) (string_of_formula f2)
+    | Ifthenelse (cf,f1,f2) ->
+       Printf.sprintf "if %s then %s else %s fi" (string_of_cformula cf) (string_of_formula f1) (string_of_formula f2))
+and
+    string_of_cformula cformula =
+  Printf.sprintf "(%s)" (
+    match cformula with
+      Ctrue -> "TT"
+    | Cand (cf1,cf2) -> Printf.sprintf "%s & %s" (string_of_cformula cf1) (string_of_cformula cf2)
+    | Cnot cf -> Printf.sprintf "! %s" (string_of_cformula cf)
+    | Cshare (f,cf) -> Printf.sprintf "%s -< %s" (string_of_formula f) (string_of_cformula cf)
+    | Cgroup f -> Printf.sprintf "Gr %s" (string_of_formula f)
+  )
+     
 type qformula =
   | QFloat of float
   | QOp of (float -> float -> bool) * qformula * qformula

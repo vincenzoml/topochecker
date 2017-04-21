@@ -94,11 +94,17 @@ object
   method dims : int array  = dims
   method pixdims : float array = pixdims
   method iter_pre = TcUtil.iter_neighbour TcUtil.Euclidean dims pixdims
-  method iter_post = TcUtil.iter_neighbour TcUtil.Euclidean dims pixdims
+  method iter_post =
+    (* WAS: TcUtil.iter_neighbour TcUtil.Euclidean dims pixdims *)
+    fun i fn -> (let (x,y) = TcUtil.coords_of_int_2d i width in
+		 if x > 0 then (fn (TcUtil.int_of_coords_2d (x-1,y) width)) 1.0;
+		 if x < width-1 then (fn (TcUtil.int_of_coords_2d (x+1,y) width)) 1.0;
+		 if y > 0 then (fn (TcUtil.int_of_coords_2d (x,y-1) width)) 1.0;
+		 if y < height-1 then (fn (TcUtil.int_of_coords_2d (x,y+1) width)) 1.0)
   method euclidean_distance = fun p1 p2 ->
-    let v1 = TcUtil.coords_of_int p1 dims in
-    let v2 = TcUtil.coords_of_int p2 dims in
-    TcUtil.euclidean_distance v1 v2 pixdims
+    let (x1,y1) = TcUtil.coords_of_int_2d p1 width in
+    let (x2,y2) = TcUtil.coords_of_int_2d p2 width in
+    TcUtil.euclidean_distance [|x1;y1|] [|x2;y2|] pixdims
 end
      
 let load_bmpdot_model bindings =
@@ -126,9 +132,9 @@ let load_bmpdot_model bindings =
   let space = new spaceBmp width height in 
       
   let eval = Model.H.create 3 in
-  Model.H.add eval (Logic.Prop "red") (fun state point -> let [|x;y|] = TcUtil.coords_of_int point space#dims in float_of_int (Rgb24.get images.(state) x y).r);
-  Model.H.add eval (Logic.Prop "green") (fun state point -> let [|x;y|] = TcUtil.coords_of_int point space#dims in float_of_int (Rgb24.get images.(state) x y).g);
-  Model.H.add eval (Logic.Prop "blue") (fun state point -> let [|x;y|] = TcUtil.coords_of_int point space#dims in float_of_int (Rgb24.get images.(state) x y).b);
+  Model.H.add eval (Logic.Prop "red") (fun state point -> let (x,y) = TcUtil.coords_of_int_2d point space#dims.(0) in float_of_int (Rgb24.get images.(state) x y).r);
+  Model.H.add eval (Logic.Prop "green") (fun state point -> let (x,y) = TcUtil.coords_of_int_2d point space#dims.(0) in float_of_int (Rgb24.get images.(state) x y).g);
+  Model.H.add eval (Logic.Prop "blue") (fun state point -> let (x,y) = TcUtil.coords_of_int_2d point space#dims.(0) in float_of_int (Rgb24.get images.(state) x y).b);
   
   { Model.kripke = kripke;
     Model.hash_and_cache = TcUtil.mapO (fun x -> (x,Model.H.create 1)) hash;
@@ -153,8 +159,7 @@ let load_bmpdot_model bindings =
 	Printf.sprintf "(%s)"
 	  (String.concat ","
 	     (List.map string_of_int
-		(Array.to_list
-		   (TcUtil.coords_of_int i space#dims)))));
+		(let (x,y)=(TcUtil.coords_of_int_2d i space#dims.(0)) in [x;y]))));
     Model.eval = eval;	
   }
     

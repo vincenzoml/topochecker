@@ -20,6 +20,10 @@
 | "EDT" {EDT}
 | "EDTM" {EDTM}
 | "MDDT" {MDDT}
+| "IF" {IF}
+| "THEN" {THEN}
+| "ELSE" {ELSE}
+| "FI" {FI}
 | "Gr" {GROUP}
 | "-<" {SHARE}
 | "Let" {LET}

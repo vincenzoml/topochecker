@@ -1,3 +1,7 @@
+%token IF
+%token THEN
+%token ELSE
+%token FI
 %token EOL
 %token <string> STRING
 %token COUNT
@@ -116,7 +120,10 @@ qformula:
 num:
 | FLOAT {$1}
 | INT {float_of_int $1}
+;
 formula:
+| IF cformula THEN formula ELSE formula FI { Syntax.IFTHENELSE ($2,$4,$6) }
+| IF cformula THEN formula FI { Syntax.IFTHENELSE ($2,$4,Syntax.FALSE) }
 | LPAREN formula RPAREN {$2}
 | TRUE {Syntax.TRUE}
 | FALSE {Syntax.FALSE}
@@ -147,6 +154,16 @@ formula:
 | EDTM LPAREN formula COMMA OP num RPAREN {Syntax.EDTM ($3,$5,$6)}
 | MDDT LPAREN formula COMMA OP num RPAREN {Syntax.MDDT ($3,$5,$6)}
 ;
+cformula:
+| LPAREN cformula RPAREN {$2}
+| TRUE {Syntax.CTRUE}
+| FALSE {Syntax.CFALSE}
+| NOT cformula {Syntax.CNOT $2}
+| cformula AND cformula {Syntax.CAND ($1,$3)}
+| cformula OR cformula {Syntax.COR ($1,$3)}
+| formula SHARE cformula {Syntax.CSHARE ($1,$3)}
+| GROUP formula {Syntax.CGROUP $2}
+; 
 formalarglist:
 | LPAREN innerformalarglist RPAREN {$2}
 ;

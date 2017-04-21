@@ -1,0 +1,16 @@
+Model "bmpdot:KRIPKE=kripke.dot,SPACE=test";
+
+Let green = [green == 255 ] & [red == 0] & [blue == 0];
+Let red =  [red == 255] & [green == 0 ] & [blue == 0];
+Let white = [green == 255] & [red == 255] & [blue == 255];
+Let blue = [green == 0] & [red == 0] & [blue == 255];
+
+Let is(x) =  IF (x -< Gr (x | red)) THEN x ELSE FF FI;
+Let isnot(x) =  IF (x -< Gr (x | red)) THEN FF ELSE x FI;
+
+Output "output/out";
+
+Check "orange" is(green);
+Check "yellow" isnot(blue);
+
+

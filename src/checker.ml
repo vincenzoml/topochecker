@@ -2,6 +2,7 @@ open Logic
 open Model
 open Bigarray
 open TcUtil
+open Slice
 
 module IntOrdDst : sig type t=(float*int) val compare: (float*int) -> (float*int) -> int end = struct
   type t = (float*int)
@@ -11,25 +12,81 @@ module DDTSet = Set.Make(IntOrdDst)
   
 type result = Slice of Slice.slice | Fun of (int -> int -> float)
 
-let apply h result = match result with
+type cresult = Cslice of Slice.cslice | Cfun of (int -> float)
+let capply cresult = match cresult with Cfun f -> f | Cslice s -> Array1.unsafe_get s
+    
+(*let apply h result = match result with
     Fun f -> f
   | Slice s -> Array2.unsafe_get s
-    
+TODO: commented on purpose *) 
+  
 let compute model =
   let num_states = Graph.nb_vertex model.kripke in
   let num_points =  model.space#num_nodes in
   let count = Array1.create int c_layout num_states in (* auxiliary *)
-  let new_slice f = let slice = Array2.create float64 c_layout num_states num_points in (f slice;Slice slice) in
+  let stack = Array1.create int c_layout num_points in (* auxiliary *)
+  let onstack = Array1.create int c_layout num_points in (* auxiliary *)
+  let lowlink = Array1.create float64 c_layout num_points in (* auxiliary *)
+  let new_slice f = let slice = make_slice num_states num_points in (f slice;Slice slice) in
+  let new_cslice f = let cslice = make_cslice num_states in (f cslice; Cslice cslice) in
+  let rec cchecker set model (cache : formula -> int -> int -> float) cf =
+    match cf with
+      Ctrue -> Cfun (fun _ -> valTrue)
+    | Cand (cf1,cf2) -> 
+       let a1 = cchecker set model cache cf1 in
+       let a2 = cchecker set model cache cf2 in
+       Cfun (fun state -> valAnd (capply a1 state) (capply a2 state))
+    | Cnot cf -> Cfun (fun state -> valNot (capply (cchecker set model cache cf) state))
+    | Cshare (f,cf) -> 
+       let a = cache f in
+       cchecker a model cache cf
+    | Cgroup f ->
+       new_cslice (fun cslice ->
+	 let a = cache f in
+	 let b = cache (CC f) in
+	 for state = 0 to num_states - 1 do
+	   let result = ref true in
+	   let cc = ref 0.0 in
+	   let point = ref 0 in
+	   while !result && (!point < num_points) do
+	     if isTrue (set state !point) then
+	       if isFalse (a state !point)
+	       then (debug "a is false";result := false)
+	       else
+		 (if (!cc) = 0.0
+		  then (cc := b state !point; debug (Printf.sprintf "group cc: %f" (b state !point)))
+		  else (if b state !point <> !cc then (debug (Printf.sprintf "group first cc: %f second cc: %f" (!cc) (b state !point));result := false)));
+	     point := !point + 1;
+	   (*	     debug (Printf.sprintf "point: %d set: %b oldcc: %f cc: %f result: %b" !point (isTrue (set state !point)) !cc (b state !point) !result) *)
+	   done; 
+	   debug (Printf.sprintf "num_points: %d" num_points);
+	   debug (Printf.sprintf "group result: %b" !result);
+	   Array1.set cslice state (TcUtil.ofBool !result)
+	 done)
+  in
   fun formula cache ->
     match formula with
-      T -> Fun (fun state point -> valTrue)
+      Ifthenelse (cf,f1,f2) ->
+	let set = cache T in (* TODO: this sets the initial context for collective evaluation to all points (formula "T") *)
+	let cresult = cchecker set model cache cf in
+	let a1 = cache f1 in
+	let a2 = cache f2 in
+	Fun (fun state point -> if isTrue (capply cresult state) then a1 state point else a2 state point)
+    | T -> Fun (fun state point -> valTrue)
     | Prop p -> let a1 = cache (Prop p) in Fun a1
+    | CC f -> let a = cache f in new_slice
+			      (fun slice ->
+				for state = 0 to num_states - 1 do
+				  TcUtil.tarjan (a state) num_points
+				    (model.space#iter_post) stack
+				    (Array2.slice_left slice state) onstack lowlink
+				done)
     | VProp (p,op,n) -> let a1 = cache (Prop p) in Fun (fun state point -> TcUtil.ofBool (Syntax.opsem op (a1 state point) n))
     | Not f1 -> let a1 = cache f1 in Fun (fun state point -> valNot (a1 state point))
-    | And (f1,f2) ->
+    | And (f1,f2) -> 
        let a1 = cache f1 in
        let a2 = cache f2 in
-       Fun (fun state point -> valAnd (a1 state point) (a2 state point))
+       Fun (fun state point -> valAnd (a1 state point) (a2 state point)) (* TODO: check if memoization is more efficient but also exponential blowup in fmla marshalling *)
     | Threshold (op,thr,f) ->
        let a = cache f in
        Fun (fun state point ->  TcUtil.ofBool (Syntax.opsem op (a state point) thr))
@@ -104,12 +161,12 @@ let compute model =
 		for point = 0 to num_points - 1 do
 		  if TcUtil.isTrue (a2 state point) then
 		    begin
-
-		      (* ???????????????????????? *)
-		      (* ib point rad *)
-		      (* 	(fun point -> ); *)
-		      (* let res = TcUtil.statcmp v in *)
-		      (* Array2.unsafe_set slice state point res *)
+		    (* TODO: VINCENZO: che è sta roba? L'ho trovata commentata, col begin ... end vuoto *)
+		    (* ???????????????????????? *)
+		    (* ib point rad *)
+		    (* 	(fun point -> ); *)
+		    (* let res = TcUtil.statcmp v in *)
+		    (* Array2.unsafe_set slice state point res *)
 		    end
 		  else
 		    Array2.unsafe_set slice state point nan
