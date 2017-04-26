@@ -51,16 +51,13 @@ let compute model =
 	   while !result && (!point < num_points) do
 	     if isTrue (set state !point) then
 	       if isFalse (a state !point)
-	       then (debug "a is false";result := false)
+	       then result := false
 	       else
 		 (if (!cc) = 0.0
-		  then (cc := b state !point; debug (Printf.sprintf "group cc: %f" (b state !point)))
-		  else (if b state !point <> !cc then (debug (Printf.sprintf "group first cc: %f second cc: %f" (!cc) (b state !point));result := false)));
+		  then cc := b state !point
+		  else (if b state !point <> !cc then result := false));
 	     point := !point + 1;
-	   (*	     debug (Printf.sprintf "point: %d set: %b oldcc: %f cc: %f result: %b" !point (isTrue (set state !point)) !cc (b state !point) !result) *)
 	   done; 
-	   debug (Printf.sprintf "num_points: %d" num_points);
-	   debug (Printf.sprintf "group result: %b" !result);
 	   Array1.set cslice state (TcUtil.ofBool !result)
 	 done)
   in

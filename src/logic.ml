@@ -31,6 +31,7 @@ let rec string_of_formula formula =
   Printf.sprintf "(%s)" (
     match formula with
       T -> "TT"
+    | CC f -> Printf.sprintf "CC (%s)" (string_of_formula f)
     | Prop p -> Printf.sprintf "[%s]" p
     | VProp (p,op,k) -> Printf.sprintf "[%s %s %f]" p op k
     | Not f -> Printf.sprintf "! %s" (string_of_formula f)

@@ -561,7 +561,7 @@ let tarjan subgraph num_points iter_post stack index onstack lowlink =
 	                   then Array1.set lowlink v (min (Array1.get lowlink v) (Array1.get index w)));
          end
       | `Exit (v,w) -> Array1.set lowlink v (min (Array1.get lowlink v) (Array1.get lowlink w));
-      | `Finalize v -> if (Array1.get lowlink v) = (Array1.get index v) then (debug (Printf.sprintf "component: %f" (Array1.get index v)); popuntil v)
+      | `Finalize v -> if (Array1.get lowlink v) = (Array1.get index v) then popuntil v
     done;
   in
   
