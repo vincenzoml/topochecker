@@ -36,7 +36,9 @@ let compute model =
        let a1 = cchecker set model cache cf1 in
        let a2 = cchecker set model cache cf2 in
        Cfun (fun state -> valAnd (capply a1 state) (capply a2 state))
-    | Cnot cf -> Cfun (fun state -> valNot (capply (cchecker set model cache cf) state))
+    | Cnot cf ->
+       let a = cchecker set model cache cf in
+       Cfun (fun state -> valNot (capply a state))
     | Cshare (f,cf) -> 
        let a = cache f in
        cchecker a model cache cf

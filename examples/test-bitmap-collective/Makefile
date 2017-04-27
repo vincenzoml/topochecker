@@ -3,10 +3,10 @@ TOPOCHECKER=../../src/topochecker
 
 run: maketool
 	mkdir -p output
-	OCAMLRUNPARAM=-b $(TOPOCHECKER) test.topochecker output/state
+	$(TOPOCHECKER) test.topochecker output/state
 
 maketool:
-	cd ../../src && make debug
+	cd ../../src && make 
 
 clean: 
 	rm -rf out* *~ *.fmla *.slice

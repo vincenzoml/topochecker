@@ -533,8 +533,8 @@ let tarjan subgraph num_points iter_post stack index onstack lowlink =
   let idx = ref 1.0 in
   let (push,popuntil) =
     let hd = ref 0 in
-    ((fun x -> Array1.set stack !hd x; Array1.set onstack x !hd; hd := !hd + 1),
-     (fun v -> let scc = Array1.get index v in repeat (fun () -> (hd := !hd - 1; let x = Array1.get stack !hd in (Array1.set index x scc;Array1.set onstack x ~-1; x))) (fun x -> x = v)))
+    ((fun x -> Array1.unsafe_set stack !hd x; Array1.unsafe_set onstack x !hd; hd := !hd + 1),
+     (fun v -> let scc = Array1.unsafe_get index v in repeat (fun () -> (hd := !hd - 1; let x = Array1.unsafe_get stack !hd in (Array1.unsafe_set index x scc;Array1.unsafe_set onstack x ~-1; x))) (fun x -> x = v)))
   in
   let callStack = Stack.create () in
   let strongconnect () =
@@ -543,25 +543,25 @@ let tarjan subgraph num_points iter_post stack index onstack lowlink =
       match x with
       | `Enter v ->         
          begin
-           Array1.set index v !idx;
-           Array1.set lowlink v !idx;
+           Array1.unsafe_set index v !idx;
+           Array1.unsafe_set lowlink v !idx;
            idx := 1.0 +. !idx;
            push v;
 	   Stack.push (`Finalize v) callStack;
            iter_post v (fun w _ ->
                        if isTrue (subgraph w) then
-	                 if 0.0 = Array1.get index w                                               
+	                 if 0.0 = Array1.unsafe_get index w                                               
                          then
                            begin
                              Stack.push (`Exit (v,w)) callStack;
                              Stack.push (`Enter w) callStack
                            end
 	                 else
-	                   if Array1.get onstack w >= 0
-	                   then Array1.set lowlink v (min (Array1.get lowlink v) (Array1.get index w)));
+	                   if Array1.unsafe_get onstack w >= 0
+	                   then Array1.unsafe_set lowlink v (min (Array1.unsafe_get lowlink v) (Array1.unsafe_get index w)));
          end
-      | `Exit (v,w) -> Array1.set lowlink v (min (Array1.get lowlink v) (Array1.get lowlink w));
-      | `Finalize v -> if (Array1.get lowlink v) = (Array1.get index v) then popuntil v
+      | `Exit (v,w) -> Array1.unsafe_set lowlink v (min (Array1.unsafe_get lowlink v) (Array1.unsafe_get lowlink w));
+      | `Finalize v -> if (Array1.unsafe_get lowlink v) = (Array1.unsafe_get index v) then popuntil v
     done;
   in
   
@@ -569,7 +569,7 @@ let tarjan subgraph num_points iter_post stack index onstack lowlink =
   Array1.fill onstack ~-1;
   Array1.fill lowlink 0.0;
   for v = 0 to num_points - 1 do
-    if (isTrue (subgraph v)) && ((Array1.get index v) = 0.0)
+    if (isTrue (subgraph v)) && ((Array1.unsafe_get index v) = 0.0)
     then (Stack.push (`Enter v) callStack; strongconnect ())
   done
   
