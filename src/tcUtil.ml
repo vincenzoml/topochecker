@@ -547,7 +547,7 @@ let tarjan subgraph num_points iter_post stack index onstack lowlink =
            Array1.unsafe_set index v !idx;
            Array1.unsafe_set lowlink v !idx;
            idx := 1.0 +. !idx;
-           push v; (* crash here*)
+           push v;
 	   Stack.push (`Finalize v) callStack;
 	   let succs = ref [] in
 	   iter_post v (fun w _ -> succs := w :: !succs);
