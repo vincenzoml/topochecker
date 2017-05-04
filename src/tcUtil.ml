@@ -529,46 +529,56 @@ let rec repeat action until =
     
 let tarjan subgraph num_points iter_post stack index onstack lowlink =
   (* N.B.: lowlink IS the result of the algorithm; value 0.0 denotes points where subgraph is false; 
-           values greater than 0.0 denote connected component indexes *)
+     values greater than 0.0 denote connected component indexes *)
   let idx = ref 1.0 in
   let (push,popuntil) =
     let hd = ref 0 in
     ((fun x -> Array1.unsafe_set stack !hd x; Array1.unsafe_set onstack x !hd; hd := !hd + 1),
-     (fun v -> let scc = Array1.unsafe_get index v in repeat (fun () -> (hd := !hd - 1; let x = Array1.unsafe_get stack !hd in (Array1.unsafe_set index x scc;Array1.unsafe_set onstack x ~-1; x))) (fun x -> x = v)))
+     (fun v -> let scc = Array1.unsafe_get index v in
+	       repeat (fun () -> (hd := !hd - 1; let x = Array1.unsafe_get stack !hd in (Array1.unsafe_set index x scc;Array1.unsafe_set onstack x ~-1; x))) (fun x -> x = v)))
   in
   let callStack = Stack.create () in
   let strongconnect () =
     while not (Stack.is_empty callStack) do
-      let x = Stack.pop callStack in
+      let x = Stack.pop callStack in      
       match x with
-      | `Enter v ->         
+      | `Enter v ->
          begin
            Array1.unsafe_set index v !idx;
            Array1.unsafe_set lowlink v !idx;
            idx := 1.0 +. !idx;
-           push v;
+           push v; (* crash here*)
 	   Stack.push (`Finalize v) callStack;
-           iter_post v (fun w _ ->
-                       if isTrue (subgraph w) then
-	                 if 0.0 = Array1.unsafe_get index w                                               
-                         then
-                           begin
-                             Stack.push (`Exit (v,w)) callStack;
-                             Stack.push (`Enter w) callStack
-                           end
-	                 else
-	                   if Array1.unsafe_get onstack w >= 0
-	                   then Array1.unsafe_set lowlink v (min (Array1.unsafe_get lowlink v) (Array1.unsafe_get index w)));
-         end
-      | `Exit (v,w) -> Array1.unsafe_set lowlink v (min (Array1.unsafe_get lowlink v) (Array1.unsafe_get lowlink w));
+	   let succs = ref [] in
+	   iter_post v (fun w _ -> succs := w :: !succs);
+	   Stack.push (`Children (v,!succs)) callStack;
+	 end
+      | `Children (_,[]) -> ()
+      | `Children (v,(w::ws)) ->
+	 begin
+	   Stack.push (`Children (v,ws)) callStack;
+           if isTrue (subgraph w) then
+	     if 0.0 = Array1.unsafe_get index w
+             then
+               begin
+                 Stack.push (`Exit (v,w)) callStack;
+                 Stack.push (`Enter w) callStack
+               end
+	     else
+	       if Array1.unsafe_get onstack w >= 0
+	       then Array1.unsafe_set lowlink v
+		 (min (Array1.unsafe_get lowlink v) (Array1.unsafe_get index w));
+	 end
+      | `Exit (v,w) ->  Array1.unsafe_set lowlink v (min (Array1.unsafe_get lowlink v) (Array1.unsafe_get lowlink w));
       | `Finalize v -> if (Array1.unsafe_get lowlink v) = (Array1.unsafe_get index v) then popuntil v
+	  
     done;
   in
-  
+
   Array1.fill index 0.0;
   Array1.fill onstack ~-1;
   Array1.fill lowlink 0.0;
-  for v = 0 to num_points - 1 do
+  for v = 0 to num_points - 1 do    
     if (isTrue (subgraph v)) && ((Array1.unsafe_get index v) = 0.0)
     then (Stack.push (`Enter v) callStack; strongconnect ())
   done

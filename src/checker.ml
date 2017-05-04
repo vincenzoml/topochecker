@@ -60,7 +60,7 @@ let compute model =
 		  else (if b state !point <> !cc then result := false));
 	     point := !point + 1;
 	   done; 
-	   Array1.set cslice state (TcUtil.ofBool !result)
+	   Array1.set cslice state (TcUtil.ofBool !result);
 	 done)
   in
   fun formula cache ->
