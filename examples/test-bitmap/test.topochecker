@@ -6,11 +6,5 @@ Let white = [ green == 255] & [red == 255] & [blue == 255];
 
 Output "out";
 
-Check "blue" red;
-
-Check "red" green S red;
-
-Check "yellow" white & (E X green);
-
-
+Check "blue" MAXVOL red;
 

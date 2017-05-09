@@ -17,6 +17,7 @@ type fsyn =
   | NEAR of fsyn
   | NEARN of (int * fsyn)
   | INT of fsyn
+  | INTN of (int * fsyn)
   | SURROUNDED of (fsyn * fsyn)
   | CALL of ide * (fsyn list)		    
   | STATCMP of (string * fsyn * string * fsyn * float * string * float * float * float * int)
@@ -42,6 +43,7 @@ type fsyn =
   | EU of fsyn * fsyn
   | AU of fsyn * fsyn
   | IFTHENELSE of cfsyn * fsyn * fsyn
+  | MAXVOL of fsyn
 and
   cfsyn =
   | CTRUE
@@ -108,6 +110,7 @@ let rec formula_of_fsyn env f =
   | NEAR f1 -> Near (formula_of_fsyn env f1)
   | NEARN (n,f1) -> if n <= 0 then formula_of_fsyn env f1 else Near (formula_of_fsyn env (NEARN(n-1,f1)))
   | INT f1 -> Not (Near (Not (formula_of_fsyn env f1)))
+  | INTN (n,f1) -> if n <= 0 then formula_of_fsyn env f1 else formula_of_fsyn env (INT (INTN (n-1,f1)))
   | SURROUNDED (f1,f2) -> Surrounded (formula_of_fsyn env f1,formula_of_fsyn env f2)
   | STATCMP (p1,f1,p2,f,rad,op,thr,min,max,nbins) -> Threshold (op,thr,Statcmp (p1,formula_of_fsyn env f1,p2,formula_of_fsyn env f,rad,min,max,nbins))
   | SCMPIMA (p1,p2,f,rad,op,thr,min,max,nbins) -> Threshold (op,thr,Scmpima (p1,p2,formula_of_fsyn env f,rad,min,max,nbins))
@@ -116,6 +119,7 @@ let rec formula_of_fsyn env f =
   | EDT (f,op,thr) -> Threshold (op,thr,EDT (formula_of_fsyn env f))
   | EDTM (f,op,thr) -> Threshold (op,thr,EDTM (formula_of_fsyn env f))
   | MDDT (f,op,thr) -> Threshold (op,thr,ModDijkstraDT (formula_of_fsyn env f))
+  | MAXVOL f -> Maxvol (formula_of_fsyn env f)
   | EX f1 -> Ex (formula_of_fsyn env f1)
   | AX f1 -> Not (Ex (Not (formula_of_fsyn env f1)))
   | EG f1 -> Not (Af (Not (formula_of_fsyn env f1)))

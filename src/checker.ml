@@ -64,36 +64,58 @@ let compute model =
 	 done)
   in
   fun formula cache ->
-    match formula with
-      Ifthenelse (cf,f1,f2) ->
-	let set = cache T in (* TODO: this sets the initial context for collective evaluation to all points (formula "T") *)
-	let cresult = cchecker set model cache cf in
-	let a1 = cache f1 in
-	let a2 = cache f2 in
-	Fun (fun state point -> if isTrue (capply cresult state) then a1 state point else a2 state point)
-    | T -> Fun (fun state point -> valTrue)
-    | Prop p -> let a1 = cache (Prop p) in Fun a1
-    | CC f -> let a = cache f in new_slice
-			      (fun slice ->
-				for state = 0 to num_states - 1 do
-				  TcUtil.tarjan (a state) num_points
-				    (model.space#iter_post) stack
-				    (Array2.slice_left slice state) onstack lowlink
-				done)
-    | VProp (p,op,n) -> let a1 = cache (Prop p) in Fun (fun state point -> TcUtil.ofBool (Syntax.opsem op (a1 state point) n))
-    | Not f1 -> let a1 = cache f1 in Fun (fun state point -> valNot (a1 state point))
-    | And (f1,f2) -> 
-       let a1 = cache f1 in
-       let a2 = cache f2 in
-       Fun (fun state point -> valAnd (a1 state point) (a2 state point)) (* TODO: check if memoization is more efficient but also exponential blowup in fmla marshalling *)
-    | Threshold (op,thr,f) ->
-       let a = cache f in
-       Fun (fun state point ->  TcUtil.ofBool (Syntax.opsem op (a state point) thr))
-    | Statcmp (p,f1,p2,f,rad,min,max,nbins) ->
-       new_slice
-	 (fun slice ->
-	   (match model.iter_ball with
-	     None -> TcUtil.fail "model does not have distances but SCMP operator used"
+  match formula with
+  | Maxvol f ->
+     let a = cache (CC f) in
+     new_slice (fun slice ->
+         let max = ref 0 in
+         let cc = ref 0 in
+         Array1.fill count 0;
+         for state = 0 to num_states - 1 do
+           for point = 0 to num_points - 1 do
+             let ncc = (int_of_float (a state point)) - 1 in
+             if ncc <> -1 then               
+               let n = (Array1.unsafe_get count ncc) + 1 in
+               Array1.unsafe_set count ncc n;
+               
+               if n > !max then (max := n; cc:= ncc+1)
+           done
+         done;
+         TcUtil.debug (Printf.sprintf "%d" !cc);
+         for state = 0 to num_states - 1 do
+           for point = 0 to num_points - 1 do 
+             Array2.set slice state point (ofBool ((a state point) = float_of_int (!(cc)))) 
+           done 
+         done)
+  | Ifthenelse (cf,f1,f2) ->
+   let set = cache T in (* TODO: this sets the initial context for collective evaluation to all points (formula "T") *)
+   let cresult = cchecker set model cache cf in
+   let a1 = cache f1 in
+   let a2 = cache f2 in
+   Fun (fun state point -> if isTrue (capply cresult state) then a1 state point else a2 state point)
+  | T -> Fun (fun state point -> valTrue)
+  | Prop p -> let a1 = cache (Prop p) in Fun a1
+  | CC f -> let a = cache f in new_slice
+			         (fun slice ->
+				   for state = 0 to num_states - 1 do
+				     TcUtil.tarjan (a state) num_points
+				                   (model.space#iter_post) stack
+				                   (Array2.slice_left slice state) onstack lowlink
+				   done)
+  | VProp (p,op,n) -> let a1 = cache (Prop p) in Fun (fun state point -> TcUtil.ofBool (Syntax.opsem op (a1 state point) n))
+  | Not f1 -> let a1 = cache f1 in Fun (fun state point -> valNot (a1 state point))
+  | And (f1,f2) -> 
+     let a1 = cache f1 in
+     let a2 = cache f2 in
+     Fun (fun state point -> valAnd (a1 state point) (a2 state point)) (* TODO: check if memoization is more efficient but also exponential blowup in fmla marshalling *)
+  | Threshold (op,thr,f) ->
+     let a = cache f in
+     Fun (fun state point ->  TcUtil.ofBool (Syntax.opsem op (a state point) thr))
+  | Statcmp (p,f1,p2,f,rad,min,max,nbins) ->
+     new_slice
+       (fun slice ->
+	 (match model.iter_ball with
+	    None -> TcUtil.fail "model does not have distances but SCMP operator used"
 	   | Some ib ->
 	      let step = (max -. min) /. (float_of_int nbins) in
 	      let v1 = Array.make nbins 0 in

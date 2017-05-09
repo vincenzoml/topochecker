@@ -13,6 +13,7 @@
 | "G" {G}
 | "F" {F}
 | "X" {X}
+| "MAXVOL" {MAXVOL}
 | "SCMP" {STATCMP}
 | "SCMPIMA" {SCMPIMA}
 | "ASM" {ASM}

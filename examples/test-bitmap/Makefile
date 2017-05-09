@@ -12,3 +12,5 @@ clean:
 	rm -rf out* *~ *.fmla *.slice
 
 
+view: run
+	xdg-open out_0.bmp

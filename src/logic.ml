@@ -18,6 +18,7 @@ type formula =
   | Af of formula
   | Eu of formula * formula
   | Ifthenelse of cformula * formula * formula
+  | Maxvol of formula 
   | CC of formula
 and
   cformula =
@@ -51,7 +52,9 @@ let rec string_of_formula formula =
     | Eu (f1,f2) ->
        Printf.sprintf "%s EU %s" (string_of_formula f1) (string_of_formula f2)
     | Ifthenelse (cf,f1,f2) ->
-       Printf.sprintf "if %s then %s else %s fi" (string_of_cformula cf) (string_of_formula f1) (string_of_formula f2))
+       Printf.sprintf "if %s then %s else %s fi" (string_of_cformula cf) (string_of_formula f1) (string_of_formula f2)
+    | Maxvol f ->
+       Printf.sprintf "maxvol %s" (string_of_formula f))
 and
     string_of_cformula cformula =
   Printf.sprintf "(%s)" (

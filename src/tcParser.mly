@@ -20,6 +20,7 @@
 %token G
 %token X
 %token F
+%token MAXVOL
 %token STATCMP
 %token SCMPIMA
 %token ASM
@@ -122,6 +123,7 @@ num:
 | INT {float_of_int $1}
 ;
 formula:
+| MAXVOL formula {Syntax.MAXVOL $2}
 | IF cformula THEN formula ELSE formula FI { Syntax.IFTHENELSE ($2,$4,$6) }
 | IF cformula THEN formula FI { Syntax.IFTHENELSE ($2,$4,Syntax.FALSE) }
 | LPAREN formula RPAREN {$2}
@@ -137,6 +139,7 @@ formula:
 | NEAR formula {Syntax.NEAR $2}
 | NEAR HAT INT formula {Syntax.NEARN ($3,$4)}
 | INTERIOR formula {Syntax.INT $2}
+| INTERIOR HAT INT formula {Syntax.INTN ($3,$4)}
 | formula SURROUNDED formula {Syntax.SURROUNDED ($1,$3)}
 | E X formula {Syntax.EX $3}
 | A X formula {Syntax.AX $3}
