@@ -8,7 +8,7 @@ Let white = [ green == 255] & [red == 255] & [blue == 255];
 
 Output "output/out";
 
-//Check "orange" MAXVOL red;
+Check "orange" MAXVOL red;
 Check "magenta" MAXVOL blue;
 
 
