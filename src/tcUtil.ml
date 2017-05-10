@@ -528,7 +528,7 @@ let rec repeat action until =
   if not (until x) then repeat action until
     
 let tarjan subgraph num_points iter_post stack index onstack lowlink =
-  (* N.B.: lowlink IS the result of the algorithm; value 0.0 denotes points where subgraph is false; 
+  (* N.B.: index IS the result of the algorithm; value 0.0 denotes points where subgraph is false; 
      values greater than 0.0 denote connected component indexes *)
   let idx = ref 1.0 in
   let (push,popuntil) =

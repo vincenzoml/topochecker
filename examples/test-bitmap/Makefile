@@ -13,4 +13,4 @@ clean:
 
 
 view: run
-	xdg-open out_0.bmp
+	xdg-open output/out_0.bmp

@@ -14,11 +14,6 @@ type result = Slice of Slice.slice | Fun of (int -> int -> float)
 
 type cresult = Cslice of Slice.cslice | Cfun of (int -> float)
 let capply cresult = match cresult with Cfun f -> f | Cslice s -> Array1.unsafe_get s
-    
-(*let apply h result = match result with
-    Fun f -> f
-  | Slice s -> Array2.unsafe_get s
-TODO: commented on purpose *) 
   
 let compute model =
   let num_states = Graph.nb_vertex model.kripke in
@@ -68,25 +63,27 @@ let compute model =
   | Maxvol f ->
      let a = cache (CC f) in
      new_slice (fun slice ->
-         let max = ref 0 in
-         let cc = ref 0 in
-         Array1.fill count 0;
-         for state = 0 to num_states - 1 do
-           for point = 0 to num_points - 1 do
-             let ncc = (int_of_float (a state point)) - 1 in
-             if ncc <> -1 then               
-               let n = (Array1.unsafe_get count ncc) + 1 in
-               Array1.unsafe_set count ncc n;
-               
-               if n > !max then (max := n; cc:= ncc+1)
-           done
+       for state = 0 to num_states - 1 do
+	 let max = ref 0 in	 
+	 Array1.fill stack 0;
+	 TcUtil.debug (Printf.sprintf "first: %d %d" (Array1.unsafe_get stack 0) (Array1.unsafe_get stack 2288));
+         for point = 0 to num_points - 1 do
+           let ncc = int_of_float (a state point) in
+           if ncc > 0 then
+             let n = (Array1.unsafe_get stack (ncc-1)) + 1 in
+	     (*     TcUtil.debug (Printf.sprintf "before: ncc: %d n: %d" ncc n); *)
+             Array1.unsafe_set stack (ncc-1) n;         
+             if n > !max then max := n
          done;
-         TcUtil.debug (Printf.sprintf "%d" !cc);
-         for state = 0 to num_states - 1 do
-           for point = 0 to num_points - 1 do 
-             Array2.set slice state point (ofBool ((a state point) = float_of_int (!(cc)))) 
-           done 
-         done)
+	 for point = 0 to num_points - 1 do
+	   let ncc = int_of_float (a state point) in
+	   if ncc > 0 then
+	     let n = Array1.unsafe_get stack (ncc - 1) in
+	     let b = (n = !max) in
+	     (*	     TcUtil.debug (Printf.sprintf "state: %d point: %d max: %d ncc: %d n: %d b: %b" state point !max ncc n b); *)
+	     Array2.set slice state point (ofBool b) 
+	 done
+       done)
   | Ifthenelse (cf,f1,f2) ->
    let set = cache T in (* TODO: this sets the initial context for collective evaluation to all points (formula "T") *)
    let cresult = cchecker set model cache cf in
@@ -99,8 +96,8 @@ let compute model =
 			         (fun slice ->
 				   for state = 0 to num_states - 1 do
 				     TcUtil.tarjan (a state) num_points
-				                   (model.space#iter_post) stack
-				                   (Array2.slice_left slice state) onstack lowlink
+				       (model.space#iter_post) stack
+				       (Array2.slice_left slice state) onstack lowlink;
 				   done)
   | VProp (p,op,n) -> let a1 = cache (Prop p) in Fun (fun state point -> TcUtil.ofBool (Syntax.opsem op (a1 state point) n))
   | Not f1 -> let a1 = cache f1 in Fun (fun state point -> valNot (a1 state point))

@@ -2,9 +2,13 @@ Model "bmpdot:KRIPKE=kripke.dot,SPACE=test";
 
 Let green = [green == 255 ] & [red == 0] & [blue == 0];
 Let red =  [red == 255] & [green == 0 ] & [blue == 0];
+Let blue = [red == 0] & [green == 0] & [blue == 255];
 Let white = [ green == 255] & [red == 255] & [blue == 255];
 
-Output "out";
 
-Check "blue" MAXVOL red;
+Output "output/out";
+
+//Check "orange" MAXVOL red;
+Check "magenta" MAXVOL blue;
+
 
