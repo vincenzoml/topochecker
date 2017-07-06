@@ -135,6 +135,8 @@ let load_bmpdot_model bindings =
   Model.H.add eval (Logic.Prop "red") (fun state point -> let (x,y) = TcUtil.coords_of_int_2d point space#dims.(0) in float_of_int (Rgb24.get images.(state) x y).r);
   Model.H.add eval (Logic.Prop "green") (fun state point -> let (x,y) = TcUtil.coords_of_int_2d point space#dims.(0) in float_of_int (Rgb24.get images.(state) x y).g);
   Model.H.add eval (Logic.Prop "blue") (fun state point -> let (x,y) = TcUtil.coords_of_int_2d point space#dims.(0) in float_of_int (Rgb24.get images.(state) x y).b);
+  Model.H.add eval (Logic.Prop "x") (fun state point -> let (x,y) = TcUtil.coords_of_int_2d point space#dims.(0) in float_of_int x);
+  Model.H.add eval (Logic.Prop "y") (fun state point -> let (x,y) = TcUtil.coords_of_int_2d point space#dims.(0) in float_of_int y);
   
   { Model.kripke = kripke;
     Model.hash_and_cache = TcUtil.mapO (fun x -> (x,Model.H.create 1)) hash;

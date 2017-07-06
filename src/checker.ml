@@ -66,12 +66,10 @@ let compute model =
        for state = 0 to num_states - 1 do
 	 let max = ref 0 in	 
 	 Array1.fill stack 0;
-	 TcUtil.debug (Printf.sprintf "first: %d %d" (Array1.unsafe_get stack 0) (Array1.unsafe_get stack 2288));
          for point = 0 to num_points - 1 do
            let ncc = int_of_float (a state point) in
            if ncc > 0 then
              let n = (Array1.unsafe_get stack (ncc-1)) + 1 in
-	     (*     TcUtil.debug (Printf.sprintf "before: ncc: %d n: %d" ncc n); *)
              Array1.unsafe_set stack (ncc-1) n;         
              if n > !max then max := n
          done;
@@ -80,7 +78,6 @@ let compute model =
 	   if ncc > 0 then
 	     let n = Array1.unsafe_get stack (ncc - 1) in
 	     let b = (n = !max) in
-	     (*	     TcUtil.debug (Printf.sprintf "state: %d point: %d max: %d ncc: %d n: %d b: %b" state point !max ncc n b); *)
 	     Array2.set slice state point (ofBool b) 
 	 done
        done)
