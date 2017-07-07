@@ -9,12 +9,13 @@ mkmodel: mkmodel.ml
 	ocamlopt.opt str.cmxa graphics.cmxa mkmodel.ml -o mkmodel	
 
 %: %.bz2
-	bunzip2 -k $<
+	bunzip2 -fk $<
+#	touch $@
 
-output: preprocess.sh input/* input/Stops-UK.csv
+output: preprocess.sh input/Stops-UK.csv
 	./preprocess.sh
 
 clean:
-	rm -f *~ \#* mkmodel *.cmi *.cmx *.o mkmodel.mli input/Stops-UK.csv
+	rm -f *~ \#* mkmodel *.cmi *.cmx *.o mkmodel.mli
 	rm -rf output
 

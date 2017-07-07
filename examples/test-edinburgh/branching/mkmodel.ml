@@ -1,8 +1,6 @@
 type coord = { lat : float; long : float }
 type position = { coord : coord; time : int; bus : int }
 type bin = { stops : coord list ref; buses : position list ref; idx : int }
-(* type result = { step : int; status : position list; next : result list }   *)
-
 type 'a tree = { node : 'a;  next : ('a tree) list }
   
 let inbox coord (pos1,pos2) = coord.lat >= pos1.lat && coord.lat < pos2.lat && coord.long >= pos1.long && coord.long < pos2.long
@@ -78,7 +76,7 @@ let load_box filename =
      
 let ((minbox,maxbox),meterslat,meterslong) = load_box "input/box.txt"
 let (deltalat,deltalong) = (maxbox.lat -. minbox.lat,maxbox.long -. minbox.long) 
-let (reslattarget,reslongtarget) = (20.0,20.0) 
+let (reslattarget,reslongtarget) = (5.0,5.0) 
 let (nbinslatf,nbinslongf) = (meterslat /. reslattarget,meterslong/.reslongtarget) 
 let (nbinslat,nbinslong) = (int_of_float nbinslatf,int_of_float nbinslongf) 
 
@@ -88,7 +86,7 @@ let meters coord =
     
 let bins = Array.init (nbinslat * nbinslong)
   (fun idx -> { stops = ref []; buses = ref []; idx = idx }) 
-
+         
 let findbin coord =
   let (disclat,disclong) =
     (int_of_float (floor (((coord.lat -. minbox.lat) /. deltalat) *.
@@ -97,7 +95,7 @@ let findbin coord =
 			     (float_of_int nbinslong))))
   in
   (disclat + (disclong * nbinslat))      
-      
+  
 (* Load stops *)
 let stops = load_stops "output/stops.csv" (minbox,maxbox) 
  
@@ -120,8 +118,8 @@ let buses =
 (* Populate bins *)
 let _ =
   List.iter (fun pos -> let r = bins.(findbin pos.coord).buses in r := pos::!r) buslst; (* do we need this? *)
-  List.iter (fun coord -> let r = bins.(findbin coord).stops in r := coord::!r) stops
-
+  List.iter (fun coord -> let r = bins.(findbin coord).stops in r := coord::!r) stops;
+  
 let rec select time delay deltat path acc =
   match path with
     [] -> List.rev acc
@@ -145,7 +143,7 @@ let bumpsinto bins time deltat deltas (bus1,path1,delay1) (bus2,path2,delay2) =
        pos1.time + delay1 < time + deltat &&
        List.exists (fun pos -> (metricdist pos1.coord pos.coord) < deltas)
        (select time delay2 deltat path2 [])       
-       
+    
 let mkresult timestep waittime deltat deltas buses =
   let rec fn time busdelays =
     if List.for_all (fun ((bus,path),delay) -> path = []) busdelays
@@ -185,7 +183,26 @@ let mkresult timestep waittime deltat deltas buses =
 	   List.map (fn (time + 1)) futures }
   in      
   fn 0 (List.map (fun (bus,path) -> ((bus,path),0)) buses)
+
+type busstate = { spos : coord; past : coord list; future : coord list; delay : int }
+
+type systemstate = (int,busstate) Hashtable.t
+
+let update : int -> (busstate -> busstate) -> systemstate -> systemstate =
+  fun bus -> fn -> st ->
+  let bt = Hashtbl.find st bus in
+  Hashtbl.replace st bus (fn bt)
+
+let clumps : int -> int -> float -> busstate -> busstate -> bool =
+  fun duration deltat deltas bst1 bst2 ->
   
+  
+let simstep : int -> int -> int -> int -> systemstate -> systemstate list =
+  fun time timestep waittime duration deltat deltas state ->
+  if 
+  
+    
+              
 let _ = mkresult 60 180 60 10.0 buses 
 
 
