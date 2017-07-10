@@ -120,188 +120,115 @@ let _ =
   List.iter (fun pos -> let r = bins.(findbin pos.coord).buses in r := pos::!r) buslst; (* do we need this? *)
   List.iter (fun coord -> let r = bins.(findbin coord).stops in r := coord::!r) stops;
   
-let rec select time delay deltat path acc =
-  match path with
-    [] -> List.rev acc
-  | pos::posn ->
-     if pos.time + delay >= time + deltat
-     then acc
-     else select time delay deltat posn (pos::acc)
-
 let metricdist coord1 coord2 =
   let (m1x,m1y) = meters coord1 in
   let (m2x,m2y) = meters coord2 in
   sqrt (((m1x -. m2x)**2.) +. (m1y -. m2y)**2.)
     
-let bumpsinto bins time deltat deltas (bus1,path1,delay1) (bus2,path2,delay2) =
-  match (path1,path2) with
-    (([],_)|(_,[])) -> false
-  | (pos1::posn1,pos2::posn2) ->
-     !(bins.(findbin pos1.coord).stops) <> [] &&
-     bus1 <> bus2 &&
-       pos1.time + delay1 >= time &&
-       pos1.time + delay1 < time + deltat &&
-       List.exists (fun pos -> (metricdist pos1.coord pos.coord) < deltas)
-       (select time delay2 deltat path2 [])       
+type bus = int
     
-let mkresult timestep waittime deltat deltas buses =
-  let rec fn time busdelays =
-    if List.for_all (fun ((bus,path),delay) -> path = []) busdelays
-    then { node = (time,busdelays); next = [] }
-    else
-       let partials =
-	 List.concat 
-	   (List.map
-	      (fun ((bus,path),delay) ->
-		match path with
-		  [] -> []
-		| pos::posn ->
-		   if pos.time + delay < (time * timestep)
-		   then
-		     (if List.exists
-			 (fun ((bus',path'),delay') ->
-			   bumpsinto bins time deltat deltas
-			     (bus,path,delay) (bus',path',delay'))		   
-			busdelays
-		      then [((bus,posn),delay);((bus,posn),delay+waittime)]
-		      else [((bus,posn),delay)])
-		   else [((bus,path),delay)])
-	      busdelays)
-       in
-       { node = (time,busdelays);
-	 next =
-	   let futures =
-	     List.map
-	       (fun ((bus,path),delay) ->
-		 List.map (fun ((bus',path'),delay') ->
-		   if bus = bus'
-		   then ((bus,path),delay)
-		   else ((bus',path'),delay'))
-		   busdelays)
-	       partials
-	   in	  
-	   List.map (fn (time + 1)) futures }
-  in      
-  fn 0 (List.map (fun (bus,path) -> ((bus,path),0)) buses)
+module M = Map.Make (bus)
+    
+type busstate = { past : coord list; future : pos list; delay : int }
 
-type busstate = { spos : coord; past : coord list; future : coord list; delay : int }
-
-type systemstate = (int,busstate) Hashtable.t
-
-let update : int -> (busstate -> busstate) -> systemstate -> systemstate =
+type systemstate = busstate M.t
+  
+let update : bus -> (busstate -> busstate) -> systemstate -> systemstate =
   fun bus -> fn -> st ->
-  let bt = Hashtbl.find st bus in
-  Hashtbl.replace st bus (fn bt)
+    try
+      M.add st bus (fn (M.find bus))
+    with
+      Not_found -> st
 
-let clumps : int -> int -> float -> busstate -> busstate -> bool =
-  fun duration deltat deltas bst1 bst2 ->
-  
-  
-let simstep : int -> int -> int -> int -> systemstate -> systemstate list =
-  fun time timestep waittime duration deltat deltas state ->
-  if 
-  
-    
-              
-let _ = mkresult 60 180 60 10.0 buses 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
-(*
-  let paths =
-  List.map
-  (fun (bus,poss) ->
-  { busno = bus;
-  delay = 0;
-  steps = 
-  List.rev
-  (List.fold_left
-  (fun path pos ->
-  { bin = findbin pos.coord;
-  stime = bus.time}::path) [] poss) })
-	buses
-  in
-*)
-    
-
-
-(*
-    let indeltat t deltat path =
-      let rec fn steps acc =
-	match steps with
-	  [] -> List.rev acc
-	| step::steps' ->
-	   if path.delay + step.stime > (t+deltat)
-	   then List.rev acc
-	   else fn steps' (step::acc)
-      in
-    
-    let generateModel paths step delay deltat =
-      let tstart =
-	List.fold_left
-	  (fun m (bus,steps) ->
-	    match steps with
-	      [] -> m
-	    | x::xs -> min (x.stime + x.delay) m) buses in
-
-      let concatmap fn l = List.concat (List.map fn l) in
-
-      let rec core t step deltat delay choices =
-	let choices' =
-	  concatmap 
-	    (fun paths ->
-	       let choices' =
-		 List.map
-		   (fun path ->
-		     if (path.steps <> []) &&
-		       (List.exists
-			  (fun path' ->
-			    (path'.busno <> path.busno) && (has_conflict path path' t ))
-			  paths)
-		     then [choices;
-		     )
-		   choices)
-	     choices)
-	in if newchoices = [] then choices else core t+step deltat newchoices
-      in
-      core 0 step deltat [paths]
+let mapa : (busstate -> 'a) -> systemstate -> 'a list =  
+  fun fn st ->
+    let r = ref [] in
+    M.iter (fun busstate -> r := (fn busstate)::!r) st;
+    List.rev !r
+      
+let map : (busstate -> busstate) -> systemstate -> systemstate = M.map      
 	
-*)
+let rec splitwhile f (past,future) =
+  match future with
+    [] -> (past,[])
+  | x::xs ->
+     if f x
+     then split f (x::past,xs)
+     else (past,future)
+       
+
+let rec taken n list = (* first n elements *)
+  if n <= 0 then []
+  else match list with
+    [] -> []
+  | x::xs -> x::(taken (n-1) xs)
+
+let rec sublist n m list = (* n-th to m-th element, boundaries included *)
+  match list with
+    [] -> []
+  | x::xs ->
+     if n <= 0
+     then taken (m+1) list
+     else sublist (n-1) (m-1) xs
+       
+let clumps : int -> int -> float -> coord list -> coord list -> bool =
+  fun duration deltat deltas delay1 past1 delay2 past2 ->
+    if past1 <> [] && past2 <> [] && !(bins.(findbin (List.head past1)).stops) <> []
+    then
+      let past1' = sublist 0 duration past1 in
+      let past2' = sublist deltat (duration + deltat) past2 in
+      let l = List.combine past1' past2' in
+      if List.length l <> duration then Printf.printf "debug: notgood\n%!";
+      List.length l = duration && 
+	  List.forall (fun (pos1,pos2) -> metricdist pos1 pos2 <= deltas) l
+    else false
+
+let avgpos : position list -> coord =
+  fun pl ->
+    assert (pl <> []);
+    let bus = (List.head pl).bus in
+    let (slat,slong,stime,len) = List.fold_left
+      (fun (slat,slong,len) pos -> (slat +. coord.pos.lat,slong +. coord.pos.long,len+.1)) (0.0,0.0,0.0) in
+    { lat = slat /. len;
+      long = slong /. len }
+	
+let simstep : int -> int -> int -> int -> int -> float -> systemstate -> systemstate list =
+  fun time timestep waittime duration deltat deltas state ->    
+    let tmpstate =
+      map
+	(fun bst ->
+	  let (p,f) =
+	    splitwhile
+	      (fun pos -> bst.delay + (pos.time / 60) < time + timestep)
+	      bst.future
+	  in
+	  { bus with
+	    past =
+	      (match p with
+		[] ->
+		  (match bus.past with
+		    [] -> []
+		  | pos::posn -> pos::pos::posn )
+	      | _ -> (avgpos p)::bst.past);
+	    future = f })
+	state
+    in
+    tmpstate::(filtermap
+	(fun bst ->
+	  if List.exists
+	    (fun bst' -> bst'.bus <> bst.bus &&
+	      clumps duration deltat deltas bst.past bst'.past)
+	    state
+	  then { bst with delay = delay + waittime }
+	  else bst)
+	state)
+
+let sim : int -> int -> int -> int -> int -> int -> float -> systemstate -> systemstate tree =
+  fun maxtime timestep waittime duration deltat deltas init ->
+    let rec fn time state =
+	{ node = state;
+	  next = if time < maxtime then List.map (fn (time + timestep)) (simstep time timestep waittime duration deltat deltas state) else []}
+    in
+    fn 0 init          
+    
+(* let _ = sim (24 * 60) 1 5 3 1 10.0 (mkinit buses) *)
