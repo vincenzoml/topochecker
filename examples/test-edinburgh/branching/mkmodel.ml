@@ -107,8 +107,7 @@ let stops = load_stops "output/stops.csv" (minbox,maxbox)
 let buslst = load_buses "output/buses.csv" "2014-01-30" (minbox,maxbox) 
 
 let buses =
-  let h = Hashtbl.create 10 in
-  List.iter (fun pos ->
+  List.fold_left (fun pos st ->
     let r =
       try Hashtbl.find h pos.bus
       with _ -> (let r = ref [] in Hashtbl.add h pos.bus r; r)
@@ -118,7 +117,8 @@ let buses =
   let l = Hashtbl.fold
     (fun bus r l -> (bus,(List.sort (fun pos1 pos2 -> compare pos1.time pos2.time) !r))::l) h [] in
   List.sort (fun (bus1,_) (bus2,_) -> compare bus1 bus2) l	
-        
+*) 
+       
 (* Populate bins *)
 let _ =
   List.iter (fun pos -> let r = bins.(findbin pos.coord).buses in r := pos::!r) buslst; (* do we need this? *)
@@ -136,8 +136,15 @@ let update : bus -> (busstate -> busstate) -> systemstate -> systemstate =
     with
       Not_found -> st
       
-let map : (busstate -> busstate) -> systemstate -> systemstate = M.map      
-	
+let map : (busstate -> busstate) -> systemstate -> systemstate = M.map
+
+let mapl : (busstate -> 'a) -> systemstate -> 'a list =
+  fun fn st -> 
+    List.rev (M.fold (fun busno bst acc -> (fn bst)::acc) st [])
+
+let exists : (busstate -> bool) -> systemstate -> bool =
+  fun fn st -> M.exists (fun busno bst -> fn bst) st
+      
 let rec splitwhile f (past,future) =
   match future with
     [] -> (past,[])
@@ -183,7 +190,10 @@ let avgpos : coord list -> coord =
     in
     { lat = slat /. len;
       long = slong /. len }
-	
+
+let replace : busstate -> systemstate -> systemstate =
+  fun bst st -> M.add bst.bus bst (M.remove bst.bus st) 
+      
 let simstep : int -> int -> int -> int -> int -> float -> systemstate -> systemstate list =
   fun time timestep waittime duration deltat deltas state -> 
     let tmpstate =
@@ -205,18 +215,19 @@ let simstep : int -> int -> int -> int -> int -> float -> systemstate -> systems
 	    future = f })
 	state
     in
-    tmpstate::(map
+    tmpstate::(
+      mapl
 	(fun bst ->
-	  if List.exists
-	       (fun bst' ->
-                 bst'.bus <> bst.bus &&
-	           clumps duration deltat deltas bst.past bst'.past)
+	  if exists
+	    (fun bst' ->
+              bst'.bus <> bst.bus &&
+	        clumps duration deltat deltas bst.past bst'.past)
 	    state
-	  then { bst with delay = delay + waittime }
-	  else bst)
+	  then replace { bst with delay = bst.delay + waittime } tmpstate
+	  else replace bst tmpstate)
 	state)
-
-let sim : int -> int -> int -> int -> int -> int -> float -> systemstate -> systemstate tree =
+      
+let sim : int -> int -> int -> int -> int -> float -> systemstate -> systemstate tree =
   fun maxtime timestep waittime duration deltat deltas init ->
     let rec fn time state =
 	{ node = state;
