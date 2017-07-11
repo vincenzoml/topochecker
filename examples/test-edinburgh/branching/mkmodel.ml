@@ -1,7 +1,11 @@
+type bus = int
 type coord = { lat : float; long : float }
-type position = { coord : coord; time : int; bus : int }
+type position = { coord : coord; time : int; bus : bus }
 type bin = { stops : coord list ref; buses : position list ref; idx : int }
 type 'a tree = { node : 'a;  next : ('a tree) list }
+module M = Map.Make(struct type t = bus let compare = compare end)
+type busstate = { past : coord list; future : position list; delay : int; bus : int }
+type systemstate = busstate M.t
   
 let inbox coord (pos1,pos2) = coord.lat >= pos1.lat && coord.lat < pos2.lat && coord.long >= pos1.long && coord.long < pos2.long
 let minutes hour minute second = ((int_of_string hour) * 60 * 60) + ((int_of_string minute) * 60) + (int_of_string second)
@@ -118,33 +122,19 @@ let buses =
 (* Populate bins *)
 let _ =
   List.iter (fun pos -> let r = bins.(findbin pos.coord).buses in r := pos::!r) buslst; (* do we need this? *)
-  List.iter (fun coord -> let r = bins.(findbin coord).stops in r := coord::!r) stops;
+  List.iter (fun coord -> let r = bins.(findbin coord).stops in r := coord::!r) stops
   
 let metricdist coord1 coord2 =
   let (m1x,m1y) = meters coord1 in
   let (m2x,m2y) = meters coord2 in
   sqrt (((m1x -. m2x)**2.) +. (m1y -. m2y)**2.)
-    
-type bus = int
-    
-module M = Map.Make (bus)
-    
-type busstate = { past : coord list; future : pos list; delay : int }
-
-type systemstate = busstate M.t
-  
+      
 let update : bus -> (busstate -> busstate) -> systemstate -> systemstate =
-  fun bus -> fn -> st ->
+  fun bus fn st ->
     try
-      M.add st bus (fn (M.find bus))
+      M.add bus (fn (M.find bus st)) st
     with
       Not_found -> st
-
-let mapa : (busstate -> 'a) -> systemstate -> 'a list =  
-  fun fn st ->
-    let r = ref [] in
-    M.iter (fun busstate -> r := (fn busstate)::!r) st;
-    List.rev !r
       
 let map : (busstate -> busstate) -> systemstate -> systemstate = M.map      
 	
@@ -153,7 +143,7 @@ let rec splitwhile f (past,future) =
     [] -> (past,[])
   | x::xs ->
      if f x
-     then split f (x::past,xs)
+     then splitwhile f (x::past,xs)
      else (past,future)
        
 
@@ -172,52 +162,55 @@ let rec sublist n m list = (* n-th to m-th element, boundaries included *)
      else sublist (n-1) (m-1) xs
        
 let clumps : int -> int -> float -> coord list -> coord list -> bool =
-  fun duration deltat deltas delay1 past1 delay2 past2 ->
-    if past1 <> [] && past2 <> [] && !(bins.(findbin (List.head past1)).stops) <> []
+  fun duration deltat deltas past1 past2 ->
+    if past1 <> [] && past2 <> [] && !(bins.(findbin (List.hd past1)).stops) <> []
     then
       let past1' = sublist 0 duration past1 in
       let past2' = sublist deltat (duration + deltat) past2 in
       let l = List.combine past1' past2' in
       if List.length l <> duration then Printf.printf "debug: notgood\n%!";
       List.length l = duration && 
-	  List.forall (fun (pos1,pos2) -> metricdist pos1 pos2 <= deltas) l
+	  List.for_all (fun (pos1,pos2) -> metricdist pos1 pos2 <= deltas) l
     else false
 
-let avgpos : position list -> coord =
+let avgpos : coord list -> coord =
   fun pl ->
-    assert (pl <> []);
-    let bus = (List.head pl).bus in
-    let (slat,slong,stime,len) = List.fold_left
-      (fun (slat,slong,len) pos -> (slat +. coord.pos.lat,slong +. coord.pos.long,len+.1)) (0.0,0.0,0.0) in
+    let (slat,slong,len) =
+      List.fold_left
+        (fun (slat,slong,len) pos -> (slat +. pos.lat,slong +. pos.long,len+.1.))
+        (0.0,0.0,0.0)
+        pl
+    in
     { lat = slat /. len;
       long = slong /. len }
 	
 let simstep : int -> int -> int -> int -> int -> float -> systemstate -> systemstate list =
-  fun time timestep waittime duration deltat deltas state ->    
+  fun time timestep waittime duration deltat deltas state -> 
     let tmpstate =
       map
 	(fun bst ->
 	  let (p,f) =
 	    splitwhile
 	      (fun pos -> bst.delay + (pos.time / 60) < time + timestep)
-	      bst.future
+	      ([],bst.future)
 	  in
-	  { bus with
+	  { bst with
 	    past =
 	      (match p with
 		[] ->
-		  (match bus.past with
+		  (match bst.past with
 		    [] -> []
 		  | pos::posn -> pos::pos::posn )
-	      | _ -> (avgpos p)::bst.past);
+	       | _ -> (avgpos (List.map (fun x -> x.coord) p))::bst.past);
 	    future = f })
 	state
     in
-    tmpstate::(filtermap
+    tmpstate::(map
 	(fun bst ->
 	  if List.exists
-	    (fun bst' -> bst'.bus <> bst.bus &&
-	      clumps duration deltat deltas bst.past bst'.past)
+	       (fun bst' ->
+                 bst'.bus <> bst.bus &&
+	           clumps duration deltat deltas bst.past bst'.past)
 	    state
 	  then { bst with delay = delay + waittime }
 	  else bst)
@@ -227,7 +220,9 @@ let sim : int -> int -> int -> int -> int -> int -> float -> systemstate -> syst
   fun maxtime timestep waittime duration deltat deltas init ->
     let rec fn time state =
 	{ node = state;
-	  next = if time < maxtime then List.map (fn (time + timestep)) (simstep time timestep waittime duration deltat deltas state) else []}
+	  next = if time < maxtime
+                 then List.map (fn (time + timestep)) (simstep time timestep waittime duration deltat deltas state)
+                 else []}
     in
     fn 0 init          
     
