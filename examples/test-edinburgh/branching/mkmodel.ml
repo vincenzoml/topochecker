@@ -4,7 +4,7 @@ type position = { coord : coord; time : int; bus : bus }
 type bin = { stops : coord list ref; buses : position list ref; idx : int }
 type 'a tree = { node : 'a;  next : ('a tree) list }
 module M = Map.Make(struct type t = bus let compare = compare end)
-type busstate = { past : coord list; future : position list; delay : int; bus : int }
+type busstate = { past : coord list; future : position list; delay : int; busid : int }
 type systemstate = busstate M.t
   
 let inbox coord (pos1,pos2) = coord.lat >= pos1.lat && coord.lat < pos2.lat && coord.long >= pos1.long && coord.long < pos2.long
@@ -107,18 +107,19 @@ let stops = load_stops "output/stops.csv" (minbox,maxbox)
 let buslst = load_buses "output/buses.csv" "2014-01-30" (minbox,maxbox) 
 
 let buses =
-  List.fold_left (fun pos st ->
-    let r =
-      try Hashtbl.find h pos.bus
-      with _ -> (let r = ref [] in Hashtbl.add h pos.bus r; r)
-    in
-    r := pos::!r)
-    buslst;      
+  let h = Hashtbl.create 10 in
+  List.iter (fun pos ->
+      let r =
+	try Hashtbl.find h pos.bus
+	with _ -> (let r = ref [] in Hashtbl.add h pos.bus r; r)
+      in
+      r := pos::!r)
+	    buslst;      
   let l = Hashtbl.fold
-    (fun bus r l -> (bus,(List.sort (fun pos1 pos2 -> compare pos1.time pos2.time) !r))::l) h [] in
-  List.sort (fun (bus1,_) (bus2,_) -> compare bus1 bus2) l	
-*) 
-       
+            (fun bus r l -> (bus,(List.sort (fun pos1 pos2 -> compare pos1.time pos2.time) !r))::l) h [] in
+  let sorted = List.sort (fun (bus1,_) (bus2,_) -> compare bus1 bus2) l in
+  List.fold_left (fun st (bus,future) -> M.add bus { past = []; future = future; delay = 0; busid = bus } st) M.empty sorted
+  
 (* Populate bins *)
 let _ =
   List.iter (fun pos -> let r = bins.(findbin pos.coord).buses in r := pos::!r) buslst; (* do we need this? *)
@@ -174,10 +175,11 @@ let clumps : int -> int -> float -> coord list -> coord list -> bool =
     then
       let past1' = sublist 0 duration past1 in
       let past2' = sublist deltat (duration + deltat) past2 in
-      let l = List.combine past1' past2' in
-      if List.length l <> duration then Printf.printf "debug: notgood\n%!";
-      List.length l = duration && 
-	  List.for_all (fun (pos1,pos2) -> metricdist pos1 pos2 <= deltas) l
+      if List.length past1' <> List.length past2'
+      then false
+      else 
+        let l = List.combine past1' past2' in
+	List.for_all (fun (pos1,pos2) -> metricdist pos1 pos2 <= deltas) l
     else false
 
 let avgpos : coord list -> coord =
@@ -192,7 +194,7 @@ let avgpos : coord list -> coord =
       long = slong /. len }
 
 let replace : busstate -> systemstate -> systemstate =
-  fun bst st -> M.add bst.bus bst (M.remove bst.bus st) 
+  fun bst st -> M.add bst.busid bst (M.remove bst.busid st) 
       
 let simstep : int -> int -> int -> int -> int -> float -> systemstate -> systemstate list =
   fun time timestep waittime duration deltat deltas state -> 
@@ -220,7 +222,7 @@ let simstep : int -> int -> int -> int -> int -> float -> systemstate -> systems
 	(fun bst ->
 	  if exists
 	    (fun bst' ->
-              bst'.bus <> bst.bus &&
+              bst'.busid <> bst.busid &&
 	        clumps duration deltat deltas bst.past bst'.past)
 	    state
 	  then replace { bst with delay = bst.delay + waittime } tmpstate
@@ -229,12 +231,15 @@ let simstep : int -> int -> int -> int -> int -> float -> systemstate -> systems
       
 let sim : int -> int -> int -> int -> int -> float -> systemstate -> systemstate tree =
   fun maxtime timestep waittime duration deltat deltas init ->
-    let rec fn time state =
-	{ node = state;
-	  next = if time < maxtime
-                 then List.map (fn (time + timestep)) (simstep time timestep waittime duration deltat deltas state)
-                 else []}
-    in
-    fn 0 init          
-    
-(* let _ = sim (24 * 60) 1 5 3 1 10.0 (mkinit buses) *)
+  let rec fn time state =
+  Printf.printf "time: %d\n%!" time;  
+    { node = state;
+      next = if time < maxtime
+             then List.map (fn (time + timestep)) (simstep time timestep waittime duration deltat deltas state)
+             else []}
+  in
+  fn 0 init          
+  
+let _ = sim (24 * 60) 1 5 3 1 10.0 buses 
+
+      
