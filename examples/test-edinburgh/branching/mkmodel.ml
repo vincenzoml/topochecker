@@ -1,11 +1,18 @@
 type bus = int
 type coord = { lat : float; long : float }
 type position = { coord : coord; time : int; bus : bus }
+
 type bin = { stops : coord list ref; buses : position list ref; idx : int }
-type 'a tree = { node : 'a;  next : ('a tree) list }
 module M = Map.Make(struct type t = bus let compare = compare end)
 type busstate = { past : coord list; future : position list; delay : int; busid : int }
 type systemstate = busstate M.t
+let mtake1 l = match l with [] -> [] | x::xs -> [x]
+let compare_sst st1 st2 =
+  let filter_st (busno,bst) = (busno,mtake1 bst.past,bst.delay) in
+  compare (List.map filter_st (M.bindings st1)) (List.map filter_st (M.bindings st2))
+    
+module N = Map.Make(struct type t = systemstate let compare = compare_sst end)
+type 'a tree = { node : 'a;  next : (('a tree) ref) list }
   
 let inbox coord (pos1,pos2) = coord.lat >= pos1.lat && coord.lat < pos2.lat && coord.long >= pos1.long && coord.long < pos2.long
 let minutes hour minute second = ((int_of_string hour) * 60 * 60) + ((int_of_string minute) * 60) + (int_of_string second)
@@ -51,7 +58,8 @@ let load_stops filename box =
           [latitude;longitude] ->
 	    let coord = { lat = float_of_string latitude;
 			  long = float_of_string longitude } in
-	    if inbox coord box then 
+	    if inbox coord box then
+	      Printf.printf "stop found\n%!";
               result := coord :: !result
         | _ -> raise
 	   (Failure
@@ -80,10 +88,12 @@ let load_box filename =
      
 let ((minbox,maxbox),meterslat,meterslong) = load_box "input/box.txt"
 let (deltalat,deltalong) = (maxbox.lat -. minbox.lat,maxbox.long -. minbox.long) 
-let (reslattarget,reslongtarget) = (5.0,5.0) 
-let (nbinslatf,nbinslongf) = (meterslat /. reslattarget,meterslong/.reslongtarget) 
+let (reslattarget,reslongtarget) = (15000.0,15000.0) 
+let (nbinslatf,nbinslongf) = (max 1.0 (meterslat /. reslattarget),max 1.0 (meterslong/.reslongtarget)) 
 let (nbinslat,nbinslong) = (int_of_float nbinslatf,int_of_float nbinslongf) 
 
+let _ = Printf.printf "nbinslat: %d nbinslong: %d\n%!" nbinslat nbinslong
+  
 let meters coord =
   (((coord.lat -. minbox.lat) /. deltalat) *. meterslat,
    ((coord.long -. minbox.long) /. deltalong) *. meterslong)
@@ -121,9 +131,8 @@ let buses =
   List.fold_left (fun st (bus,future) -> M.add bus { past = []; future = future; delay = 0; busid = bus } st) M.empty sorted
   
 (* Populate bins *)
-let _ =
-  List.iter (fun pos -> let r = bins.(findbin pos.coord).buses in r := pos::!r) buslst; (* do we need this? *)
-  List.iter (fun coord -> let r = bins.(findbin coord).stops in r := coord::!r) stops
+let _ = List.iter (fun pos -> let r = bins.(findbin pos.coord).buses in r := pos::!r) buslst
+(* (* do we need this? *)  List.iter (fun coord -> let r = bins.(findbin coord).stops in r := coord::!r) stops *)
   
 let metricdist coord1 coord2 =
   let (m1x,m1y) = meters coord1 in
@@ -139,9 +148,9 @@ let update : bus -> (busstate -> busstate) -> systemstate -> systemstate =
       
 let map : (busstate -> busstate) -> systemstate -> systemstate = M.map
 
-let mapl : (busstate -> 'a) -> systemstate -> 'a list =
+let mapl : (busstate -> 'a option) -> systemstate -> 'a list =
   fun fn st -> 
-    List.rev (M.fold (fun busno bst acc -> (fn bst)::acc) st [])
+    List.rev (M.fold (fun busno bst acc -> match (fn bst) with Some x -> x::acc | None -> acc) st [])
 
 let exists : (busstate -> bool) -> systemstate -> bool =
   fun fn st -> M.exists (fun busno bst -> fn bst) st
@@ -170,7 +179,7 @@ let rec sublist n m list = (* n-th to m-th element, boundaries included *)
      else sublist (n-1) (m-1) xs
        
 let clumps : int -> int -> float -> coord list -> coord list -> bool =
-  fun duration deltat deltas past1 past2 ->
+  fun duration deltat deltas past1 past2 -> 
     if past1 <> [] && past2 <> [] && !(bins.(findbin (List.hd past1)).stops) <> []
     then
       let past1' = sublist 0 duration past1 in
@@ -180,7 +189,7 @@ let clumps : int -> int -> float -> coord list -> coord list -> bool =
       else 
         let l = List.combine past1' past2' in
 	List.for_all (fun (pos1,pos2) -> metricdist pos1 pos2 <= deltas) l
-    else false
+      else false 
 
 let avgpos : coord list -> coord =
   fun pl ->
@@ -196,8 +205,8 @@ let avgpos : coord list -> coord =
 let replace : busstate -> systemstate -> systemstate =
   fun bst st -> M.add bst.busid bst (M.remove bst.busid st) 
       
-let simstep : int -> int -> int -> int -> int -> float -> systemstate -> systemstate list =
-  fun time timestep waittime duration deltat deltas state -> 
+let simstep : int -> int -> int -> int -> int -> float -> int -> systemstate -> systemstate list =
+  fun time timestep waittime duration deltat deltas maxdelay state -> 
     let tmpstate =
       map
 	(fun bst ->
@@ -218,28 +227,47 @@ let simstep : int -> int -> int -> int -> int -> float -> systemstate -> systems
 	state
     in
     tmpstate::(
-      mapl
+      let x = mapl
 	(fun bst ->
-	  if exists
-	    (fun bst' ->
-              bst'.busid <> bst.busid &&
-	        clumps duration deltat deltas bst.past bst'.past)
-	    state
-	  then replace { bst with delay = bst.delay + waittime } tmpstate
-	  else replace bst tmpstate)
-	state)
+	  if bst.delay < maxdelay
+	    && 
+	      exists
+	      (fun bst' ->
+		bst'.busid <> bst.busid &&
+	          let t = clumps duration deltat deltas bst.past bst'.past in
+		  if t then Printf.printf "clumps!\n%!";
+		  t
+	      )
+	      state
+	  then Some (replace { bst with delay = bst.delay + waittime } tmpstate)
+	  else None)
+	state
+      in
+      if List.length x > 0 then Printf.printf "length: %d\n%!" (List.length x); x)
       
-let sim : int -> int -> int -> int -> int -> float -> systemstate -> systemstate tree =
-  fun maxtime timestep waittime duration deltat deltas init ->
-  let rec fn time state =
-  Printf.printf "time: %d\n%!" time;  
-    { node = state;
-      next = if time < maxtime
-             then List.map (fn (time + timestep)) (simstep time timestep waittime duration deltat deltas state)
-             else []}
-  in
-  fn 0 init          
-  
-let _ = sim (24 * 60) 1 5 3 1 10.0 buses 
+let sim : int -> int -> int -> int -> int -> float -> int -> systemstate -> systemstate tree ref =
+  fun maxtime timestep waittime duration deltat deltas maxdelay init ->
+    let rec fn visited time state =
+      Printf.printf "time: %d\n%!" time;
+(*      try (* THIS IS NEEDED TO DETECT LOOPS; DO WE NEED THAT? *)
+	let x = N.find state visited in Printf.printf "loop\n%!"; x
+	with Not_found -> *)
+      let r = ref { node = state; next = []} in
+      let tree =
+	{ node = state;
+	  next =
+	    if time <= maxtime
+	    then
+	      List.map
+		(fn (N.add state r visited) (time + timestep))
+		(simstep time timestep waittime duration deltat deltas maxdelay state)
+	    else []}
+      in
+      r := tree;
+      r
+    in
+    fn N.empty 0 init          
+      
+let _ = sim (24 * 60) 1 5 1 10 10.0 15 buses  
 
       

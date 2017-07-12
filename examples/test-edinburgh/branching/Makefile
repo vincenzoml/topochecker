@@ -1,3 +1,5 @@
+mkmodel: mkmodel.ml
+	ocamlopt.opt str.cmxa graphics.cmxa mkmodel.ml -o mkmodel	
 
 run: mkmodel output
 	./mkmodel
@@ -5,8 +7,6 @@ run: mkmodel output
 mli: mkmodel.ml
 	ocamlopt.opt -i str.cmxa graphics.cmxa mkmodel.ml
 
-mkmodel: mkmodel.ml
-	ocamlopt.opt str.cmxa graphics.cmxa mkmodel.ml -o mkmodel	
 
 %: %.bz2
 	bunzip2 -fk $<
