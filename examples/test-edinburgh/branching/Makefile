@@ -1,21 +1,29 @@
-mkmodel: mkmodel.ml
-	ocamlopt.opt str.cmxa graphics.cmxa mkmodel.ml -o mkmodel	
+OCAMLBUILD=ocamlbuild -use-ocamlfind -pkg camlimages,camlimages.all_formats -pkg str
 
-run: mkmodel output
-	./mkmodel
+mkmodel: mkmodel.ml
+	$(OCAMLBUILD) mkmodel.native && cp -af _build/mkmodel.native mkmodel
+
+model/edinburgh.dot: mkmodel output/stops.csv 
+	@mkdir -p model
+	@mkdir -p mc_output
+	@./mkmodel
+
+check: model/edinburgh.dot
+	../../../src/topochecker experiment.topochecker
 
 mli: mkmodel.ml
-	ocamlopt.opt -i str.cmxa graphics.cmxa mkmodel.ml
-
+	$(OCAMLBUILD) mkmodel.inferred.mli && cat _build/mkmodel.inferred.mli
 
 %: %.bz2
 	bunzip2 -fk $<
-#	touch $@
 
-output: preprocess.sh input/Stops-UK.csv
-	./preprocess.sh
+output/stops.csv: preprocess.sh input/Stops-UK.csv
+	@./preprocess.sh
 
 clean:
 	rm -f *~ \#* mkmodel *.cmi *.cmx *.o mkmodel.mli
 	rm -rf output
+	rm -rf _build
 
+allclean: clean
+	rm -rf model

@@ -1,0 +1,5 @@
+Model "bmpdot:KRIPKE=model/edinburgh.dot,SPACE=model/edinburgh";
+
+Output "mc_output/state" "0","100","1000";
+
+Check "green" [green >= 100];

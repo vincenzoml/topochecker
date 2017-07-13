@@ -113,8 +113,7 @@ let load_bmpdot_model bindings =
       if List.length bindings <> 2 then raise Not_found
       else (List.assoc "KRIPKE" bindings,List.assoc "SPACE" bindings)
     with Not_found -> TcUtil.fail "Wrong model specification for bmpdot model. Format is 'bmpdot:kripke=<filename>,space=<filename>'"
-  in
-    
+  in    
   (*  let kripkef = TcUtil.mkfname dir k in *)
   let (kripke,(k_id_of_int,k_int_of_id)) =
     if kripkef = ""
