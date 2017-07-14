@@ -206,15 +206,21 @@ let clumps : int -> int -> float -> coord list -> coord list -> bool =
 
 let avgpos : coord list -> coord =
   fun pl ->
+    let pl' =
+      let pl'' = List.filter (fun pos -> !(bins.(findbin pos).stops) <> []) pl in	
+      match pl'' with
+	[] -> pl
+      | _ -> (Printf.printf "found position at stop\n%!");pl''
+    in
     let (slat,slong,len) =
       List.fold_left
         (fun (slat,slong,len) pos -> (slat +. pos.lat,slong +. pos.long,len+.1.))
         (0.0,0.0,0.0)
-        pl
+        pl'
     in
     { lat = slat /. len;
       long = slong /. len }
-
+      
 let replace : busstate -> systemstate -> systemstate =
   fun bst st -> M.add bst.busid bst (M.remove bst.busid st) 
       
@@ -323,10 +329,10 @@ let findpixel img (minbox,maxbox) coord =
    img.Rgb24.height - (int_of_float ((coord.lat -. minbox.lat) /. (maxbox.lat -. minbox.lat) *. (float_of_int img.Rgb24.height))))
 
      
-let save_image filename img =
-  Bmp.save filename [] (Images.Rgb24 img)
+let save_image filename img (x,y,w,h) =  
+  Bmp.save filename [] (Images.Rgb24 (Rgb24.sub img x y w h))
   
-let write_state sid nids kripkefile basename img colours systemstate =
+let write_state sid nids kripkefile basename img colours crop systemstate =
   List.iter (fun nid -> Printf.fprintf kripkefile "%d->%d;\n%!" sid nid) nids;
   let img' = Rgb24.copy img in
   (M.iter (fun busid bst ->
@@ -335,7 +341,7 @@ let write_state sid nids kripkefile basename img colours systemstate =
     | coord::_ ->
        mksign (findpixel img' (minbox,maxbox) coord) 2 (colours busid) img')
      systemstate);
-  save_image (Printf.sprintf "%s_%d.bmp" basename sid) img'
+  save_image (Printf.sprintf "%s_%d.bmp" basename sid) img' crop
 
 let stopscols k l =
   let (_,res) = List.fold_left (fun (n,res) coord -> (n+k,(coord,{Color.b = n; Color.r = 0; Color.g = 0})::res)) (0,[]) l in
@@ -346,7 +352,7 @@ let buscols k l =
   fun busid -> List.assoc busid res
 
     
-let write_model basename imgfile tree =
+let write_model basename imgfile crop tree =
   let genid = let cnt = ref 0 in
 	      fun () -> let x = !cnt in cnt := x+1; x
   in
@@ -359,7 +365,7 @@ let write_model basename imgfile tree =
       | x::xs -> (genid())::(getids xs)
     in
     let nids = getids tree.next in
-    write_state sid nids kripkefile basename img cols tree.node;  
+    write_state sid nids kripkefile basename img cols crop tree.node;  
     List.iter
       (fun (treeref,sid') -> write_model_rec sid' kripkefile img !treeref)
       (List.combine tree.next nids)
@@ -379,4 +385,4 @@ let write_model basename imgfile tree =
 		(Printexc.to_string exn))
     
 let _ =
-  write_model "model/edinburgh" "input/map.bmp" !treeref
+  write_model "model/edinburgh" "input/map.bmp" (20,60,360,100) !treeref

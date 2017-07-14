@@ -21,7 +21,7 @@ output/stops.csv: preprocess.sh input/Stops-UK.csv
 	@./preprocess.sh
 
 clean:
-	rm -f *~ \#* mkmodel *.cmi *.cmx *.o mkmodel.mli
+	rm -f *~ \#* mkmodel *.cmi *.cmx *.o mkmodel.mli mkmodel.native
 	rm -rf output
 	rm -rf _build
 
