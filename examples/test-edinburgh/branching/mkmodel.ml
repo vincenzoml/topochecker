@@ -260,7 +260,8 @@ let simstep : int -> int -> int -> int -> int -> float -> int -> systemstate -> 
 	 state)      
 
 type parameters =
-  { maxtime : int; (* in minutes *)
+  { mintime : int; (* in minutes *)
+    maxtime : int; (* in minutes *)
     timestep : int; (* in minutes *)
     waittime : int; (* in minutes *)
     duration : int; (* in timesteps *)
@@ -290,16 +291,17 @@ let sim : parameters -> systemstate tree ref =
       r := tree;
       r
     in
-    fn N.empty 0 par.init
+    fn N.empty par.mintime par.init
       
 let treeref = sim
-  { maxtime = 24 * 60; (* in minutes *)
-    timestep = 3; (* in minutes *)
+  { mintime = 6 * 60 + 30; (* in minutes *)
+    maxtime = 8 * 60 + 30; (* in minutes *)
+    timestep = 1; (* in minutes *)
     waittime = 2; (* in minutes *)
     duration = 2; (* in timesteps *)
     deltat = 5; (* in timesteps *)
-    deltas = 1000.0; (* in meters *)
-    maxdelay = 6; (* in minutes *)
+    deltas = 500.0; (* in meters *)
+    maxdelay = 5; (* in minutes *)
     init = buses; (* initial state *) }
 
 let _ = Printf.printf "max branching: %d size: %d\n%!" (maxbranch !treeref) (size !treeref)
@@ -340,7 +342,7 @@ let stopscols k l =
   fun busid -> List.assoc busid res
 
 let buscols k l =
-  let (_,res) = List.fold_left (fun (n,res) (busid,_) -> (n+k,(busid,{Color.r = n; Color.b = 0; Color.g = 0})::res)) (0,[]) l in
+  let (_,res) = List.fold_left (fun (n,res) (busid,_) -> (n+k,(busid,{Color.r = n; Color.b = 100; Color.g = 0})::res)) (0,[]) l in
   fun busid -> List.assoc busid res
 
     

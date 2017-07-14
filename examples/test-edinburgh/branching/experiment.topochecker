@@ -1,5 +1,29 @@
 Model "bmpdot:KRIPKE=model/edinburgh.dot,SPACE=model/edinburgh";
 
-Output "mc_output/state" "0","100","1000";
+Let close(x) = N^5 x;
 
-Check "green" [green >= 100];
+Let bus = [blue == 100] & [green == 0];
+
+Let bus1 = bus & [red == 0];
+Let bus2 = bus & [red == 15];
+Let bus3 = bus & [red == 30];
+Let bus4 = bus & [red == 45];
+Let bus5 = bus & [red == 60];
+Let bus6 = bus & [red == 75];
+Let bus7 = bus & [red == 90];
+Let bus8 = bus & [red == 105];
+Let bus9 = bus & [red == 120];
+Let bus10 = bus & [red == 135];
+Let bus11 = bus & [red == 150];
+Let bus12 = bus & [red == 165];
+
+Let busStop = [red == 0] & [green == 255] & [blue == 0];
+
+Let busAtStop(x) = busStop & close(x);
+
+// busAtStop(x) espanso	   
+//Let busAfterBus(x) = (busStop & (N^5 x)) & E X busAtStop(bus & (! x));
+
+Output "mc_output/state" "0";
+
+Check "magenta" E F (busStop & (N^5 bus1)) & (E X (busStop & N^5(bus & (! bus1))));
