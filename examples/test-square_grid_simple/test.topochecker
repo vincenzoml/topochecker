@@ -1,8 +1,8 @@
 Kripke "kripke.dot" Space "space.dot" Eval "eval.csv";
 
+Let close(x) = x;
+Let f(x) = close(x);
+
 Output "out";
 
-
-Check "0xFF0000" TT;
-
-
+Check "0xFF0000" f([a]);

@@ -35,8 +35,9 @@ let load_experiment =
     let (msyn,dseq,commands) = TcParser.main TcLexer.token lexbuf in
     let model = load_model dir msyn in
     let env = Syntax.env_of_dseq dseq in
-    let commands = List.map (function
-      | Syntax.CHECK (color,fsyn) -> Check (color,Syntax.formula_of_fsyn env fsyn)
+    let commands = List.map (fun cmd ->
+      match cmd with 
+	Syntax.CHECK (color,fsyn) -> Check (color,Syntax.formula_of_fsyn env fsyn)
       | Syntax.ASK (ide,points,qfsyn) -> Ask (ide,points,Syntax.qformula_of_qfsyn env qfsyn)
       | Syntax.OUTPUT (s,None) -> Output (s,None)
       | Syntax.OUTPUT (s,Some states) -> Output (s,Some (List.map model.Model.idkripke states))) commands in    

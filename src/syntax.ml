@@ -1,5 +1,15 @@
 open Logic
 
+let genid =
+  let r = ref 0 in
+  fun () ->
+    let res = string_of_int !r in
+    r := !r + 1;
+    res
+
+let genids formals =
+  List.map (fun formal -> (formal,genid())) formals
+
 type ide = string
 type propsyn = string
 type model =
@@ -58,6 +68,8 @@ type qfsyn =
   | QFLOAT of float
   | QOP of string * qfsyn * qfsyn
   | QCOUNT of fsyn
+
+
       
 type decl = LET of ide * ide list * fsyn
 type dseq = decl list
@@ -75,7 +87,9 @@ type dval = ide list * fsyn
 type env = dval MEnv.t	       
 let empty : env = MEnv.empty		
 let bind : env -> ide -> dval -> env = fun env name value -> MEnv.add name value env
-let apply : env -> ide -> dval = fun env name -> MEnv.find name env
+let apply : env -> ide -> dval = fun env name ->
+  try MEnv.find name env
+  with Not_found -> TcUtil.fail (Printf.sprintf "undefined identifier: %s" name)
 		    
 let zipenv : env -> ide list -> dval list -> env =
   fun env formals actuals ->
@@ -93,10 +107,65 @@ let opsem op =
   | ">" -> (>)
   | ">=" -> (>=)
   | x -> TcUtil.fail (Printf.sprintf "unknown operator %s" x)
+
+let rec replace_fsyn replacements f =
+  match f with
+    PROP prop -> f 
+  | VPROP (prop,op,n) -> f
+  | TRUE -> f
+  | FALSE -> f
+  | NOT f1 -> NOT (replace_fsyn replacements f1)     
+  | AND (f1,f2) -> AND (replace_fsyn replacements f1,replace_fsyn replacements f2)
+  | OR (f1,f2) -> OR (replace_fsyn replacements f1,replace_fsyn replacements f2)
+  | NEAR f1 -> NEAR (replace_fsyn replacements f1)
+  | NEARN (n,f1) -> NEARN (n,replace_fsyn replacements f1)
+  | INT f1 -> INT (replace_fsyn replacements f1)
+  | INTN (n,f1) -> INTN (n,replace_fsyn replacements f1)
+  | SURROUNDED (f1,f2) -> SURROUNDED (replace_fsyn replacements f1,replace_fsyn replacements f2)
+  | STATCMP (p1,f1,p2,f,rad,op,thr,min,max,nbins) ->
+     STATCMP (p1,replace_fsyn replacements f1,p2,replace_fsyn replacements f,rad,op,thr,min,max,nbins)
+  | SCMPIMA (p1,p2,f,rad,op,thr,min,max,nbins) ->
+     SCMPIMA (p1,p2,replace_fsyn replacements f,rad,op,thr,min,max,nbins) 
+  | ASM (p,f,rad,op,thr) -> ASM (p,replace_fsyn replacements f,rad,op,thr)
+  | EUCL (f,op,thr) -> EUCL (replace_fsyn replacements f,op,thr)
+  | EDT (f,op,thr) -> EDT (replace_fsyn replacements f,op,thr)
+  | EDTM (f,op,thr) -> EDTM (replace_fsyn replacements f,op,thr)
+  | MDDT (f,op,thr) -> MDDT (replace_fsyn replacements f,op,thr)
+  | MAXVOL f -> MAXVOL (replace_fsyn replacements f)
+  | EX f1 -> EX (replace_fsyn replacements f1)
+  | AX f1 -> AX (replace_fsyn replacements f1)
+  | EG f1 -> EG (replace_fsyn replacements f1)
+  | AG f1 -> AG (replace_fsyn replacements f1)
+  | EF f1 -> EF (replace_fsyn replacements f1)
+  | AF f1 -> AF (replace_fsyn replacements f1)
+  | EU (f1,f2) -> EU (replace_fsyn replacements f1,replace_fsyn replacements f2)
+  | AU (f1,f2) -> AU  (replace_fsyn replacements f1,replace_fsyn replacements f2)
+  | CALL (ide,actuals) ->
+     CALL ((try (List.assoc ide replacements) with Not_found -> ide),List.map (replace_fsyn replacements) actuals)
+  | IFTHENELSE (cf,f1,f2) -> IFTHENELSE (replace_cfsyn replacements cf,replace_fsyn replacements f1,replace_fsyn replacements f2)
+and
+    replace_cfsyn replacements cf =
+  match cf with
+    CTRUE -> cf
+  | CFALSE -> cf
+  | CAND (cf1,cf2) -> CAND (replace_cfsyn replacements cf1,replace_cfsyn replacements cf2)
+  | COR (cf1,cf2) -> COR (replace_cfsyn replacements cf1,replace_cfsyn replacements cf2)
+  | CNOT cf1 -> CNOT (replace_cfsyn replacements cf1)
+  | CSHARE (f,cf) -> CSHARE (replace_fsyn replacements f,replace_cfsyn replacements cf)
+  | CGROUP f -> CGROUP (replace_fsyn replacements f) 
+
+let replace_list replacements l =
+  List.map (fun x -> List.assoc x replacements) l
      
-let env_of_dseq ds = List.fold_left (fun env (LET (name,args,body)) ->
-  bind env name (args,body)) empty ds
-		   
+let env_of_dseq ds =
+  List.fold_left
+    (fun env (LET (name,args,body)) ->
+      let replacements = genids args in
+      let args' = replace_list replacements args in
+      let body' = replace_fsyn replacements body in
+      bind env name (args',body'))
+    empty ds
+     
 let rec formula_of_fsyn env f =
   match f with
     PROP prop -> Prop prop

@@ -298,19 +298,6 @@ let sim : parameters -> systemstate tree ref =
       r
     in
     fn N.empty par.mintime par.init
-      
-let treeref = sim
-  { mintime = 6 * 60 + 30; (* in minutes *)
-    maxtime = 8 * 60 + 30; (* in minutes *)
-    timestep = 1; (* in minutes *)
-    waittime = 2; (* in minutes *)
-    duration = 2; (* in timesteps *)
-    deltat = 5; (* in timesteps *)
-    deltas = 500.0; (* in meters *)
-    maxdelay = 5; (* in minutes *)
-    init = buses; (* initial state *) }
-
-let _ = Printf.printf "max branching: %d size: %d\n%!" (maxbranch !treeref) (size !treeref)
 
 let mksign (x,y) k colour img =
   for i = (max 0 (x-k)) to (min (img.Rgb24.width - 1) (x+k)) do
@@ -339,7 +326,7 @@ let write_state sid nids kripkefile basename img colours crop systemstate =
     match bst.past with
       [] -> ()
     | coord::_ ->
-       mksign (findpixel img' (minbox,maxbox) coord) 2 (colours busid) img')
+       mksign (findpixel img' (minbox,maxbox) coord) 2 ({(colours busid) with Color.g = 5 * bst.delay}) img')
      systemstate);
   save_image (Printf.sprintf "%s_%d.bmp" basename sid) img' crop
 
@@ -350,7 +337,6 @@ let stopscols k l =
 let buscols k l =
   let (_,res) = List.fold_left (fun (n,res) (busid,_) -> (n+k,(busid,{Color.r = n; Color.b = 100; Color.g = 0})::res)) (0,[]) l in
   fun busid -> List.assoc busid res
-
     
 let write_model basename imgfile crop tree =
   let genid = let cnt = ref 0 in
@@ -383,6 +369,19 @@ let write_model basename imgfile crop tree =
     close_out kripkefile;
     failwith (Printf.sprintf "a fatal exception occurred: %s"
 		(Printexc.to_string exn))
-    
+      
+let treeref = sim
+  { mintime = 7 * 60; (* in minutes *)
+    maxtime = 8 * 60 + 20; (* in minutes *)
+    timestep = 1; (* in minutes *)
+    waittime = 2; (* in minutes *)
+    duration = 2; (* in timesteps *)
+    deltat = 5; (* in timesteps *)
+    deltas = 500.0; (* in meters *)
+    maxdelay = 5; (* in minutes *)
+    init = buses; (* initial state *) }
+
+let _ = Printf.printf "max branching: %d size: %d\n%!" (maxbranch !treeref) (size !treeref)
+      
 let _ =
   write_model "model/edinburgh" "input/map.bmp" (20,60,360,100) !treeref

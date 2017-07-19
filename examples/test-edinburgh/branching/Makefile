@@ -8,6 +8,8 @@ model/edinburgh.dot: mkmodel output/stops.csv
 	@mkdir -p mc_output
 	@./mkmodel
 
+model: model/edinburgh.dot
+
 check: model/edinburgh.dot
 	../../../src/topochecker experiment.topochecker
 
@@ -27,3 +29,4 @@ clean:
 
 allclean: clean
 	rm -rf model
+	rm -rf mc_output
