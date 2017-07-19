@@ -96,8 +96,6 @@ let (deltalat,deltalong) = (maxbox.lat -. minbox.lat,maxbox.long -. minbox.long)
 let (reslattarget,reslongtarget) = (10.0,10.0) 
 let (nbinslatf,nbinslongf) = (max 1.0 (meterslat /. reslattarget),max 1.0 (meterslong/.reslongtarget)) 
 let (nbinslat,nbinslong) = (int_of_float nbinslatf,int_of_float nbinslongf) 
-
-let _ = Printf.printf "nbinslat: %d nbinslong: %d\n%!" nbinslat nbinslong
   
 let meters coord =
   (((coord.lat -. minbox.lat) /. deltalat) *. meterslat,
@@ -210,7 +208,7 @@ let avgpos : coord list -> coord =
       let pl'' = List.filter (fun pos -> !(bins.(findbin pos).stops) <> []) pl in	
       match pl'' with
 	[] -> pl
-      | _ -> (Printf.printf "found position at stop\n%!");pl''
+      | _ -> (* Printf.printf "found position at stop\n%!" ; *)pl''
     in
     let (slat,slong,len) =
       List.fold_left
@@ -251,15 +249,15 @@ let simstep : int -> int -> int -> int -> int -> float -> int -> systemstate -> 
 	   if bst.delay < maxdelay
 	     && exists
 	       (fun bst' ->
-		 bst'.busid <> bst.busid &&
-	           let t = clumps duration deltat deltas bst.past bst'.past in
-		   (if t then let c = List.hd bst.past in
-			      begin
+		 bst'.busid <> bst.busid && (clumps duration deltat deltas bst.past bst'.past))
+	        (*   let t = clumps duration deltat deltas bst.past bst'.past in
+		   (if t then let   c = List.hd bst.past in
+			      be  gin
 				Printf.printf "time %d: bus %d clumps at (%f,%f) stops:" time bst.busid c.lat c.long;
-				List.iter (fun pos -> Printf.printf "(%f,%f) " pos.lat pos.long) !(bins.(findbin (List.hd bst.past)).stops);
-				Printf.printf "\n%!"
-			      end);
-		   t)
+				List.iter (fun pos -> Printf.printf "(%f,%f) " pos.lat pos.long         ) !(bins.(findbin (List.hd bst.past)).stops);
+				Printf.printf "\n%!"  
+			        end);           
+		   t) *)      
 	       state
 	   then Some (replace { bst with delay = bst.delay + waittime } tmpstate)
 	   else None)
@@ -320,13 +318,14 @@ let save_image filename img (x,y,w,h) =
   Bmp.save filename [] (Images.Rgb24 (Rgb24.sub img x y w h))
   
 let write_state sid nids kripkefile basename img colours crop systemstate =
+  Printf.fprintf kripkefile "%d [URL=\"state_%d.bmp\"];\n%!" sid sid;
   List.iter (fun nid -> Printf.fprintf kripkefile "%d->%d;\n%!" sid nid) nids;
   let img' = Rgb24.copy img in
   (M.iter (fun busid bst ->
     match bst.past with
       [] -> ()
     | coord::_ ->
-       mksign (findpixel img' (minbox,maxbox) coord) 2 ({(colours busid) with Color.g = 5 * bst.delay}) img')
+       mksign (findpixel img' (minbox,maxbox) coord) 1 ({(colours busid) with Color.g = 5 * bst.delay}) img')
      systemstate);
   save_image (Printf.sprintf "%s_%d.bmp" basename sid) img' crop
 
@@ -335,7 +334,7 @@ let stopscols k l =
   fun busid -> List.assoc busid res
 
 let buscols k l =
-  let (_,res) = List.fold_left (fun (n,res) (busid,_) -> (n+k,(busid,{Color.r = n; Color.b = 100; Color.g = 0})::res)) (0,[]) l in
+  let (_,res) = List.fold_left (fun (n,res) (busid,_) -> (n+k,(busid,{Color.r = n; Color.b = 177; Color.g = 0})::res)) (0,[]) l in
   fun busid -> List.assoc busid res
     
 let write_model basename imgfile crop tree =
@@ -343,7 +342,6 @@ let write_model basename imgfile crop tree =
 	      fun () -> let x = !cnt in cnt := x+1; x
   in
   let cols = buscols 15 (M.bindings tree.node) in
-  Printf.printf "bindings: %d\n%!" (List.length (M.bindings tree.node));
   let rec write_model_rec sid kripkefile img tree =
     let rec getids next =
       match next with
@@ -369,7 +367,9 @@ let write_model basename imgfile crop tree =
     close_out kripkefile;
     failwith (Printf.sprintf "a fatal exception occurred: %s"
 		(Printexc.to_string exn))
-      
+
+let _ = Printf.printf "Computing model...%!"
+    
 let treeref = sim
   { mintime = 7 * 60; (* in minutes *)
     maxtime = 8 * 60 + 20; (* in minutes *)
@@ -381,7 +381,8 @@ let treeref = sim
     maxdelay = 5; (* in minutes *)
     init = buses; (* initial state *) }
 
-let _ = Printf.printf "max branching: %d size: %d\n%!" (maxbranch !treeref) (size !treeref)
+let _ = Printf.printf " done.\nMax branching: %d size: %d\nSaving model...%!" (maxbranch !treeref) (size !treeref)
       
 let _ =
-  write_model "model/edinburgh" "input/map.bmp" (20,60,360,100) !treeref
+  write_model "model/edinburgh" "input/map.bmp" (20,60,360,100) !treeref;
+  Printf.printf " all done.\n%!"
