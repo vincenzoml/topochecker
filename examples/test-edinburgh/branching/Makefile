@@ -10,8 +10,14 @@ model/edinburgh.dot: mkmodel output/stops.csv
 
 model: model/edinburgh.dot
 
-check: model/edinburgh.dot
+mc_output/state_0.bmp: model/edinburgh.dot experiment.topochecker
 	../../../src/topochecker experiment.topochecker
+
+view: mc_output/state_0.bmp
+	xdg-open mc_output/state_0.bmp
+
+viewdot: mc_output/state_0.bmp
+	cd mc_output && dot -Tx11 ../model/edinburgh.dot
 
 mli: mkmodel.ml
 	$(OCAMLBUILD) mkmodel.inferred.mli && cat _build/mkmodel.inferred.mli

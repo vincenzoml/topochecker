@@ -3,6 +3,8 @@ Model "bmpdot:KRIPKE=model/edinburgh.dot,SPACE=model/edinburgh";
 Let close(x) = N x;
 Let reach(x,y) = !((!y) S (!x));
 Let touch(x,y) = x & reach(x|y,y);
+Let exists(x) = touch(TT,x);
+Let forall(x) = !touch(TT,!x);
 
 Let bus = [blue == 177] & [green < 100];
 Let delayed = [green > 0];
@@ -22,25 +24,37 @@ Let bus12 = bus & [red == 165];
 
 Let busStop = [red == 0] & [green == 255] & [blue == 0];
 
-Let busAtStop(x) = touch(busStop,close(x));
+Let busAtStop(x) = touch(busStop|bus,x);
+Let emptyStop = busStop & (!busAtStop(bus));
 
 Let busAfterBus(x) = busAtStop(x) & E X busAtStop(bus & (!x));
 
 Let timeConglomerate = busAfterBus(bus1);
 
-Let doubleConglomerate = busAtStop(bus) & E X (!(busAtStop(bus))) & (E X (E X (busAtStop(bus))));
+Let threeSteps = touch(busStop,bus) & touch(busStop,E X bus) & (touch(busStop,E X (E X bus)));
+
+Let flipFlop = busStop & busAtStop(bus) & (E X (!busAtStop(bus)));
+
+//Let noBuses = nowAndNext(emptyStop,nowAndNext(emptyStop,emptyStop));
+
+Let noBusesNext(x) = emptyStop & (E X x);
+
+Let noDelay = forall(!(bus & delayed));
+
+Let nbnnd(x) = emptyStop & noDelay & (E X x);
+
+Let noBuses = noBusesNext(noBusesNext(noBusesNext(noBusesNext(noBusesNext(noBusesNext(noBusesNext(noBusesNext(noBusesNext(emptyStop)))))))));
+
+Let noBusesND = nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(emptyStop & noDelay))))))))));
 
 Output "mc_output/state";
 
 //Check "yellow" N (busAfterBus(bus1 & (! delayed)));
 //Check "magenta" (busAfterBus(bus1 & delayed));
 
-//Check "red" (E F doubleConglomerate);
 
-
-//Check "red" bus;
-//Check "orange" touch(busStop & (E X (!touch(busStop,bus))));
-Check "magenta" busStop & touch(busStop,bus) & (!touch(busStop,E X bus));
-Check "orange"
-//busStop & touch(busStop,bus) & (touch(busStop,E X bus)) &
-(touch(busStop,E X (E X bus)));
+//Check "magenta" E F noBuses;
+//Check "orange" noBuses;
+Check "orange" E F noBusesND;
+Check "red" noBusesND;
+Check "magenta" bus & (!delayed);
