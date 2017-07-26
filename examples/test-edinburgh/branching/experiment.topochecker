@@ -47,14 +47,28 @@ Let noBuses = noBusesNext(noBusesNext(noBusesNext(noBusesNext(noBusesNext(noBuse
 
 Let noBusesND = nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(emptyStop & noDelay))))))))));
 
+Let int = busAtStop(bus1) & E X busAtStop(bus & (!bus1));
+
+Let threeSteps(x) = x & exists(E X x) & (exists (E X (E X x)));
+
+Let int2 = touch(bus1,(E X (N^5 (bus & (!bus1)))));
+//Let int2 = threeSteps(bus1 & (N^3 (bus & (!bus1))));
+
 Output "mc_output/state";
 
 //Check "yellow" N (busAfterBus(bus1 & (! delayed)));
 //Check "magenta" (busAfterBus(bus1 & delayed));
 
-
 //Check "magenta" E F noBuses;
 //Check "orange" noBuses;
-Check "orange" E F noBusesND;
-Check "red" noBusesND;
-Check "magenta" bus & (!delayed);
+
+//Check "orange" E F noBusesND;
+//Check "red" noBusesND;
+
+
+//Check "magenta" N(bus & (!delayed));
+//Check "red" N (bus & delayed);
+//Check "yellow" E F int;
+Check "orange" int2;
+Check "red" I(E F int2);
+

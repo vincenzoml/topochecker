@@ -223,7 +223,8 @@ let replace : busstate -> systemstate -> systemstate =
   fun bst st -> M.add bst.busid bst (M.remove bst.busid st) 
       
 let simstep : int -> int -> int -> int -> int -> float -> int -> systemstate -> systemstate list =
-  fun time timestep waittime duration deltat deltas maxdelay state -> 
+  fun time timestep waittime duration deltat deltas maxdelay state ->
+  Printf.printf "time: %d\n%!" time;
     let tmpstate =
       map
 	(fun bst ->
@@ -369,17 +370,19 @@ let write_model basename imgfile crop tree =
 		(Printexc.to_string exn))
 
 let _ = Printf.printf "Computing model...%!"
-    
+
+      
 let treeref = sim
-  { mintime = 7 * 60; (* in minutes *)
-    maxtime = 8 * 60 + 20; (* in minutes *)
-    timestep = 1; (* in minutes *)
-    waittime = 2; (* in minutes *)
-    duration = 2; (* in timesteps *)
-    deltat = 5; (* in timesteps *)
-    deltas = 500.0; (* in meters *)
-    maxdelay = 5; (* in minutes *)
-    init = buses; (* initial state *) }
+                { mintime = 7 * 60; (* in minutes *) 
+                  maxtime = 8 * 60 + 20; (* in minutes *) 
+                  timestep = 1; (* in minutes *)
+                  waittime = 2; (* in minutes *)
+                  duration = 2; (* in timesteps *)
+                  deltat = 5; (* in timesteps *)
+                  deltas = 500.0; (* in meters *)
+                  maxdelay = 5; (* in minutes *)
+                  init = buses; (* initial state *) }
+            
 
 let _ = Printf.printf " done.\nMax branching: %d size: %d\nSaving model...%!" (maxbranch !treeref) (size !treeref)
       
