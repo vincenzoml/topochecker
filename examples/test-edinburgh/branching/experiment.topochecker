@@ -6,9 +6,7 @@ Let touch(x,y) = x & reach(x|y,y);
 Let exists(x) = touch(TT,x);
 Let forall(x) = !touch(TT,!x);
 
-Let bus = [blue == 177] & [green < 100];
-Let delayed = [green > 0];
-
+Let bus = [blue == 10];
 Let bus1 = bus & [red == 0];
 Let bus2 = bus & [red == 15];
 Let bus3 = bus & [red == 30];
@@ -21,6 +19,14 @@ Let bus9 = bus & [red == 120];
 Let bus10 = bus & [red == 135];
 Let bus11 = bus & [red == 150];
 Let bus12 = bus & [red == 165];
+
+Let delayed = [green > 0];
+Let delayed1min = [green == 5];
+Let delayed2mins = [green == 10];
+Let delayed3mins = [green == 15];
+Let delayed4mins = [green == 20];
+Let delayed5mins = [green == 25];
+Let delayed6mins = [green == 30];
 
 Let busStop = [red == 0] & [green == 255] & [blue == 0];
 
@@ -56,6 +62,9 @@ Let int2 = touch(bus1,(E X (N^5 (bus & (!bus1)))));
 
 Output "mc_output/state";
 
+// In the paper:
+Check "red" exists(E F (bus & delayed6mins));
+
 //Check "yellow" N (busAfterBus(bus1 & (! delayed)));
 //Check "magenta" (busAfterBus(bus1 & delayed));
 
@@ -69,6 +78,7 @@ Output "mc_output/state";
 //Check "magenta" N(bus & (!delayed));
 //Check "red" N (bus & delayed);
 //Check "yellow" E F int;
-Check "orange" int2;
-Check "red" I(E F int2);
-
+//Check "orange" int2;
+//Check "red" I(E F int2);
+//Check "red" exists(E F (bus & [green > 20]));
+Check "red" noBusesND;
