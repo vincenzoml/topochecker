@@ -221,7 +221,7 @@ let avgpos : coord list -> coord =
       
 let replace : busstate -> systemstate -> systemstate =
   fun bst st -> M.add bst.busid bst (M.remove bst.busid st) 
-      
+
 let simstep : int -> int -> int -> int -> int -> float -> int -> systemstate -> systemstate list =
   fun time timestep waittime duration deltat deltas maxdelay state ->
   Printf.printf "time: %d\n%!" time;
@@ -247,18 +247,10 @@ let simstep : int -> int -> int -> int -> int -> float -> int -> systemstate -> 
     tmpstate::
       (mapl
 	 (fun bst ->
-	   if bst.delay < maxdelay
+	   if bst.delay + waittime <= maxdelay
 	     && exists
 	       (fun bst' ->
 		 bst'.busid <> bst.busid && (clumps duration deltat deltas bst.past bst'.past))
-	        (*   let t = clumps duration deltat deltas bst.past bst'.past in
-		   (if t then let   c = List.hd bst.past in
-			      be  gin
-				Printf.printf "time %d: bus %d clumps at (%f,%f) stops:" time bst.busid c.lat c.long;
-				List.iter (fun pos -> Printf.printf "(%f,%f) " pos.lat pos.long         ) !(bins.(findbin (List.hd bst.past)).stops);
-				Printf.printf "\n%!"  
-			        end);           
-		   t) *)      
 	       state
 	   then Some (replace { bst with delay = bst.delay + waittime } tmpstate)
 	   else None)
@@ -274,7 +266,7 @@ type parameters =
     deltas : float; (* in meters *)
     maxdelay : int; (* in minutes *)
     init : systemstate; (* initial state *) }
-      
+    
 let sim : parameters -> systemstate tree ref =
   (* duration, deltat are multiplied by timestep *)
   fun par ->
@@ -335,7 +327,7 @@ let stopscols k l =
   fun busid -> List.assoc busid res
 
 let buscols k l =
-  let (_,res) = List.fold_left (fun (n,res) (busid,_) -> (n+k,(busid,{Color.r = n; Color.b = 177; Color.g = 0})::res)) (0,[]) l in
+  let (_,res) = List.fold_left (fun (n,res) (busid,_) -> (n+k,(busid,{Color.r = n; Color.b = 10; Color.g = 0})::res)) (0,[]) l in
   fun busid -> List.assoc busid res
     
 let write_model basename imgfile crop tree =
@@ -380,7 +372,7 @@ let treeref = sim
                   duration = 2; (* in timesteps *)
                   deltat = 5; (* in timesteps *)
                   deltas = 500.0; (* in meters *)
-                  maxdelay = 5; (* in minutes *)
+                  maxdelay = 6; (* in minutes *)
                   init = buses; (* initial state *) }
             
 
