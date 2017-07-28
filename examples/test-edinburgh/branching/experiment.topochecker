@@ -30,40 +30,31 @@ Let delayed6mins = [green == 30];
 
 Let busStop = [red == 0] & [green == 255] & [blue == 0];
 
-Let busAtStop(x) = touch(busStop|bus,x);
+Let busAtStop(x) = touch(busStop,x);
 Let emptyStop = busStop & (!busAtStop(bus));
 
 Let busAfterBus(x) = busAtStop(x) & E X busAtStop(bus & (!x));
 
 Let timeConglomerate = busAfterBus(bus1);
 
-Let threeSteps = touch(busStop,bus) & touch(busStop,E X bus) & (touch(busStop,E X (E X bus)));
-
-Let flipFlop = busStop & busAtStop(bus) & (E X (!busAtStop(bus)));
-
-//Let noBuses = nowAndNext(emptyStop,nowAndNext(emptyStop,emptyStop));
-
-Let noBusesNext(x) = emptyStop & (E X x);
-
-Let noDelay = forall(!(bus & delayed));
-
-Let nbnnd(x) = emptyStop & noDelay & (E X x);
-
-Let noBuses = noBusesNext(noBusesNext(noBusesNext(noBusesNext(noBusesNext(noBusesNext(noBusesNext(noBusesNext(noBusesNext(emptyStop)))))))));
-
-Let noBusesND = nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(nbnnd(emptyStop & noDelay))))))))));
-
 Let int = busAtStop(bus1) & E X busAtStop(bus & (!bus1));
-
-Let threeSteps(x) = x & exists(E X x) & (exists (E X (E X x)));
 
 Let int2 = touch(bus1,(E X (N^5 (bus & (!bus1)))));
 //Let int2 = threeSteps(bus1 & (N^3 (bus & (!bus1))));
 
-Output "mc_output/state";
+// In the paper:
+Let noDelay = forall(!(bus & delayed));
 
 // In the paper:
-Check "red" exists(E F (bus & delayed6mins));
+Let noBusesStep(d,cont) =
+    emptyStop & d & (E X cont);
+
+// In the paper:
+Let noBusesTenSteps(d) =
+    noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,emptyStop & d & (![deadlock])))))))))));
+
+Output "mc_output/state";
+
 
 //Check "yellow" N (busAfterBus(bus1 & (! delayed)));
 //Check "magenta" (busAfterBus(bus1 & delayed));
@@ -74,11 +65,25 @@ Check "red" exists(E F (bus & delayed6mins));
 //Check "orange" E F noBusesND;
 //Check "red" noBusesND;
 
-
 //Check "magenta" N(bus & (!delayed));
 //Check "red" N (bus & delayed);
 //Check "yellow" E F int;
 //Check "orange" int2;
 //Check "red" I(E F int2);
 //Check "red" exists(E F (bus & [green > 20]));
-Check "red" noBusesND;
+
+
+// In the paper:
+//Check "red" exists(E F (bus & delayed6mins));
+
+// In the paper:
+//Check "orange" E F noBusesTenSteps(TT);
+//Check "red" noBusesTenSteps(TT);
+
+// In the paper:
+//Check "orange" E F noBusesTenSteps(noDelay);
+//Check "red" noBusesTenSteps(noDelay);
+
+
+
+Check "red" emptyStop;

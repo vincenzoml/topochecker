@@ -379,5 +379,5 @@ let treeref = sim
 let _ = Printf.printf " done.\nMax branching: %d size: %d\nSaving model...%!" (maxbranch !treeref) (size !treeref)
       
 let _ =
-  write_model "model/edinburgh" "input/map.bmp" (20,60,360,100) !treeref;
+  write_model "model/edinburgh" "input/map-google.bmp" (20,60,360,100) !treeref;
   Printf.printf " all done.\n%!"
