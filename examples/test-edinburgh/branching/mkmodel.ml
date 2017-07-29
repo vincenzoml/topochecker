@@ -4,7 +4,8 @@ type position = { coord : coord; time : int; bus : bus }
 
 type bin = { stops : coord list ref; buses : position list ref; idx : int }
 module M = Map.Make(struct type t = bus let compare = compare end)
-type busstate = { past : coord list; future : position list; delay : int; busid : int }
+type direction = Centre | Airport | Unknown
+type busstate = { past : coord list; future : position list; delay : int; busid : int; direction : direction }
 type systemstate = busstate M.t
 
 let mtake1 l = match l with [] -> [] | x::xs -> [x]
@@ -131,7 +132,7 @@ let buses =
   let l = Hashtbl.fold
             (fun bus r l -> (bus,(List.sort (fun pos1 pos2 -> compare pos1.time pos2.time) !r))::l) h [] in
   let sorted = List.sort (fun (bus1,_) (bus2,_) -> compare bus1 bus2) l in
-  List.fold_left (fun st (bus,future) -> M.add bus { past = []; future = future; delay = 0; busid = bus } st) M.empty sorted
+  List.fold_left (fun st (bus,future) -> M.add bus { past = []; future = future; delay = 0; busid = bus; direction = Unknown } st) M.empty sorted
   
 (* Populate bins *)
 (* (* do we need this? *) let _ = List.iter (fun pos -> let r = bins.(findbin pos.coord).buses in r := pos::!r) buslst *)
@@ -208,7 +209,7 @@ let avgpos : coord list -> coord =
       let pl'' = List.filter (fun pos -> !(bins.(findbin pos).stops) <> []) pl in	
       match pl'' with
 	[] -> pl
-      | _ -> (* Printf.printf "found position at stop\n%!" ; *)pl''
+      | _ -> pl''
     in
     let (slat,slong,len) =
       List.fold_left
@@ -222,9 +223,20 @@ let avgpos : coord list -> coord =
 let replace : busstate -> systemstate -> systemstate =
   fun bst st -> M.add bst.busid bst (M.remove bst.busid st) 
 
+let centerStop = { lat = 55.95157; long = -3.191772 }
+
+let direction coord1 coord2 =
+  let (c1,c2) = (metricdist centerStop coord1,metricdist centerStop coord2) in
+  if c1 >= c2 then Airport
+  else Centre
+  
+let rec findneq a l =
+  match l with
+    [] -> None
+  | x::xs -> if x.coord <> a then Some x else findneq a xs
+   
 let simstep : int -> int -> int -> int -> int -> float -> int -> systemstate -> systemstate list =
   fun time timestep waittime duration deltat deltas maxdelay state ->
-  Printf.printf "time: %d\n%!" time;
     let tmpstate =
       map
 	(fun bst ->
@@ -241,7 +253,25 @@ let simstep : int -> int -> int -> int -> int -> float -> int -> systemstate -> 
 		    [] -> []
 		  | pos::posn -> pos::pos::posn )
 	       | _ -> (avgpos (List.map (fun x -> x.coord) p))::bst.past);
-	    future = f })
+	    future = f;
+	    direction = (match (bst.past,bst.future) with
+	      ([],[]) -> Unknown
+	    | ([],[x]) -> Unknown
+	    | ([x],[]) -> Unknown
+	    | (x1::x2::_,[]) -> direction x1 x2
+	    | ([x1],l) -> let mx2 = findneq x1 l in
+			  (match mx2 with
+			    None -> Unknown
+			  | Some x2 -> direction x1 x2.coord)
+	    | (x1::x2::_,l) -> let mx2 = findneq x1 l in
+			       (match mx2 with
+				 None -> direction x1 x2
+			       | Some x2' -> direction x1 x2'.coord)
+	  | (_,x1::l) -> let mx2 = findneq x1.coord l in
+			 (match mx2 with
+			   None -> Unknown
+			 | Some x2 -> direction x1.coord x2.coord))
+	  })
 	state
     in
     tmpstate::
@@ -271,9 +301,6 @@ let sim : parameters -> systemstate tree ref =
   (* duration, deltat are multiplied by timestep *)
   fun par ->
     let rec fn visited time state =
-(*      try (* THIS IS NEEDED TO DETECT LOOPS; DO WE NEED THAT? *)
-	let x = N.find state visited in Printf.printf "loop\n%!"; x
-	with Not_found -> *)
       let r = ref { node = state; next = []} in
       let tree =
 	{ node = state;
@@ -318,7 +345,7 @@ let write_state sid nids kripkefile basename img colours crop systemstate =
     match bst.past with
       [] -> ()
     | coord::_ ->
-       mksign (findpixel img' (minbox,maxbox) coord) 1 ({(colours busid) with Color.g = 5 * bst.delay}) img')
+       mksign (findpixel img' (minbox,maxbox) coord) 1 ({(colours busid) with Color.g = 5 * bst.delay; Color.b = (match bst.direction with Centre -> 10 | Airport -> 15 | Unknown -> 13)}) img')
      systemstate);
   save_image (Printf.sprintf "%s_%d.bmp" basename sid) img' crop
 
