@@ -36,3 +36,4 @@ clean:
 allclean: clean
 	rm -rf model
 	rm -rf mc_output
+	rm -rf input/Stops-UK.csv
