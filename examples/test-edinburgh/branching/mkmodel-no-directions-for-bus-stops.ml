@@ -2,7 +2,7 @@ type bus = int
 type coord = { lat : float; long : float }
 type position = { coord : coord; time : int; bus : bus }
 
-type bin = { airport_stops : coord list ref; centre_stops : coord list ref; (* buses : position list ref; *) idx : int }
+type bin = { stops : coord list ref; buses : position list ref; idx : int }
 module M = Map.Make(struct type t = bus let compare = compare end)
 type direction = Centre | Airport | Unknown
 type busstate = { past : coord list; future : position list; delay : int; busid : int; direction : direction }
@@ -103,7 +103,7 @@ let meters coord =
    ((coord.long -. minbox.long) /. deltalong) *. meterslong)
     
 let bins = Array.init (nbinslat * nbinslong)
-                      (fun idx -> { airport_stops = ref []; centre_stops = ref []; (* buses = ref []; *) idx = idx }) 
+  (fun idx -> { stops = ref []; buses = ref []; idx = idx }) 
          
 let findbin coord =
   let (disclat,disclong) =
@@ -115,8 +115,7 @@ let findbin coord =
   (disclat + (disclong * nbinslat))      
   
 (* Load stops *)
-let airport_stops = load_stops "output/stops-airport.csv" (minbox,maxbox)
-let centre_stops = load_stops "output/stops-centre.csv" (minbox,maxbox)                  
+let stops = load_stops "output/stops.csv" (minbox,maxbox) 
  
 (* Load buses *)
 let buslst = load_buses "output/buses.csv" "2014-01-30" (minbox,maxbox) 
@@ -136,9 +135,8 @@ let buses =
   List.fold_left (fun st (bus,future) -> M.add bus { past = []; future = future; delay = 0; busid = bus; direction = Unknown } st) M.empty sorted
   
 (* Populate bins *)
-let _ =
-  List.iter (fun coord -> let r = bins.(findbin coord).airport_stops in r := coord::!r) airport_stops;
-  List.iter (fun coord -> let r = bins.(findbin coord).centre_stops in r := coord::!r) centre_stops
+(* (* do we need this? *) let _ = List.iter (fun pos -> let r = bins.(findbin pos.coord).buses in r := pos::!r) buslst *)
+let _ = List.iter (fun coord -> let r = bins.(findbin coord).stops in r := coord::!r) stops 
   
 let metricdist coord1 coord2 =
   let (m1x,m1y) = meters coord1 in
@@ -191,26 +189,24 @@ let rec mklist n =
     
 let clumps : int -> int -> float -> coord list -> coord list -> bool =
   fun duration deltat deltas past1 past2 ->
-  if past1 <> [] && past2 <> [] &&
-       (let bin = bins.(findbin (List.hd past1)) in
-        (List.concat [!(bin.airport_stops);!(bin.centre_stops)]) <> [])
-  then
-    List.exists
-      (fun deltat ->
-	let past1' = sublist 0 duration past1 in
-	let past2' = sublist deltat (duration + deltat) past2 in
-	if List.length past1' <> List.length past2'
-	then false
-	else 
-          let l = List.combine past1' past2' in
-	  List.for_all (fun (pos1,pos2) -> metricdist pos1 pos2 <= deltas) l)
-      (mklist deltat)
-  else false 
-  
+    if past1 <> [] && past2 <> [] && !(bins.(findbin (List.hd past1)).stops) <> [] 
+    then
+      List.exists
+	(fun deltat ->
+	  let past1' = sublist 0 duration past1 in
+	  let past2' = sublist deltat (duration + deltat) past2 in
+	  if List.length past1' <> List.length past2'
+	  then false
+	  else 
+            let l = List.combine past1' past2' in
+	    List.for_all (fun (pos1,pos2) -> metricdist pos1 pos2 <= deltas) l)
+	(mklist deltat)
+    else false 
+
 let avgpos : coord list -> coord =
   fun pl ->
     let pl' =
-      let pl'' = List.filter (fun pos -> (let bin = bins.(findbin pos) in (List.concat [!(bin.airport_stops);!(bin.centre_stops)]) <> [])) pl in	
+      let pl'' = List.filter (fun pos -> !(bins.(findbin pos).stops) <> []) pl in	
       match pl'' with
 	[] -> pl
       | _ -> pl''
@@ -231,8 +227,8 @@ let centerStop = { lat = 55.95157; long = -3.191772 }
 
 let direction coord1 coord2 =
   let (c1,c2) = (metricdist centerStop coord1,metricdist centerStop coord2) in
-  if c2 < c1 then Centre
-  else Airport
+  if c1 >= c2 then Airport
+  else Centre
   
 let rec findneq a l =
   match l with
@@ -340,10 +336,6 @@ let findpixel img (minbox,maxbox) coord =
      
 let save_image filename img (x,y,w,h) =  
   Bmp.save filename [] (Images.Rgb24 (Rgb24.sub img x y w h))
-
-let blue_centre = 10
-let blue_unknown = 13
-let blue_airport = 15                
   
 let write_state sid nids kripkefile basename img colours crop systemstate =
   Printf.fprintf kripkefile "%d [URL=\"state_%d.bmp\"];\n%!" sid sid;
@@ -353,7 +345,7 @@ let write_state sid nids kripkefile basename img colours crop systemstate =
     match bst.past with
       [] -> ()
     | coord::_ ->
-       mksign (findpixel img' (minbox,maxbox) coord) 1 ({(colours busid) with Color.g = 5 * bst.delay; Color.b = (match bst.direction with Centre -> blue_centre | Airport -> blue_airport | Unknown -> blue_unknown)}) img')
+       mksign (findpixel img' (minbox,maxbox) coord) 1 ({(colours busid) with Color.g = 5 * bst.delay; Color.b = (match bst.direction with Centre -> 10 | Airport -> 15 | Unknown -> 13)}) img')
      systemstate);
   save_image (Printf.sprintf "%s_%d.bmp" basename sid) img' crop
 
@@ -386,10 +378,8 @@ let write_model basename imgfile crop tree =
   try
     Printf.fprintf kripkefile "digraph{\n%!";
     let img = load_image imgfile in
-(*    List.iter (fun coord -> mksign (findpixel img (minbox,maxbox) coord) 2 {Color.r = 0; Color.g=255; Color.b=blue_airport} img) airport_stops;
-    List.iter (fun coord -> mksign (findpixel img (minbox,maxbox) coord) 2 {Color.r = 0; Color.g=255; Color.b=blue_centre} img) centre_stops; *)
-    List.iter (fun coord -> mksign (findpixel img (minbox,maxbox) coord) 2 {Color.r = 0; Color.g=255; Color.b=0} img) airport_stops;
-    List.iter (fun coord -> mksign (findpixel img (minbox,maxbox) coord) 2 {Color.r = 0; Color.g=255; Color.b=0} img) centre_stops;
+    (*     let cols = stopscols 10 stops in *)
+    List.iter (fun coord -> mksign (findpixel img (minbox,maxbox) coord) 2 {Color.r = 0; Color.g=255; Color.b=0} img) stops;
     write_model_rec (genid()) kripkefile img tree;
     Printf.fprintf kripkefile "}\n%!";
     close_out kripkefile
