@@ -96,4 +96,4 @@ Output "mc_output/state";
 // In the paper:
 //Check "orange" touch(busStop,E F delayedClumping);
 
-Check "red" busStop & (A F (notDelayedClumping));
+Check "red" noBusesFifteenSteps(delay);
