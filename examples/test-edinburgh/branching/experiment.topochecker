@@ -35,22 +35,46 @@ Let delayed6mins = [green == 30];
 Let busStop = [red == 0] & [green == 255] & [blue == 0];
 
 Let busAtStop(x) = touch(busStop,x);
-Let emptyStop = busStop & (!busAtStop(bus));
+Let emptyStop(dir) = busStop & (!touch(busStop,dir));
 
 // In the paper:
 Let noDelay = forall(!(bus & delayed));
 
-// In the paper:
-Let noBusesStep(d,cont) =
-    emptyStop & d & (E X cont);
+//In the paper:
+Let delay = exists(bus & delayed);
 
 // In the paper:
-Let noBusesTenSteps(d) =
-    noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,noBusesStep(d,emptyStop & d & (![deadlock])))))))))));
+Let noBusesStep(d,dir,cont) =
+    emptyStop(dir) & d & (E X cont);
 
+// In the paper:
+Let noBusesFifteenStepsDir(d,dir) =
+ noBusesStep(d,dir,
+  noBusesStep(d,dir,
+   noBusesStep(d,dir,
+    noBusesStep(d,dir,
+     noBusesStep(d,dir,
+      noBusesStep(d,dir,
+       noBusesStep(d,dir,
+        noBusesStep(d,dir,
+         noBusesStep(d,dir,
+          noBusesStep(d,dir,
+	   noBusesStep(d,dir,
+	    noBusesStep(d,dir,
+	     noBusesStep(d,dir,
+	      noBusesStep(d,dir,
+	       noBusesStep(d,dir,
+                emptyStop(dir) & d & (![deadlock]))))))))))))))));
 
-Let bound(x) = (N x) & (! x);
-Let clumps(b) = busAtStop(b) & (E X (busAtStop(bus & (!b))));
+Let noBusesFifteenSteps(d) = noBusesFifteenStepsDir(d,airportBus) | noBusesFifteenStepsDir(d,centreBus);
+
+// In the paper
+Let clumping(del,dir) = del & busAtStop(dir) & (E X ((del & emptyStop(dir)) & (E X ((del & busAtStop(dir)) | (E X (del & busAtStop(dir)))))));
+
+// In the paper
+Let notDelayedClumping = clumping(noDelay,airportBus) | clumping(noDelay,centreBus);
+// In the paper
+Let delayedClumping = clumping(delay,airportBus) | clumping(delay,centreBus);
 
 Output "mc_output/state";
 
@@ -58,20 +82,18 @@ Output "mc_output/state";
 //Check "red" exists(E F (bus & delayed6mins));
 
 // In the paper:
-//Check "orange" E F noBusesTenSteps(TT);
-//Check "red" noBusesTenSteps(TT);
+//Check "orange" E F noBusesFifteenSteps(TT);
+// In the paper:
+//Check "red" noBusesFifteenSteps(TT);
 
 // In the paper:
-//Check "orange" E F noBusesTenSteps(noDelay);
-//Check "red" noBusesTenSteps(noDelay);
+//Check "orange" E F noBusesFifteenSteps(TT);
+// In the paper:
+//Check "red" noBusesFifteenSteps(TT);
 
-//Check "red" N (E F (clumping(noDelay)));
-//Check "orange" clumping(noDelay);
+// In the paper:
+//Check "orange" touch(busStop,E F notDelayedClumping);
+// In the paper:
+//Check "orange" touch(busStop,E F delayedClumping);
 
-//Check "red" E F (clumps(bus1)|clumps(bus2)|clumps(bus3)|clumps(bus4)|clumps(bus5)|clumps(bus6)|clumps(bus7)|clumps(bus8)|clumps(bus9)|clumps(bus10)|clumps(bus11)|clumps(bus12));
-
-Check "red" bound(unknownBus);
-Check "magenta" bound(airportBus);
-Check "orange" bound(centreBus);
-Check "white" I bus1;
-Check "blue" I bus2;
+Check "red" noBusesFifteenSteps(delay);

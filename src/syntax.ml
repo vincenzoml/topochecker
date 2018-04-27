@@ -201,7 +201,10 @@ let rec formula_of_fsyn env f =
      And(Not (Eu (Not ff2,And(Not ff1,Not ff2))),Af ff2)
   | CALL (ide,actuals) ->
      let (formals,body) = apply env ide in
-     formula_of_fsyn (zipenv env formals (List.map (fun x -> ([],x)) actuals)) body
+     let (lf,la) = (List.length formals,List.length actuals) in
+     if lf <> la
+     then TcUtil.fail (Printf.sprintf "identifier %s takes %d parameters, but %d were provided" ide lf la)
+     else formula_of_fsyn (zipenv env formals (List.map (fun x -> ([],x)) actuals)) body
   | IFTHENELSE (cf,f1,f2) ->
      Ifthenelse (cformula_of_cfsyn env cf,formula_of_fsyn env f1,formula_of_fsyn env f2)
 and

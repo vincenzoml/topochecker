@@ -189,11 +189,14 @@ let rec mklist n =
   else if n = 0 then [0]
   else n::(mklist (n-1))
     
-let clumps : int -> int -> float -> coord list -> coord list -> bool =
-  fun duration deltat deltas past1 past2 ->
+let clumps : int -> int -> float -> coord list -> coord list -> direction -> bool =
+  fun duration deltat deltas past1 past2 dir ->
   if past1 <> [] && past2 <> [] &&
        (let bin = bins.(findbin (List.hd past1)) in
-        (List.concat [!(bin.airport_stops);!(bin.centre_stops)]) <> [])
+        match dir with
+          Unknown -> (Printf.printf "direction: unknwon\n%!";false) (* TODO: this is a bit approximative *) 
+        | Airport -> !(bin.airport_stops) <> []
+        | Centre -> !(bin.centre_stops) <> [])
   then
     List.exists
       (fun deltat ->
@@ -231,8 +234,8 @@ let centerStop = { lat = 55.95157; long = -3.191772 }
 
 let direction coord1 coord2 =
   let (c1,c2) = (metricdist centerStop coord1,metricdist centerStop coord2) in
-  if c2 < c1 then Centre
-  else Airport
+  if c1 >= c2 then Airport
+  else Centre
   
 let rec findneq a l =
   match l with
@@ -284,7 +287,7 @@ let simstep : int -> int -> int -> int -> int -> float -> int -> systemstate -> 
 	   if bst.delay + waittime <= maxdelay
 	     && exists
 	       (fun bst' ->
-		 bst'.busid <> bst.busid && (clumps duration deltat deltas bst.past bst'.past))
+		 bst'.busid <> bst.busid && (clumps duration deltat deltas bst.past bst'.past bst.direction))
 	       state
 	   then Some (replace { bst with delay = bst.delay + waittime } tmpstate)
 	   else None)
@@ -386,10 +389,8 @@ let write_model basename imgfile crop tree =
   try
     Printf.fprintf kripkefile "digraph{\n%!";
     let img = load_image imgfile in
-(*    List.iter (fun coord -> mksign (findpixel img (minbox,maxbox) coord) 2 {Color.r = 0; Color.g=255; Color.b=blue_airport} img) airport_stops;
-    List.iter (fun coord -> mksign (findpixel img (minbox,maxbox) coord) 2 {Color.r = 0; Color.g=255; Color.b=blue_centre} img) centre_stops; *)
-    List.iter (fun coord -> mksign (findpixel img (minbox,maxbox) coord) 2 {Color.r = 0; Color.g=255; Color.b=0} img) airport_stops;
-    List.iter (fun coord -> mksign (findpixel img (minbox,maxbox) coord) 2 {Color.r = 0; Color.g=255; Color.b=0} img) centre_stops;
+    List.iter (fun coord -> mksign (findpixel img (minbox,maxbox) coord) 2 {Color.r = 0; Color.g=255; Color.b=blue_airport} img) airport_stops;
+    List.iter (fun coord -> mksign (findpixel img (minbox,maxbox) coord) 2 {Color.r = 0; Color.g=255; Color.b=blue_centre} img) centre_stops;
     write_model_rec (genid()) kripkefile img tree;
     Printf.fprintf kripkefile "}\n%!";
     close_out kripkefile

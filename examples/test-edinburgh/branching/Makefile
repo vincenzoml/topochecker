@@ -3,12 +3,10 @@ OCAMLBUILD=ocamlbuild -use-ocamlfind -pkg camlimages,camlimages.all_formats -pkg
 mkmodel: mkmodel.ml
 	$(OCAMLBUILD) mkmodel.native && cp -af _build/mkmodel.native mkmodel
 
-model/edinburgh.dot: mkmodel output/stops.csv 
-	@mkdir -p model
-	@mkdir -p mc_output
-	@./mkmodel
-
-model: model/edinburgh.dot
+model/edinburgh.dot: mkmodel
+	mkdir -p model
+	mkdir -p mc_output
+	./mkmodel
 
 mc_output/state_0.bmp: model/edinburgh.dot experiment.topochecker
 	../../../src/topochecker experiment.topochecker
@@ -36,3 +34,4 @@ clean:
 allclean: clean
 	rm -rf model
 	rm -rf mc_output
+	rm -rf input/Stops-UK.csv
