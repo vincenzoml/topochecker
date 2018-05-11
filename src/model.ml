@@ -51,15 +51,15 @@ let save_cache model =
        (fun formula slice ->
 	 let formula_repr = Marshal.to_string formula [] in
 	 let formula_hash = TcUtil.sha256 formula_repr in
- (*	 let formula_fname = Printf.sprintf "%s_%s_%s.fmla" model_hash formula_hash (Logic.string_of_formula formula) *)
-	 let formula_fname = Printf.sprintf "%s_%s.fmla" model_hash formula_hash in 
+ (*	 let formula_fname = Printf.sprintf ".%s_%s_%s.fmla" model_hash formula_hash (Logic.string_of_formula formula) *)
+	 let formula_fname = Printf.sprintf ".%s_%s.fmla" model_hash formula_hash in 
 	 if not (Sys.file_exists formula_fname) then
 	   begin
 	     let formula_chan = open_out_bin formula_fname in
 	     output_string formula_chan formula_repr;
 	     Printf.fprintf formula_chan "\n%s\n" (Logic.string_of_formula formula);
 	     close_out formula_chan;
-	     let slice_fname = Printf.sprintf "%s_%s.slice" model_hash formula_hash in
+	     let slice_fname = Printf.sprintf ".%s_%s.slice" model_hash formula_hash in
 	     save_slice slice slice_fname
 	   end)
        cache
@@ -72,10 +72,10 @@ let load_cache model =
       for i = 0 to Array.length v - 1 do
 	let found_formula_fname = v.(i) in
 	if Filename.check_suffix found_formula_fname ".fmla" then
-	  let found_model_hash = String.sub v.(i) 0 64 in
+	  let found_model_hash = String.sub v.(i) 1 64 in
 	  if found_model_hash = model_hash then
-	    let found_formula_hash = String.sub v.(i) 65 64 in
-	    let slice_fname = Printf.sprintf "%s_%s.slice" model_hash found_formula_hash in
+	    let found_formula_hash = String.sub v.(i) 66 64 in
+	    let slice_fname = Printf.sprintf ".%s_%s.slice" model_hash found_formula_hash in
 	    if Sys.file_exists slice_fname then
 	      let formula_chan = open_in found_formula_fname in
 	      let formula = Marshal.from_channel formula_chan in

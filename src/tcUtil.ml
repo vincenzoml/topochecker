@@ -10,7 +10,16 @@ let valNot x = if x = 0.0 then 1.0 else 0.0
 let ofBool x = if x then valTrue else valFalse
 
 let toBool f x y = isTrue (f x y)
-     
+
+let exists_idx fn vect =
+  let res = ref false in
+  let i = ref 0 in
+  while (not !res) && (!i < Array.length vect) do
+    res := fn !i vect.(!i);
+    i := !i + 1
+  done;
+  !res
+                 
 module IntOrdT : sig type t=int val compare: int -> int -> int end = struct
   type t = int
   let compare = Pervasives.compare
@@ -45,6 +54,9 @@ type connectivity = CityBlock | Chessboard | Euclidean | SubDim
 					
 let debug s =
   Printf.eprintf "debug: %s\n%!" s		 
+
+let debugint s =
+  Printf.eprintf "debug (internal): %s\n%!" s		 
 		 
 let fail s =
   Printf.eprintf "%s\n%!" s;
@@ -284,9 +296,7 @@ let avg v =
   (float_of_int !sum) /. (float_of_int len)
 
 let statcmp v1 v2 =
-  assert_samelen v1 v2;
   let nbins = Array.length v1 in
-  assert (nbins > 0);
   let avg1 = avg v1 in
   let avg2 = avg v2 in
   let num = ref 0.0 in
@@ -495,7 +505,8 @@ let bin bins value min max step =
   (*TODO: normalize histogram!*)
   if (value < min) || (value >= max) then ()
   else let i = (int_of_float ((value -. min) /. step)) in
-       bins.(i) <- bins.(i) + 1
+       let c = Array.get bins i in
+       Array.set bins i (c+1)
 
 
 

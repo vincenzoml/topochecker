@@ -35,8 +35,8 @@ let _ =
 	| ModelLoader.Check (color,formula) ->
 	   (match accum with
 	     [] -> TcUtil.fail "no output file specified"
-	   | (fname,fmlas)::rem ->
-	      (fname,(color,(TcUtil.toBool (checker formula)))::fmlas)::rem)
+	    | (fname,fmlas)::rem ->
+               (fname,(color,(TcUtil.toBool (checker formula)))::fmlas)::rem)
 	| ModelLoader.Output (fname,states) ->
 	   ((fname,states),[])::accum)
       [] commands 

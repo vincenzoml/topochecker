@@ -14,7 +14,14 @@ type result = Slice of Slice.slice | Fun of (int -> int -> float)
 
 type cresult = Cslice of Slice.cslice | Cfun of (int -> float)
 let capply cresult = match cresult with Cfun f -> f | Cslice s -> Array1.unsafe_get s
-  
+
+let newid =
+  let counter = ref 0 in
+  fun () ->
+  let tmp = !counter in
+  counter := !counter + 1;
+  tmp
+                                                                
 let compute model =
   let num_states = Graph.nb_vertex model.kripke in
   let num_points =  model.space#num_nodes in
@@ -22,8 +29,8 @@ let compute model =
   let stack = Array1.create int c_layout num_points in (* auxiliary *)
   let onstack = Array1.create int c_layout num_points in (* auxiliary *)
   let lowlink = Array1.create float64 c_layout num_points in (* auxiliary *)
-  let new_slice f = let slice = make_slice num_states num_points in (f slice;Slice slice) in
-  let new_cslice f = let cslice = make_cslice num_states in (f cslice; Cslice cslice) in
+  let new_slice dbg f = let slice = make_slice num_states num_points in let id = newid() in (debugint (Printf.sprintf "[%d] %s" id dbg); f slice;debugint (Printf.sprintf "[%d] %s done" id dbg); Slice slice) in
+    let new_cslice f = let cslice = make_cslice num_states in (f cslice; Cslice cslice) in
   let rec cchecker set model (cache : formula -> int -> int -> float) cf =
     match cf with
       Ctrue -> Cfun (fun _ -> valTrue)
@@ -62,7 +69,7 @@ let compute model =
   match formula with
   | Maxvol f ->
      let a = cache (CC f) in
-     new_slice (fun slice ->
+     new_slice "maxvol" (fun slice ->
        for state = 0 to num_states - 1 do
 	 let max = ref 0 in	 
 	 Array1.fill stack 0;
@@ -81,6 +88,7 @@ let compute model =
 	     Array2.set slice state point (ofBool b) 
 	 done
        done)
+         
   | Ifthenelse (cf,f1,f2) ->
    let set = cache T in (* TODO: this sets the initial context for collective evaluation to all points (formula "T") *)
    let cresult = cchecker set model cache cf in
@@ -89,7 +97,7 @@ let compute model =
    Fun (fun state point -> if isTrue (capply cresult state) then a1 state point else a2 state point)
   | T -> Fun (fun state point -> valTrue)
   | Prop p -> let a1 = cache (Prop p) in Fun a1
-  | CC f -> let a = cache f in new_slice
+  | CC f -> let a = cache f in new_slice "CC"
 			         (fun slice ->
 				   for state = 0 to num_states - 1 do
 				     TcUtil.tarjan (a state) num_points
@@ -106,7 +114,7 @@ let compute model =
      let a = cache f in
      Fun (fun state point ->  TcUtil.ofBool (Syntax.opsem op (a state point) thr))
   | Statcmp (p,f1,p2,f,rad,min,max,nbins) ->
-     new_slice
+     new_slice "statcmp"
        (fun slice ->
 	 (match model.iter_ball with
 	    None -> TcUtil.fail "model does not have distances but SCMP operator used"
@@ -136,7 +144,7 @@ let compute model =
 		done
 	      done))
     | Scmpima (p1,p2,f,rad,min,max,nbins) ->
-       new_slice
+       new_slice "scmpima"
 	 (fun slice ->
 	   (match model.iter_ball with
 	     None -> TcUtil.fail "model does not have distances but SCMPIMA operator used"
@@ -165,7 +173,7 @@ let compute model =
 		done
 	      done))
     | Asm (p,f,rad) ->
-       new_slice
+       new_slice "asm"
 	 (fun slice ->
 	   (match model.iter_ball with
 	     None -> TcUtil.fail "model does not have distances but ASM operator used"
@@ -188,7 +196,7 @@ let compute model =
 		done
 	      done))
     | Eucl f ->
-       new_slice
+       new_slice "eucl"
 	 (fun slice -> (
 	   try
 	     let a1 = cache f in
@@ -209,7 +217,7 @@ let compute model =
 	     done
 	   with _ -> TcUtil.fail "model does not have distances but EUCL operator used"))
     | EDT f -> (*Ciesielski et al. 2010*)
-       new_slice
+       new_slice "EDT"
     	 (fun slice -> (
 	   try
     	     let a1 = cache f in
@@ -261,7 +269,7 @@ let compute model =
 	     done
 	   with _ -> TcUtil.fail "model is not a euclidean grid"))
     | EDTM f -> (*Ciesielski et al. 2010*)
-       new_slice
+       new_slice "EDTM"
     	 (fun slice -> (
 	   try
     	     let a1 = cache f in
@@ -313,7 +321,7 @@ let compute model =
 	     done
 	   with _ -> TcUtil.fail "model is not a euclidean grid"))
     | ModDijkstraDT f ->
-       new_slice
+       new_slice "moddijkstradt"
 	 (fun slice ->
 	   let a1 = cache f in
 	   Array2.fill slice infinity;
@@ -346,7 +354,7 @@ let compute model =
 	     done
 	   done)
     | Near f1 ->
-       new_slice
+       new_slice "near"
 	 (fun slice ->
 	   Array2.fill slice valFalse;
 	   let a1 = cache f1 in
@@ -362,7 +370,7 @@ let compute model =
 	     done
 	   done)
     | Surrounded (f1,f2) ->
-       new_slice
+       new_slice "surrounded"
 	 (fun slice ->
 	   Array2.fill slice valFalse;
 	   let a1 = cache f1 in
@@ -392,7 +400,7 @@ let compute model =
 	     done;
 	   done)
     | Af f1 ->
-       new_slice
+       new_slice "af"
 	 (fun slice ->
 	   let a1 = cache f1 in
 	   for point = 0 to num_points - 1 do
@@ -414,7 +422,7 @@ let compute model =
 	     done	      
 	   done)	   
     | Ex f1 ->
-       new_slice
+       new_slice "ex"
 	 (fun slice ->
 	   Array2.fill slice valFalse;
 	   let a1 = cache f1 in
@@ -427,7 +435,7 @@ let compute model =
 	     done
 	   done)
     | Eu (f1,f2) ->
-       new_slice
+       new_slice "eu"
 	 (fun slice ->
 	   Array2.fill slice valFalse;
 	   let a1 = cache f1 in

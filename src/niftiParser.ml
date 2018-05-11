@@ -184,6 +184,7 @@ let load_nifti_model bindings =
   (let prop_img = List.map (fun (name,file) -> ((match name with "" -> "value" | s -> s),load_nifti2 file)) bindings in
    
    let hash = TcUtil.mapO (fun x -> (x,Model.H.create 1)) (TcUtil.sfsSha256 bindings) in
+   match hash with Some (a,b) -> TcUtil.debug a;
    let (_,origfname) = List.hd bindings in
    let (prop,main) = List.hd prop_img in
    let dims = main.dims in
@@ -193,7 +194,13 @@ let load_nifti_model bindings =
    List.iter (fun (prop,img) -> 
 	      Model.H.add h (Logic.Prop prop)
 		(fun k s -> img.data.{s}))
-     prop_img;
+             prop_img;
+   Model.H.add h (Logic.Prop "border")
+               (fun k s ->
+                 TcUtil.ofBool
+                   (TcUtil.exists_idx
+                      (fun dim coord -> coord = 0 || coord = dims.(dim) - 1)
+                      (TcUtil.coords_of_int s dims)));
    { Model.hash_and_cache = hash;
      Model.kripke = Model.default_kripke ();
      (*distance 1 not euclidean*)
