@@ -182,7 +182,7 @@ let load_nifti2 s =
 (*dir: directory, s=file name, k,e=""*)
 let load_nifti_model bindings =
   (let prop_img = List.map (fun (name,file) -> ((match name with "" -> "value" | s -> s),load_nifti2 file)) bindings in
-   
+
    let hash = TcUtil.mapO (fun x -> (x,Model.H.create 1)) (TcUtil.sfsSha256 bindings) in
    match hash with Some (a,b) -> TcUtil.debug a;
    let (_,origfname) = List.hd bindings in
@@ -333,7 +333,6 @@ let load_nifti_model bindings =
 	   headerOut.{505}<-0;
 	   headerOut.{504}<-0;
 	 ););
-
        let v1 = Array1.create valtype c_layout main.dim in
        Array1.fill v1 0;
        let r = Unix.openfile filename [Unix.O_RDWR;Unix.O_CREAT;Unix.O_TRUNC] 0o644 in

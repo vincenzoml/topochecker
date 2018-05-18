@@ -381,11 +381,12 @@ let compute model =
 	       Array2.unsafe_set slice state point (a1 state point);
 	       if isTrue (a1 state point) || isTrue (a2 state point) then
 		 model.space#iter_post point
-		   (fun point w -> if (isFalse (a1 state point)) &&
-		       (isFalse(a2 state point)) &&
-		       (isFalse(Array2.unsafe_get slice state point))
-		     then (Array2.unsafe_set slice state point valUtil;
-			   Stack.push point accum))
+		                       (fun point w ->
+                                         if (isFalse (a1 state point)) &&
+		                              (isFalse(a2 state point)) &&
+		                                (isFalse(Array2.unsafe_get slice state point))
+		                         then (Array2.unsafe_set slice state point valUtil;
+			                       Stack.push point accum))
 	     done;
 	     while not (Stack.is_empty accum) do
 	       let point = Stack.pop accum in

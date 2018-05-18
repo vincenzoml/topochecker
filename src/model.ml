@@ -51,15 +51,15 @@ let save_cache model =
        (fun formula slice ->
 	 let formula_repr = Marshal.to_string formula [] in
 	 let formula_hash = TcUtil.sha256 formula_repr in
- (*	 let formula_fname = Printf.sprintf ".%s_%s_%s.fmla" model_hash formula_hash (Logic.string_of_formula formula) *)
-	 let formula_fname = Printf.sprintf ".%s_%s.fmla" model_hash formula_hash in 
+	 let formula_fname = Printf.sprintf ".%s_%s.fmla" model_hash formula_hash in
+         let slice_fname = Printf.sprintf ".%s_%s.slice" model_hash formula_hash in
+         if (Sys.file_exists formula_fname) && (not (Sys.file_exists slice_fname)) then Sys.remove formula_fname;
 	 if not (Sys.file_exists formula_fname) then
 	   begin
 	     let formula_chan = open_out_bin formula_fname in
 	     output_string formula_chan formula_repr;
 	     Printf.fprintf formula_chan "\n%s\n" (Logic.string_of_formula formula);
 	     close_out formula_chan;
-	     let slice_fname = Printf.sprintf ".%s_%s.slice" model_hash formula_hash in
 	     save_slice slice slice_fname
 	   end)
        cache
@@ -68,7 +68,7 @@ let load_cache model =
   match model.hash_and_cache with
     None -> () 
   | Some (model_hash,cache) ->
-      let v = Sys.readdir "." in
+     let v = Sys.readdir "." in
       for i = 0 to Array.length v - 1 do
 	let found_formula_fname = v.(i) in
 	if Filename.check_suffix found_formula_fname ".fmla" then
@@ -77,13 +77,19 @@ let load_cache model =
 	    let found_formula_hash = String.sub v.(i) 66 64 in
 	    let slice_fname = Printf.sprintf ".%s_%s.slice" model_hash found_formula_hash in
 	    if Sys.file_exists slice_fname then
-	      let formula_chan = open_in found_formula_fname in
-	      let formula = Marshal.from_channel formula_chan in
-	      close_in formula_chan;
-	      if not (H.mem model.eval formula) then
-		let slice = load_slice slice_fname (Graph.nb_vertex model.kripke) (model.space#num_nodes) in
-		H.replace cache formula slice;
-		H.replace model.eval formula (Array2.unsafe_get slice);
+              try
+	        let formula_chan = open_in found_formula_fname in
+	        let formula = Marshal.from_channel formula_chan in
+	        close_in formula_chan;
+	        if not (H.mem model.eval formula) then
+                  begin
+	            let slice = load_slice slice_fname (Graph.nb_vertex model.kripke) (model.space#num_nodes) in
+	            H.replace cache formula slice;
+	            H.replace model.eval formula (Array2.unsafe_get slice);
+                  end
+              with Sys_error _ ->
+                Sys.remove found_formula_fname;
+                Sys.remove slice_fname                
       done
 	
 let default_kripke () =
