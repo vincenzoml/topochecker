@@ -1,3 +1,7 @@
+%token IF
+%token THEN
+%token ELSE
+%token FI
 %token EOL
 %token <string> STRING
 %token COUNT
@@ -16,8 +20,13 @@
 %token G
 %token X
 %token F
+%token MAXVOL
 %token STATCMP
+%token SCMPIMA
+%token ASM
 %token EUCL
+%token EDT
+%token EDTM
 %token MDDT
 %token OR
 %token NOT
@@ -112,7 +121,11 @@ qformula:
 num:
 | FLOAT {$1}
 | INT {float_of_int $1}
+;
 formula:
+| MAXVOL formula {Syntax.MAXVOL $2}
+| IF cformula THEN formula ELSE formula FI { Syntax.IFTHENELSE ($2,$4,$6) }
+| IF cformula THEN formula FI { Syntax.IFTHENELSE ($2,$4,Syntax.FALSE) }
 | LPAREN formula RPAREN {$2}
 | TRUE {Syntax.TRUE}
 | FALSE {Syntax.FALSE}
@@ -126,6 +139,7 @@ formula:
 | NEAR formula {Syntax.NEAR $2}
 | NEAR HAT INT formula {Syntax.NEARN ($3,$4)}
 | INTERIOR formula {Syntax.INT $2}
+| INTERIOR HAT INT formula {Syntax.INTN ($3,$4)}
 | formula SURROUNDED formula {Syntax.SURROUNDED ($1,$3)}
 | E X formula {Syntax.EX $3}
 | A X formula {Syntax.AX $3}
@@ -135,10 +149,24 @@ formula:
 | A F formula {Syntax.AF $3}
 | E formula U formula {Syntax.EU ($2,$4)}
 | A formula U formula {Syntax.AU ($2,$4)}
-| STATCMP LPAREN IDE COMMA num COMMA OP num COMMA num COMMA num COMMA INT RPAREN formula {Syntax.STATCMP ($3,$16,$5,$7,$8,$10,$12,$14)}
+| STATCMP LPAREN IDE COMMA formula COMMA num COMMA OP num COMMA num COMMA num COMMA INT RPAREN LPAREN IDE COMMA formula RPAREN {Syntax.STATCMP ($3,$5,$19,$21,$7,$9,$10,$12,$14,$16)}
+| SCMPIMA LPAREN IDE COMMA IDE COMMA formula COMMA num COMMA OP num COMMA num COMMA num COMMA INT RPAREN {Syntax.SCMPIMA ($3,$5,$7,$9,$11,$12,$14,$16,$18)}
+| ASM LPAREN IDE COMMA formula COMMA num COMMA OP num RPAREN {Syntax.ASM ($3,$5,$7,$9,$10)}
 | EUCL LPAREN formula COMMA OP num RPAREN {Syntax.EUCL ($3,$5,$6)}
+| EDT LPAREN formula COMMA OP num RPAREN {Syntax.EDT ($3,$5,$6)}
+| EDTM LPAREN formula COMMA OP num RPAREN {Syntax.EDTM ($3,$5,$6)}
 | MDDT LPAREN formula COMMA OP num RPAREN {Syntax.MDDT ($3,$5,$6)}
 ;
+cformula:
+| LPAREN cformula RPAREN {$2}
+| TRUE {Syntax.CTRUE}
+| FALSE {Syntax.CFALSE}
+| NOT cformula {Syntax.CNOT $2}
+| cformula AND cformula {Syntax.CAND ($1,$3)}
+| cformula OR cformula {Syntax.COR ($1,$3)}
+| formula SHARE cformula {Syntax.CSHARE ($1,$3)}
+| GROUP formula {Syntax.CGROUP $2}
+; 
 formalarglist:
 | LPAREN innerformalarglist RPAREN {$2}
 ;

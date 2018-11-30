@@ -1,0 +1,29 @@
+Model "bmpdot:KRIPKE=kripke.dot,SPACE=test";
+
+Let green = [green == 255] & [red == 0] & [blue == 0];
+Let red =  [red == 255] & [green == 0 ] & [blue == 0];
+Let white = [green == 255] & [red == 255] & [blue == 255];
+Let blue = [green == 0] & [red == 0] & [blue == 255];
+Let yellow = [red == 255] & [green == 255] &  [blue == 0];
+Let cyan = [red == 0] & [green == 255] & [blue == 255];
+Let magenta = [red == 255] & [green == 0] & [blue == 255];
+Let orange = [red == 255] & [green == 127] & [blue == 0];
+Let purple = [red == 127] & [green == 0] & [blue == 255];
+
+Let connected(x) = IF x -< Gr x THEN x ELSE FF FI;
+Let iscurve(x) = IF ((!x) -< Gr (!x)) THEN FF ELSE x FI;
+
+Let quasisurr(x,y) =
+    IF ((!y) -< Gr (!y))
+    THEN x S (MDDT(y,<=35) & (!x))
+    ELSE x S y FI;    	   
+
+Output "output/out";
+
+Check "brown" connected(green);
+Check "gray" iscurve(orange);
+Check "gray"  iscurve(red);
+
+Check "black" quasisurr(blue,magenta);
+Check "black" quasisurr(cyan,red);
+Check "black" quasisurr(yellow,purple);

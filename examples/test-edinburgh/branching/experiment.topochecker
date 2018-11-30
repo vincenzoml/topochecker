@@ -1,0 +1,99 @@
+Model "bmpdot:KRIPKE=model/edinburgh.dot,SPACE=model/edinburgh";
+
+Let centreBus = [blue == 10];
+Let airportBus = [blue == 15];
+Let unknownBus = [blue == 13];
+
+Let close(x) = N x;
+Let reach(x,y) = !((!y) S (!x));
+Let touch(x,y) = x & reach(x|y,y);
+Let exists(x) = touch(TT,x);
+Let forall(x) = !touch(TT,!x);
+
+Let bus = centreBus | airportBus | unknownBus;
+Let bus1 = bus & [red == 0];
+Let bus2 = bus & [red == 15];
+Let bus3 = bus & [red == 30];
+Let bus4 = bus & [red == 45];
+Let bus5 = bus & [red == 60];
+Let bus6 = bus & [red == 75];
+Let bus7 = bus & [red == 90];
+Let bus8 = bus & [red == 105];
+Let bus9 = bus & [red == 120];
+Let bus10 = bus & [red == 135];
+Let bus11 = bus & [red == 150];
+Let bus12 = bus & [red == 165];
+
+Let delayed = [green > 0];
+Let delayed1min = [green == 5];
+Let delayed2mins = [green == 10];
+Let delayed3mins = [green == 15];
+Let delayed4mins = [green == 20];
+Let delayed5mins = [green == 25];
+Let delayed6mins = [green == 30];
+
+Let busStop = [red == 0] & [green == 255] & [blue == 0];
+
+Let busAtStop(x) = touch(busStop,x);
+Let emptyStop(dir) = busStop & (!touch(busStop,dir));
+
+// In the paper:
+Let noDelay = forall(!(bus & delayed));
+
+//In the paper:
+Let delay = exists(bus & delayed);
+
+// In the paper:
+Let noBusesStep(d,dir,cont) =
+    emptyStop(dir) & d & (E X cont);
+
+// In the paper:
+Let noBusesFifteenStepsDir(d,dir) =
+ noBusesStep(d,dir,
+  noBusesStep(d,dir,
+   noBusesStep(d,dir,
+    noBusesStep(d,dir,
+     noBusesStep(d,dir,
+      noBusesStep(d,dir,
+       noBusesStep(d,dir,
+        noBusesStep(d,dir,
+         noBusesStep(d,dir,
+          noBusesStep(d,dir,
+	   noBusesStep(d,dir,
+	    noBusesStep(d,dir,
+	     noBusesStep(d,dir,
+	      noBusesStep(d,dir,
+	       noBusesStep(d,dir,
+                emptyStop(dir) & d & (![deadlock]))))))))))))))));
+
+Let noBusesFifteenSteps(d) = noBusesFifteenStepsDir(d,airportBus) | noBusesFifteenStepsDir(d,centreBus);
+
+// In the paper
+Let clumping(del,dir) = del & busAtStop(dir) & (E X ((del & emptyStop(dir)) & (E X ((del & busAtStop(dir)) | (E X (del & busAtStop(dir)))))));
+
+// In the paper
+Let notDelayedClumping = clumping(noDelay,airportBus) | clumping(noDelay,centreBus);
+// In the paper
+Let delayedClumping = clumping(delay,airportBus) | clumping(delay,centreBus);
+
+Output "mc_output/state";
+
+// In the paper:
+//Check "red" exists(E F (bus & delayed6mins));
+
+// In the paper:
+//Check "orange" E F noBusesFifteenSteps(TT);
+// In the paper:
+//Check "red" noBusesFifteenSteps(TT);
+
+// In the paper:
+//Check "orange" E F noBusesFifteenSteps(TT);
+// In the paper:
+//Check "red" noBusesFifteenSteps(TT);
+
+// In the paper:
+//Check "orange" touch(busStop,E F notDelayedClumping);
+// In the paper:
+//Check "orange" touch(busStop,E F delayedClumping);
+
+Check "red" noBusesFifteenSteps(delay);

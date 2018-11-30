@@ -4,13 +4,13 @@ TOP=topochecker.top
 #Command to compile without explicit dependencies:
 #ocamlbuild -cflags -I,+ocamlgraph,-I,+csv -libs ocamlgraph/graph,csv/csv,bigarray,str main.native
 
-LIBS=bigarray.cmxa unix.cmxa graph.cmxa str.cmxa csv.cmxa
+LIBS=bigarray.cmxa graph.cmxa str.cmxa csv.cmxa
 ALIBS=$(LIBS:.cmxa=.cma)
-PACKAGES=-package csv -I $(shell ocamlfind query ocamlgraph) -I $(shell ocamlfind query bytes)
+PACKAGES=-package camlimages,camlimages.all_formats -linkpkg -package csv -I $(shell ocamlfind query ocamlgraph) -I $(shell ocamlfind query bytes) -I $(shell ocamlfind query camlimages)
 OCAMLC = ocamlfind ocamlc $(PACKAGES) $(ALIBS)
-OCAMLOPT = ocamlfind ocamlopt -p $(PACKAGES) $(LIBS)
+OCAMLOPT = ocamlfind ocamlopt $(PACKAGES) $(LIBS)
 OCAMLMKTOP = ocamlfind ocamlmktop $(PACKAGES) $(ALIBS)
-DEPS=util.cmx logic.cmx syntax.cmx tcParser.cmx tcLexer.cmx model.cmx checker.cmx bmp.cmx bmpParser.cmx niftiParser.cmx dotParser.cmx modelLoader.cmx
+DEPS=slice.cmx tcUtil.cmx logic.cmx syntax.cmx tcParser.cmx tcLexer.cmx model.cmx checker.cmx bmpDotParser.cmx niftiParser.cmx dotParser.cmx modelLoader.cmx
 ADEPS=$(DEPS:.cmx=.cmo)
 MAIN=main
 RLFE=$(shell which rlfe)
@@ -38,7 +38,7 @@ OCAMLBUILD_EXE=$(shell which ocamlbuild)
 ifneq ($(OCAMLBUILD_EXE),)
 	ifeq ($(WINDOWS),false)
 		TARGET=fast
-		OCAMLBUILD=ocamlbuild -package bytes -package bigarray -package str -package unix -package ocamlgraph -package csv
+		OCAMLBUILD=ocamlbuild -use-ocamlfind -pkg camlimages,camlimages.all_formats -pkg bytes -pkg bigarray -pkg str -pkg unix -pkg ocamlgraph -pkg csv
 	endif
 endif
 
@@ -56,6 +56,10 @@ doslow: $(DEPS) $(MAIN).cmx
 fast:
 	make slowclean
 	$(OCAMLBUILD) main.native && cp -L main.native $(EXE) && rm main.native
+
+debug:
+	make slowclean
+	$(OCAMLBUILD) main.d.byte && cp -L main.d.byte $(EXE) && rm main.d.byte
 
 fastprof:
 	make slowclean

@@ -1,0 +1,824 @@
+        {
+            "name": "100",
+            "description": "AIRLINK: Airport - City Centre",
+            "service_type": "day",
+            "routes": [
+                {
+                    "destination": "Airport",
+                    "points": [
+                        {
+                            "stop_id": 36232493,
+                            "latitude": 55.95157,
+                            "longitude": -3.191772
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.95272,
+                            "longitude": -3.192336
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.95269,
+                            "longitude": -3.192831
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.950188,
+                            "longitude": -3.207728
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.950077,
+                            "longitude": -3.208381
+                        },
+                        {
+                            "stop_id": 36236565,
+                            "latitude": 55.949818,
+                            "longitude": -3.208886
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945904,
+                            "longitude": -3.217651
+                        },
+                        {
+                            "stop_id": 36232639,
+                            "latitude": 55.94589,
+                            "longitude": -3.219412
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945976,
+                            "longitude": -3.22393
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94596,
+                            "longitude": -3.224778
+                        },
+                        {
+                            "stop_id": 36232645,
+                            "latitude": 55.945755,
+                            "longitude": -3.228182
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945473,
+                            "longitude": -3.233025
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945484,
+                            "longitude": -3.233842
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945797,
+                            "longitude": -3.235838
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.946064,
+                            "longitude": -3.236695
+                        },
+                        {
+                            "stop_id": 36239682,
+                            "latitude": 55.945744,
+                            "longitude": -3.239967
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94536,
+                            "longitude": -3.243478
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94529,
+                            "longitude": -3.24418
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94517,
+                            "longitude": -3.246114
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.9451,
+                            "longitude": -3.247985
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.944984,
+                            "longitude": -3.249535
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.944824,
+                            "longitude": -3.250955
+                        },
+                        {
+                            "stop_id": 36236578,
+                            "latitude": 55.94463,
+                            "longitude": -3.252405
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94417,
+                            "longitude": -3.256137
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94356,
+                            "longitude": -3.258456
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.942726,
+                            "longitude": -3.26115
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.942432,
+                            "longitude": -3.264375
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.942383,
+                            "longitude": -3.265798
+                        },
+                        {
+                            "stop_id": 36235756,
+                            "latitude": 55.94214,
+                            "longitude": -3.267792
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.941757,
+                            "longitude": -3.270565
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94176,
+                            "longitude": -3.27364
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.942673,
+                            "longitude": -3.282076
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.943058,
+                            "longitude": -3.287308
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.943153,
+                            "longitude": -3.289217
+                        },
+                        {
+                            "stop_id": 36235764,
+                            "latitude": 55.942883,
+                            "longitude": -3.291257
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.942677,
+                            "longitude": -3.292996
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.942547,
+                            "longitude": -3.293312
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94253,
+                            "longitude": -3.293791
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.941647,
+                            "longitude": -3.300086
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94124,
+                            "longitude": -3.303979
+                        },
+                        {
+                            "stop_id": 36237927,
+                            "latitude": 55.94072,
+                            "longitude": -3.311519
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.940105,
+                            "longitude": -3.318303
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.93855,
+                            "longitude": -3.327728
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936913,
+                            "longitude": -3.335164
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936733,
+                            "longitude": -3.336102
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936462,
+                            "longitude": -3.340512
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936382,
+                            "longitude": -3.34211
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.93666,
+                            "longitude": -3.348603
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.9367,
+                            "longitude": -3.354768
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936596,
+                            "longitude": -3.356974
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.93644,
+                            "longitude": -3.358105
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936214,
+                            "longitude": -3.358818
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.93614,
+                            "longitude": -3.359359
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936394,
+                            "longitude": -3.359672
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936737,
+                            "longitude": -3.359524
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.937042,
+                            "longitude": -3.358943
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.937317,
+                            "longitude": -3.359048
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.937744,
+                            "longitude": -3.3594
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.938072,
+                            "longitude": -3.359011
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.938507,
+                            "longitude": -3.358722
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.939342,
+                            "longitude": -3.358751
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.93978,
+                            "longitude": -3.359038
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.93993,
+                            "longitude": -3.359396
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.940483,
+                            "longitude": -3.359527
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.941383,
+                            "longitude": -3.360215
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.942352,
+                            "longitude": -3.360634
+                        },
+                        {
+                            "stop_id": 36232425,
+                            "latitude": 55.943546,
+                            "longitude": -3.361316
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.944527,
+                            "longitude": -3.361478
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.944862,
+                            "longitude": -3.361794
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94498,
+                            "longitude": -3.362391
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945065,
+                            "longitude": -3.363723
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94538,
+                            "longitude": -3.364631
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945885,
+                            "longitude": -3.365129
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.947826,
+                            "longitude": -3.365149
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.948452,
+                            "longitude": -3.36325
+                        },
+                        {
+                            "stop_id": 36232426,
+                            "latitude": 55.948467,
+                            "longitude": -3.363234
+                        }
+                    ],
+                    "stops": [
+                        36232493,
+                        36236565,
+                        36232639,
+                        36232645,
+                        36239682,
+                        36236578,
+                        36235756,
+                        36235764,
+                        36237927,
+                        36232425,
+                        36232426
+                    ]
+                },
+                {
+                    "destination": "City Centre",
+                    "points": [
+                        {
+                            "stop_id": 36232426,
+                            "latitude": 55.948467,
+                            "longitude": -3.363234
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.948105,
+                            "longitude": -3.361988
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94767,
+                            "longitude": -3.360612
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94711,
+                            "longitude": -3.360112
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.946617,
+                            "longitude": -3.359967
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94492,
+                            "longitude": -3.361604
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.944313,
+                            "longitude": -3.360975
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94392,
+                            "longitude": -3.360977
+                        },
+                        {
+                            "stop_id": 36232427,
+                            "latitude": 55.94307,
+                            "longitude": -3.360643
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94179,
+                            "longitude": -3.360134
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.940254,
+                            "longitude": -3.359151
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.940098,
+                            "longitude": -3.358857
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.939533,
+                            "longitude": -3.358694
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.938835,
+                            "longitude": -3.358349
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.938267,
+                            "longitude": -3.358553
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.937607,
+                            "longitude": -3.358082
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.93723,
+                            "longitude": -3.357268
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936996,
+                            "longitude": -3.354907
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936913,
+                            "longitude": -3.351125
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936882,
+                            "longitude": -3.348131
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936634,
+                            "longitude": -3.342103
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.936977,
+                            "longitude": -3.336015
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.937237,
+                            "longitude": -3.334599
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.93774,
+                            "longitude": -3.332615
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.9387,
+                            "longitude": -3.327781
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94041,
+                            "longitude": -3.317625
+                        },
+                        {
+                            "stop_id": 36236596,
+                            "latitude": 55.940834,
+                            "longitude": -3.311683
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94144,
+                            "longitude": -3.303346
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94185,
+                            "longitude": -3.299645
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94276,
+                            "longitude": -3.293367
+                        },
+                        {
+                            "stop_id": 36243478,
+                            "latitude": 55.942955,
+                            "longitude": -3.291932
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.943268,
+                            "longitude": -3.289541
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94324,
+                            "longitude": -3.287971
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.942936,
+                            "longitude": -3.283317
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.942608,
+                            "longitude": -3.279768
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.941986,
+                            "longitude": -3.274544
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.941887,
+                            "longitude": -3.273035
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.941837,
+                            "longitude": -3.271465
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.941895,
+                            "longitude": -3.27057
+                        },
+                        {
+                            "stop_id": 36253682,
+                            "latitude": 55.942413,
+                            "longitude": -3.266984
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.942524,
+                            "longitude": -3.265915
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.942574,
+                            "longitude": -3.264476
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94274,
+                            "longitude": -3.262272
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94287,
+                            "longitude": -3.261155
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.943703,
+                            "longitude": -3.2587
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.944164,
+                            "longitude": -3.25673
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94453,
+                            "longitude": -3.254484
+                        },
+                        {
+                            "stop_id": 36236585,
+                            "latitude": 55.944996,
+                            "longitude": -3.250031
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945126,
+                            "longitude": -3.248914
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945232,
+                            "longitude": -3.247157
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945366,
+                            "longitude": -3.244439
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945564,
+                            "longitude": -3.242588
+                        },
+                        {
+                            "stop_id": 36232652,
+                            "latitude": 55.945786,
+                            "longitude": -3.240353
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94618,
+                            "longitude": -3.237099
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94601,
+                            "longitude": -3.235941
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945717,
+                            "longitude": -3.23457
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.94555,
+                            "longitude": -3.233348
+                        },
+                        {
+                            "stop_id": 36232654,
+                            "latitude": 55.945827,
+                            "longitude": -3.228873
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.946102,
+                            "longitude": -3.224046
+                        },
+                        {
+                            "stop_id": 36232657,
+                            "latitude": 55.945995,
+                            "longitude": -3.21855
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.945995,
+                            "longitude": -3.217734
+                        },
+                        {
+                            "stop_id": 36236568,
+                            "latitude": 55.949852,
+                            "longitude": -3.209143
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.950165,
+                            "longitude": -3.208384
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.95034,
+                            "longitude": -3.207108
+                        },
+                        {
+                            "stop_id": 36253282,
+                            "latitude": 55.95152,
+                            "longitude": -3.200339
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.951633,
+                            "longitude": -3.199637
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.95292,
+                            "longitude": -3.200398
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.953007,
+                            "longitude": -3.200673
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.953197,
+                            "longitude": -3.200535
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.95313,
+                            "longitude": -3.200196
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.953663,
+                            "longitude": -3.197154
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.95353,
+                            "longitude": -3.197069
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.953266,
+                            "longitude": -3.197093
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.95226,
+                            "longitude": -3.196534
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.95193,
+                            "longitude": -3.196812
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.950348,
+                            "longitude": -3.195898
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.950294,
+                            "longitude": -3.195192
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.9502,
+                            "longitude": -3.194805
+                        },
+                        {
+                            "stop_id": null,
+                            "latitude": 55.95093,
+                            "longitude": -3.191528
+                        },
+                        {
+                            "stop_id": 36232493,
+                            "latitude": 55.95157,
+                            "longitude": -3.191772
+                        }
+                    ],
+                    "stops": [
+                        36232426,
+                        36232427,
+                        36236596,
+                        36243478,
+                        36253682,
+                        36236585,
+                        36232652,
+                        36232654,
+                        36232657,
+                        36236568,
+                        36253282,
+                        36232493
+                    ]
+                }
+            ]
+        }

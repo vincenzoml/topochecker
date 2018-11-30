@@ -1,8 +1,8 @@
 
 
-let num_time = 100000
+let num_time = 10
 let branching_time = 5		 
-let num_space = 25
+let num_space = 10
 let mkid i j = i + (num_space*j)
 	    
 let out_time fname =
@@ -14,9 +14,10 @@ let out_time fname =
   done;
   for i = 0 to num_time - 1 do
     if i != num_time - 1 then Printf.fprintf ch "%d->%d;\n" i (i+1);
+    Printf.fprintf ch "%d->%d;\n" i i;
     for j = 0 to branching_time do      
       let dst = Random.int num_time in
-      Printf.fprintf ch "%d->%d;\n" i dst
+      if i <> dst then Printf.fprintf ch "%d->%d;\n" i dst
     done
   done;
   Printf.fprintf ch "}\n";
@@ -56,6 +57,6 @@ let out_eval fname =
 let main =
   out_space "space.dot";
   out_time "kripke.dot";
-  (*  out_eval "eval.csv" *)
+  out_eval "eval.csv"
 
 	    

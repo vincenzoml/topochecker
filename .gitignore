@@ -21,3 +21,9 @@ src/main.native
 examples/*/out*.dot
 examples/*_generator/*.dot
 examples/*_generator/*.csv
+*/_build
+util/bmp_to_topochecker
+util/kripke.dot
+examples/test-square_grid_quantitative/eval.csv
+examples/test-square_grid_quantitative/kripke.dot
+examples/test-square_grid_quantitative/space.dot

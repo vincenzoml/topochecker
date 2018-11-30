@@ -1,0 +1,7 @@
+_build
+a.pdf
+input/Stops-UK.csv
+mkmodel
+mkmodel.native
+output
+model
