@@ -101,7 +101,7 @@ let load_head_ver nii header version =
     else
       level
   in
-  let vect valtype = Array1.map_file nii ?pos:(Some voffs) valtype c_layout false ~-1 in
+  let vect valtype = Bigarray.array1_of_genarray (Unix.map_file nii ?pos:(Some voffs) valtype c_layout false [|~-1|]) in
   let data = Array1.create float64 c_layout dim in
   (match datatype with
   | 1 (*binary*) -> TcUtil.fail "Binary type not supported in nifti"
@@ -166,7 +166,7 @@ let load_head_ver nii header version =
 
 let load_nifti2 s =
   let f = Unix.openfile s [Unix.O_RDONLY] 0o644 in
-  let hbytes = Array1.map_file f int8_unsigned c_layout false 540 in
+  let hbytes = Bigarray.array1_of_genarray (Unix.map_file f int8_unsigned c_layout false [|540|]) in
   let hsizeL = from_bytes_to_int (Array1.sub hbytes 0 4) Little in
   let hsizeB = from_bytes_to_int (Array1.sub hbytes 0 4) Big in
   let (hsize,versionOpt) =
@@ -336,7 +336,7 @@ let load_nifti_model bindings =
        let v1 = Array1.create valtype c_layout main.dim in
        Array1.fill v1 0;
        let r = Unix.openfile filename [Unix.O_RDWR;Unix.O_CREAT;Unix.O_TRUNC] 0o644 in
-       let v2 = Array1.map_file r int8_unsigned c_layout true ((Array1.dim v1)*(bitpixOut/8)+hsize+offs) in
+       let v2 = Bigarray.array1_of_genarray (Unix.map_file r int8_unsigned c_layout true [|(Array1.dim v1)*(bitpixOut/8)+hsize+offs|]) in
        Array1.blit headerOut (Array1.sub v2 0 hsize);
        Unix.close r;
        List.iter (fun (colour,truth) ->
@@ -345,7 +345,7 @@ let load_nifti_model bindings =
        	 done
        ) coloured_truth_vals;
        let r = Unix.openfile filename [Unix.O_RDWR] 0o644 in
-       let v2 = Array1.map_file r valtype c_layout true ~-1 in
+       let v2 = Bigarray.array1_of_genarray (Unix.map_file r valtype c_layout true [|~-1|]) in
        Array1.blit v1 (Array1.sub v2 dataoffs (Array1.dim v1));
        Unix.close r;
      )})

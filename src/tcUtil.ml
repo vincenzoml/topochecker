@@ -22,7 +22,7 @@ let exists_idx fn vect =
                  
 module IntOrdT : sig type t=int val compare: int -> int -> int end = struct
   type t = int
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end
 module PointsSet = Set.Make(IntOrdT)
 

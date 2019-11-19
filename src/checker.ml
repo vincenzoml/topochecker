@@ -6,7 +6,7 @@ open Slice
 
 module IntOrdDst : sig type t=(float*int) val compare: (float*int) -> (float*int) -> int end = struct
   type t = (float*int)
-  let compare = Pervasives.compare
+  let compare = Stdlib.compare
 end
 module DDTSet = Set.Make(IntOrdDst)
   
